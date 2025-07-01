@@ -1839,7 +1839,6 @@ GameObject:
   - component: {fileID: 1726479579904620211}
   - component: {fileID: 5010713921222806561}
   - component: {fileID: 5261292370255701108}
-  - component: {fileID: -2322003165429302159}
   m_Layer: 3
   m_Name: BishopWhite
   m_TagString: Untagged
@@ -1948,86 +1947,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 150, y: 350, z: 150}
   m_Center: {x: 0, y: 175, z: 0}
---- !u!114 &-2322003165429302159
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8668495537862111196}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 239d4642fd7f72346bb6e78106fb41f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 4
-  player: 1
-  position: {x: 0, y: 0}
-  destroyPiece: {fileID: 0}
-  x: 0
-  z: 0
-  chessPoint: 30
-  move:
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  getValidMoves: []
-  chessControl: {fileID: 0}
-  enemyChessControl: {fileID: 0}
-  hasMoved: 0
 --- !u!1 &8790425898436006678
 GameObject:
   m_ObjectHideFlags: 0

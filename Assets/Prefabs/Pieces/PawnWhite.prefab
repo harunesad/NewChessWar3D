@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 3442484060847683368}
   - component: {fileID: 1525507420068881467}
   - component: {fileID: 3625696825748020631}
-  - component: {fileID: 4894928142783639325}
   m_Layer: 3
   m_Name: PawnWhite
   m_TagString: Untagged
@@ -100,38 +99,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 150, y: 250, z: 150}
   m_Center: {x: 0, y: 125, z: 0}
---- !u!114 &4894928142783639325
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1002023932286551586}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27ccd2805200e8c4c8a79503cc508e67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 1
-  player: 1
-  position: {x: 0, y: 0}
-  destroyPiece: {fileID: 0}
-  x: 0
-  z: 0
-  chessPoint: 10
-  move:
-  - x: 0
-    z: 1
-  - x: 0
-    z: 2
-  - x: 1
-    z: 1
-  - x: -1
-    z: 1
-  getValidMoves: []
-  chessControl: {fileID: 0}
-  enemyChessControl: {fileID: 0}
-  hasMoved: 0
 --- !u!1 &1425492474804554786
 GameObject:
   m_ObjectHideFlags: 0

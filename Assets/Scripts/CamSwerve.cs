@@ -14,7 +14,7 @@ public class CamSwerve : MonoBehaviour
     void Update()
     {
         System();
-        transform.LookAt(new Vector3(3.5f, 0, 3.5f));
+        transform.LookAt(new Vector3(-.725f, 0, 0));
     }
     public void System()
     {

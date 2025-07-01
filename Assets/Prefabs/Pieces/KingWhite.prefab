@@ -95,7 +95,6 @@ GameObject:
   - component: {fileID: 5495485540119497025}
   - component: {fileID: 8918424437425415729}
   - component: {fileID: -7474423292277474872}
-  - component: {fileID: 5399946794841411171}
   m_Layer: 3
   m_Name: KingWhite
   m_TagString: Untagged
@@ -188,46 +187,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 150, y: 350, z: 150}
   m_Center: {x: 0, y: 175, z: 0}
---- !u!114 &5399946794841411171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3244064420380952257}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6185293cc2d77a48b5725870f6a7b4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 6
-  player: 1
-  position: {x: 0, y: 0}
-  destroyPiece: {fileID: 0}
-  x: 0
-  z: 0
-  chessPoint: 1000
-  move:
-  - x: 0
-    z: 1
-  - x: 1
-    z: 1
-  - x: -1
-    z: 1
-  - x: 0
-    z: -1
-  - x: 1
-    z: -1
-  - x: -1
-    z: -1
-  - x: 1
-    z: 0
-  - x: -1
-    z: 0
-  getValidMoves: []
-  chessControl: {fileID: 0}
-  enemyChessControl: {fileID: 0}
-  hasMoved: 0
 --- !u!1 &3461250195371764542
 GameObject:
   m_ObjectHideFlags: 0

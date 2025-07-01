@@ -675,7 +675,6 @@ GameObject:
   - component: {fileID: 3293045015559913040}
   - component: {fileID: 2683824536578452519}
   - component: {fileID: 5405042038088779064}
-  - component: {fileID: 7704080626698304922}
   m_Layer: 7
   m_Name: RookBlack
   m_TagString: Untagged
@@ -783,86 +782,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 150, y: 300, z: 150}
   m_Center: {x: 0, y: 150, z: 0}
---- !u!114 &7704080626698304922
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3089562719083472239}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59325e8d947faa14d86c5dc8e056f2f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 2
-  player: 2
-  position: {x: 0, y: 0}
-  destroyPiece: {fileID: 0}
-  x: 0
-  z: 0
-  chessPoint: 50
-  move:
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  - x: 0
-    z: 0
-  getValidMoves: []
-  chessControl: {fileID: 0}
-  enemyChessControl: {fileID: 0}
-  hasMoved: 0
 --- !u!1 &3347813589751733250
 GameObject:
   m_ObjectHideFlags: 0

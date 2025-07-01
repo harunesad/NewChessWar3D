@@ -94,7 +94,6 @@ GameObject:
   - component: {fileID: 9153163057495152442}
   - component: {fileID: 4703593415380449306}
   - component: {fileID: 861784756818555916}
-  - component: {fileID: 3049355764657911302}
   m_Layer: 7
   m_Name: KnightBlack
   m_TagString: Untagged
@@ -212,46 +211,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 150, y: 300, z: 150}
   m_Center: {x: 0, y: 150, z: 0}
---- !u!114 &3049355764657911302
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1346231976579295143}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcec56e94ac697741a10f5cd4f2c5163, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  type: 3
-  player: 2
-  position: {x: 0, y: 0}
-  destroyPiece: {fileID: 0}
-  x: 0
-  z: 0
-  chessPoint: 30
-  move:
-  - x: 1
-    z: 2
-  - x: -1
-    z: 2
-  - x: 1
-    z: -2
-  - x: -1
-    z: -2
-  - x: 2
-    z: 1
-  - x: 2
-    z: -1
-  - x: -2
-    z: 1
-  - x: -2
-    z: -1
-  getValidMoves: []
-  chessControl: {fileID: 0}
-  enemyChessControl: {fileID: 0}
-  hasMoved: 0
 --- !u!1 &1444217819326942177
 GameObject:
   m_ObjectHideFlags: 0

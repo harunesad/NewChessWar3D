@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Clickables-Runtime</name>
+    </assembly>
+    <members>
+        <member name="T:Clickables.Clickable">
+            <summary>
+            A component intended to be attached to a GameObject that makes it 'Clickable'.
+            </summary>
+            Author: Intuitive Gaming Solutions
+        </member>
+        <member name="E:Clickables.Clickable.ClickableAwoke">
+            <summary>A static event that is invoked whenveer a Clickable's Awake method is invoked. (Arg0: Clickable - the clickable that awoke.)</summary>
+        </member>
+        <member name="E:Clickables.Clickable.ClickableEnabled">
+            <summary>A static event that is invoked whenveer a Clickable's OnEnable method is invoked. (Arg0: Clickable - the clickable that awoke.)</summary>
+        </member>
+        <member name="E:Clickables.Clickable.ClickableDisabled">
+            <summary>A static event that is invoked whenveer a Clickable's OnDisable method is invoked. (Arg0: Clickable - the clickable that awoke.)</summary>
+        </member>
+        <member name="E:Clickables.Clickable.ClickableDestroyed">
+            <summary>A static event that is invoked whenveer a Clickable's OnDestroy method is invoked. (Arg0: Clickable - the clickable that awoke.)</summary>
+        </member>
+        <member name="P:Clickables.Clickable.IsHovered">
+            <summary>Returns true if the selector is hovering over this Clickable, otherwise false.</summary>
+        </member>
+        <member name="M:Clickables.Clickable.Find(UnityEngine.Collider)">
+            <summary>
+            Finds and returns the Clickable associated with the given Collider, pCollider, or null.
+            </summary>
+            <param name="pCollider"></param>
+            <returns>the Clickable associated with the given Collider, pCollider, or null.</returns>
+        </member>
+        <member name="M:Clickables.Clickable.Find(UnityEngine.Collider2D)">
+            <summary>
+            Finds and returns the Clickable associated with the given Collider2D, pCollider, or null.
+            </summary>
+            <param name="pCollider"></param>
+            <returns>the Clickable associated with the given Collider2D, pCollider, or null.</returns>
+        </member>
+        <member name="T:Clickables.ClickableChild">
+            <summary>
+            A component that redirects clicks to a Clickable.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="T:Clickables.Clicker">
+            <summary>
+            The base class for all Clickers that can click on Clickables.
+            Provides public methods for clicking on a Clickable.
+            Intended to be overridden by specialized 'Clickers' that parse user input to click Clickables.
+            </summary>
+            Author: Intuitive Gaming Solutions
+        </member>
+        <member name="E:Clickables.Clicker.ClickerAwoke">
+            <summary>A static event that is invoked whenveer a Clicker's Awake method is invoked. (Arg0: Clicker - the clicker that awoke.)</summary>
+        </member>
+        <member name="E:Clickables.Clicker.ClickerEnabled">
+            <summary>A static event that is invoked whenveer a Clicker's OnEnable method is invoked. (Arg0: Clicker - the clicker that awoke.)</summary>
+        </member>
+        <member name="E:Clickables.Clicker.ClickerDisabled">
+            <summary>A static event that is invoked whenveer a Clicker's OnDisable method is invoked. (Arg0: Clicker - the clicker that awoke.)</summary>
+        </member>
+        <member name="E:Clickables.Clicker.ClickerDestroyed">
+            <summary>A static event that is invoked whenveer a Clicker's OnDestroy method is invoked. (Arg0: Clicker - the clicker that awoke.)</summary>
+        </member>
+        <member name="P:Clickables.Clicker.HoveringOver">
+            <summary>Returns the Clickable being hovered over, or null.</summary>
+        </member>
+        <member name="F:Clickables.Clicker.OverrideCanPrimaryClickClickableDelegate">
+            <summary>
+            A C# delegate event that is invoked to provide listeners an opportunity to overrid the primary
+            clickability of the described click. You may leave the 'ref bool' argument unchanged to leave the existing behavior.
+            Arg0: Clicker - the clicker whose clickability is being tested.
+            Arg1: Clickcable - the clickable whose clickability is being tested.
+            Arg2: Vector3 - the click pos being tested in screen space.
+            Arg3: ref bool - a reference to the boolean value that controls whether or not the click is allowed.
+            </summary>
+        </member>
+        <member name="F:Clickables.Clicker.OverrideCanSecondaryClickClickableDelegate">
+            <summary>
+            A C# delegate event that is invoked to provide listeners an opportunity to overrid the secondary
+            clickability of the described click. You may leave the 'ref bool' argument unchanged to leave the existing behavior.
+            Arg0: Clicker - the clicker whose clickability is being tested.
+            Arg1: Clickcable - the clickable whose clickability is being tested.
+            Arg2: Vector3 - the click pos being tested in screen space.
+            Arg3: ref bool - a reference to the boolean value that controls whether or not the click is allowed.
+            </summary>
+        </member>
+        <member name="M:Clickables.Clicker.SetUnhoverOnDisable(System.Boolean)">
+            <summary>A public method that sets the unhoverOnDisable field of this component. Useful for use with Unity editor events.</summary>
+            <param name="pUnhover"></param>
+        </member>
+        <member name="M:Clickables.Clicker.ForceStopHover">
+            <summary>Forcefully stops the current hover.</summary>
+        </member>
+        <member name="M:Clickables.Clicker.CanPrimaryClickClickable(Clickables.Clickable,UnityEngine.Vector2)">
+            <summary>Returns true if the described primary click is allowed, otherwise false.</summary>
+            <param name="pClickable"></param>
+            <param name="pClickPos"></param>
+            <returns>true if the described primary click is allowed, otherwise false.</returns>
+        </member>
+        <member name="M:Clickables.Clicker.PrimaryClickClickable(Clickables.Clickable,UnityEngine.Vector2)">
+            <summary>Performs a primary click on the given Clickable at the given screen space 'click pos'.</summary>
+            <param name="pClickable"></param>
+            <param name="pClickPos"></param>
+        </member>
+        <member name="M:Clickables.Clicker.CanSecondaryClickClickable(Clickables.Clickable,UnityEngine.Vector2)">
+            <summary>Returns true if the described secondary click is allowed, otherwise false.</summary>
+            <param name="pClickable"></param>
+            <param name="pClickPos"></param>
+            <returns>true if the described secondary click is allowed, otherwise false.</returns>
+        </member>
+        <member name="M:Clickables.Clicker.SecondaryClickClickable(Clickables.Clickable,UnityEngine.Vector2)">
+            <summary>Performs a secondary click on the given Clickable at the given screen space 'click pos'.</summary>
+            <param name="pClickable"></param>
+            <param name="pClickPos"></param>
+        </member>
+        <member name="T:Clickables.ClickerMode">
+            <summary>Controls what type of colliders a clicker can click.</summary>
+        </member>
+        <member name="F:Clickables.ClickerMode.Collider">
+            <summary>Click 3D colliders.</summary>
+        </member>
+        <member name="F:Clickables.ClickerMode.Collider2D">
+            <summary>Clicks 2D colliders.</summary>
+        </member>
+        <member name="F:Clickables.ClickerMode.Both3D">
+            <summary>Clicks both 3D and 2D colliders but favors 3D colliders.</summary>
+        </member>
+        <member name="F:Clickables.ClickerMode.Both2D">
+            <summary>Clicks both 3D and 2D colliders but favors 2D colliders.</summary>
+        </member>
+        <member name="T:Clickables.Delegates.ActionRef`1">
+            <summary>A simple delegate for events where an argument is passed by reference.</summary>
+            <typeparam name="T">The type of the passed reference.</typeparam>
+            <param name="pItem">The reference that was passed.</param>
+        </member>
+        <member name="T:Clickables.Delegates.ActionRef`2">
+            <summary>A simple delegate for events where an argument is passed by reference.</summary>
+            <typeparam name="VALUE_ONE">The type of the fist passed value.</typeparam>
+            <typeparam name="T">The type of the passed reference.</typeparam>
+            <param name="pValueOne">The first value that was passed.</param>
+            <param name="pItem">The reference that was passed.</param>
+        </member>
+        <member name="T:Clickables.Delegates.ActionRef`3">
+            <summary>A simple delegate for events where an argument is passed by reference.</summary>
+            <typeparam name="VALUE_ONE">The type of the first passed value.</typeparam>
+            <typeparam name="VALUE_TWO">The type of the second passed value.</typeparam>
+            <typeparam name="T">The type of the passed reference.</typeparam>
+            <param name="pValueOne">The first value that was passed.</param>
+            <param name="pValueTwo">The second value that was passed.</param>
+            <param name="pItem">The reference that was passed.</param>
+        </member>
+        <member name="T:Clickables.Delegates.ActionRef`4">
+            <summary>A simple delegate for events where an argument is passed by reference.</summary>
+            <typeparam name="VALUE_ONE">The type of the first passed value.</typeparam>
+            <typeparam name="VALUE_TWO">The type of the second passed value.</typeparam>
+            <typeparam name="VALUE_THREE">The type of the third passed value.</typeparam>
+            <typeparam name="T">The type of the passed reference.</typeparam>
+            <param name="pValueOne">The first value that was passed.</param>
+            <param name="pValueTwo">The second value that was passed.</param>
+            <param name="pValueThree">The third value that was passed.</param>
+            <param name="pItem">The reference that was passed.</param>
+        </member>
+        <member name="T:Clickables.Events.ClickedUnityEvent">
+            <summary>
+            Arg0: Clicker   - the Clicker involved in the event.
+            Arg1: Clickable - the Clickable involved in the event.
+            Arg2: Vector2   - the click position in screen space.
+            </summary>
+        </member>
+        <member name="T:Clickables.Events.HoverTargetChangedUnityEvent">
+            <summary>
+            Arg0: Clickable - The last hovered Clickable, or null.
+            Arg1: Clickable - The new hovered Clickable, or null.
+            </summary>
+        </member>
+        <member name="T:Clickables.Management.GlobalClickerDisabler">
+            <summary>
+            A component that can disable through C# delegate event overriding
+            of clickability the primary and secondary clickabiity of all Clickers.
+            
+            This component will only override clickability while enabled.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:Clickables.Management.GlobalClickerDisabler.m_RegisteredClickers">
+            <summary>A list that tracks which clickers have been registered.</summary>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerDisabler.SetClickDisabled(System.Boolean)">
+            <summary>Sets both the primary and secondary click disabled fields at the same time for this component.</summary>
+            <param name="pDisabled"></param>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerDisabler.SetPrimaryClickDisabled(System.Boolean)">
+            <summary>Sets the 'disablePrimaryClick' field of this component.</summary>
+            <param name="pDisabled"></param>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerDisabler.SetSecondaryClickDisabled(System.Boolean)">
+            <summary>Sets the 'disableSecondaryClick' field of this component.</summary>
+            <param name="pDisabled"></param>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerDisabler.RegisterClicker(Clickables.Clicker)">
+            <summary>Registers the specified clicker if it isn't already registered and subscribes to its events.</summary>
+            <param name="pClicker"></param>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerDisabler.DeregisterClicker(Clickables.Clicker)">
+            <summary>Deregisters the specified clicker if it is already registered and unsubscribes from its events.</summary>
+            <param name="pClicker"></param>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerDisabler.OnClickerAwake(Clickables.Clicker)">
+            <summary>A callback that is invoked whenever any Clicker awakes after subscribing to this clalback.</summary>
+            <param name="pClicker"></param>
+        </member>
+        <member name="T:Clickables.Management.GlobalClickerToggler">
+            <summary>
+            A component that can toggle and/or set all Clickers in the scenes enabled state at once.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:Clickables.Management.GlobalClickerToggler.m_RegisteredClickers">
+            <summary>A hash set that tracks which clickers have been registered.</summary>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerToggler.SetAllEnabled(System.Boolean)">
+            <summary>Sets the enabled state of all Clickers.</summary>
+            <param name="pEnabled"></param>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerToggler.ToggleAll">
+            <summary>Individually toggles the state of all Clickers.</summary>
+        </member>
+        <member name="M:Clickables.Management.GlobalClickerToggler.OnClickerAwake(Clickables.Clicker)">
+            <summary>A callback that is invoked whenever any Clicker awakes after subscribing to this clalback.</summary>
+            <param name="pClicker"></param>
+        </member>
+        <member name="T:Clickables.Tracking.ICursorTracker">
+            <summary>
+            A generic interface for tracking and reporting cursor information.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="M:Clickables.Tracking.ICursorTracker.GetScreenPos">
+            <summary>Returns the screen space position of the cursor.</summary>
+            <returns>the screen space position of the cursor.</returns>
+        </member>
+    </members>
+</doc>

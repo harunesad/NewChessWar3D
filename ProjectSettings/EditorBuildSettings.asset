@@ -7,5 +7,11 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Scenes/Menu.unity
-    guid: c850ee8c3b14cc8459e7e186857cf567
+    guid: 5f462beb505be704d9e2986d6611650e
+  - enabled: 1
+    path: Assets/Scenes/HarunChessWhiteAI.unity
+    guid: 8bbc6878ee56bfb4d90d02029376b981
+  - enabled: 1
+    path: Assets/Scenes/HarunChessBlackAI.unity
+    guid: a51a5cd63bc213e45a3562d19d82c716
   m_configObjects: {}
