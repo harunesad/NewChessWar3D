@@ -9,8 +9,8 @@ public class ChessPoints : MonoBehaviour
     public Text whitePointText, blackPointText;
     void Start()
     {
-        whitePointText.text = "White Points: " + whitePoints;
-        blackPointText.text = "Black Points: " + blackPoints;
+        //whitePointText.text = "White Points: " + whitePoints;
+        //blackPointText.text = "Black Points: " + blackPoints;
     }
 
     // Update is called once per frame

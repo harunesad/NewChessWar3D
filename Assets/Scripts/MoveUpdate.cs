@@ -19,16 +19,20 @@ public class MoveUpdate : MonoBehaviour
     {
         parent = transform.parent;
         transform.parent = null;
+
+        chessPoints = FindAnyObjectByType<ChessPoints>();
         if (character.GetComponent<MeshRenderer>().materials[0].color == Color.white)
         {
             piecetype = Piecetype.White;
+            chessPoints.whitePoints += piecePoint;
         }
         else
         {
             piecetype = Piecetype.Black;
+            chessPoints.blackPoints += piecePoint;
         }
-        Debug.Log((character.GetComponent<MeshRenderer>().materials[0].color) + " " + transform.name);
-        chessPoints = FindAnyObjectByType<ChessPoints>();
+        chessPoints.whitePointText.text = "White Points: " + chessPoints.whitePoints;
+        chessPoints.blackPointText.text = "Black Points: " + chessPoints.blackPoints;
     }
 
     // Update is called once per frame
@@ -43,7 +47,21 @@ public class MoveUpdate : MonoBehaviour
             Vector3 newPos = new Vector3(parent.position.x, transform.position.y, parent.position.z);
             transform.DOMove(newPos, .75f).SetEase(Ease.Linear).OnComplete(() =>
             {
-                transform.DOMoveY(transform.position.y - 1, .2f).SetEase(Ease.Linear);
+                transform.DOMoveY(transform.position.y - 1, .2f).SetEase(Ease.Linear).OnComplete(() =>
+                {
+                    if (FindAnyObjectByType<GameUIManager>().gameFinish)
+                    {
+                        Debug.Log("b");
+                        if (piecetype == Piecetype.White)
+                        {
+                            FindAnyObjectByType<GameUIManager>().GameoverMenuOpen("White Win");
+                        }
+                        else
+                        {
+                            FindAnyObjectByType<GameUIManager>().GameoverMenuOpen("Black Win");
+                        }
+                    }
+                });
             });
         });
     }
