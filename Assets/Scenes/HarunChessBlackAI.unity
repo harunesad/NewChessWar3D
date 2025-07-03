@@ -4018,6 +4018,7 @@ MonoBehaviour:
   resumePanel: {fileID: 1326980403}
   gameoverPanel: {fileID: 1791068810}
   game: {fileID: 1084211741}
+  chessPoints: {fileID: 1430467487}
   time: 900
   gameFinish: 0
 --- !u!4 &2121386936
