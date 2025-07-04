@@ -1,20 +1,36 @@
+using Clickables;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static Unity.VisualScripting.Member;
 
 public class GameUIManager : MonoBehaviour
 {
     [SerializeField] Text timeText;
-    [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn;
+    [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn, soundOnOffBtn;
     [SerializeField] GameObject resumePanel, gameoverPanel, game;
     [SerializeField] ChessPoints chessPoints;
+    [SerializeField] Sprite soundOn, soundOff;
+    [SerializeField] AudioSource click;
     [SerializeField] float time;
     public bool gameFinish = false;
     void Start()
     {
+        if (PlayerPrefs.HasKey("Audio"))
+        {
+            if (PlayerPrefs.GetInt("Audio") == 1)
+            {
+                soundOnOffBtn.GetComponent<Image>().sprite = soundOff;
+            }
+            else
+            {
+                soundOnOffBtn.GetComponent<Image>().sprite = soundOn;
+            }
+        }
+
         string first = ((int)(time / 60)) < 10 ? "0" + ((int)(time / 60)) : ((int)(time / 60)).ToString();
         string second = ((int)(time % 60)) < 10 ? "0" + ((int)(time % 60)) : ((int)(time % 60)).ToString();
         timeText.text = first + " : " + second;
@@ -23,6 +39,7 @@ public class GameUIManager : MonoBehaviour
         menuBtn.onClick.AddListener(MenuOpen);
         restartBtn.onClick.AddListener(RestartGame);
         closeBtn.onClick.AddListener(ResumePanelOff);
+        soundOnOffBtn.onClick.AddListener(SoundfOnOff);
 
         gameoverPanel.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(MenuOpen);
         gameoverPanel.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RestartGame);
@@ -53,6 +70,10 @@ public class GameUIManager : MonoBehaviour
     }
     void ResumePanelOnOff()
     {
+        if (PlayerPrefs.GetInt("Audio") == 1)
+        {
+            click.Play();
+        }
         resumePanel.SetActive(!resumePanel.gameObject.activeSelf);
         game.SetActive(!game.activeSelf);
         if (Time.timeScale == 1)
@@ -66,16 +87,45 @@ public class GameUIManager : MonoBehaviour
     }
     void MenuOpen()
     {
+        if (PlayerPrefs.GetInt("Audio") == 1)
+        {
+            click.Play();
+        }
         Time.timeScale = 1;
         SceneManager.LoadScene(0);
     }
     void RestartGame()
     {
+        if (PlayerPrefs.GetInt("Audio") == 1)
+        {
+            click.Play();
+        }
         Time.timeScale = 1;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+    void SoundfOnOff()
+    {
+        if (PlayerPrefs.GetInt("Audio") == 1)
+        {
+            click.Play();
+        }
+        if (soundOnOffBtn.GetComponent<Image>().sprite == soundOn)
+        {
+            PlayerPrefs.SetInt("Audio", 1);
+            soundOnOffBtn.GetComponent<Image>().sprite = soundOff;
+        }
+        else
+        {
+            PlayerPrefs.SetInt("Audio", 0);
+            soundOnOffBtn.GetComponent<Image>().sprite = soundOn;
+        }
+    }
     void ResumePanelOff()
     {
+        if (PlayerPrefs.GetInt("Audio") == 1)
+        {
+            click.Play();
+        }
         resumePanel.SetActive(false);
         game.SetActive(true);
         Time.timeScale = 1;
