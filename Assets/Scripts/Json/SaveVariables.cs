@@ -7,4 +7,6 @@ using UnityEngine;
 public class SaveVariables
 {
     public bool save;
+    public List<int> starCounts;
+    public List<bool> unlock;
 }

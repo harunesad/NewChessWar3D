@@ -21,9 +21,9 @@ public class MenuUIManager : MonoBehaviour
     {
         MusicState(music);
         chessPlayBtn.onClick.AddListener(Difficultopen);
-        chessTowerBtn.onClick.AddListener(ComingSoon);
-        chessMarketBtn.onClick.AddListener(ComingSoon);
-        chessMultiplayerBtn.onClick.AddListener(ComingSoon);
+        chessTowerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        chessMarketBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        chessMultiplayerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
 
         whiteBtn.onClick.AddListener(WhiteSelect);
         blackBtn.onClick.AddListener(BlackSelect);
@@ -75,6 +75,7 @@ public class MenuUIManager : MonoBehaviour
         mainMenu.DOFade(0, 1).SetEase(Ease.Linear).OnComplete(() =>
         {
             backBtn.transform.parent = difficultMenu.transform;
+            warning.transform.parent = difficultMenu.transform;
             backBtn.gameObject.SetActive(true);
             difficultMenu.DOFade(1, 1).SetEase(Ease.Linear).OnComplete(() =>
             {
@@ -98,14 +99,21 @@ public class MenuUIManager : MonoBehaviour
     void DifficultSelect(int difficult)
     {
         MusicState(click);
-        difficulty.difficult = (difficult + 1) * 2;
-        if (difficulty.type == Difficulty.Type.White)
+        if (JsonSave.jsonSave.sv.unlock[difficult])
         {
-            SceneManager.LoadScene(2);
+            difficulty.difficult = (difficult + 1) * 2;
+            if (difficulty.type == Difficulty.Type.White)
+            {
+                SceneManager.LoadScene(2);
+            }
+            else
+            {
+                SceneManager.LoadScene(1);
+            }
         }
         else
         {
-            SceneManager.LoadScene(1);
+            MessageShow("Unlock");
         }
     }
     void Backmenu()
@@ -115,6 +123,7 @@ public class MenuUIManager : MonoBehaviour
         difficultMenu.blocksRaycasts = false;
         difficultMenu.DOFade(0, 1).SetEase(Ease.Linear).OnComplete(() =>
         {
+            warning.transform.parent = mainMenu.transform;
             mainMenu.DOFade(1, 1).SetEase(Ease.Linear).OnComplete(() =>
             {
                 mainMenu.interactable = true;
@@ -144,14 +153,15 @@ public class MenuUIManager : MonoBehaviour
         MusicState(click);
         Application.Quit();
     }
-    void ComingSoon()
+    void MessageShow(string message)
     {
         MusicState(click);
+        warning.GetComponent<TextMeshProUGUI>().text = message;
         warning.GetComponent<CanvasGroup>().DOFade(1, 1).SetEase(Ease.Linear).OnComplete(() =>
         {
-            warning.GetComponent<CanvasGroup>().DOFade(1, 2).SetEase(Ease.Linear).OnComplete(() =>
+            warning.GetComponent<CanvasGroup>().DOFade(1, 1).SetEase(Ease.Linear).OnComplete(() =>
             {
-                warning.GetComponent<CanvasGroup>().DOFade(0, 2).SetEase(Ease.Linear);
+                warning.GetComponent<CanvasGroup>().DOFade(0, 1).SetEase(Ease.Linear);
             });
         });
     }

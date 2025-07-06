@@ -1212,7 +1212,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -475, y: 250}
+  m_AnchoredPosition: {x: -400, y: 250}
   m_SizeDelta: {x: 70, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &218266335
@@ -1541,7 +1541,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 268521642}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1550,7 +1550,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -265}
+  m_AnchoredPosition: {x: 0, y: 155}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &268521644
@@ -1573,18 +1573,18 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Coming Soon
+  m_text: ssss
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: cbe5f95f68c926b47a2568406899dff6, type: 2}
-  m_sharedMaterial: {fileID: -8615051065196949347, guid: cbe5f95f68c926b47a2568406899dff6,
+  m_fontAsset: {fileID: 11400000, guid: 4290330b0beec7344afe848ad9f4b245, type: 2}
+  m_sharedMaterial: {fileID: -8615051065196949347, guid: 4290330b0beec7344afe848ad9f4b245,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281216703
-  m_fontColor: {r: 0.7509433, g: 0.17994298, b: 0.17994298, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1601,8 +1601,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3074,7 +3074,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0, g: 0, b: 0, a: 1}
     m_PressedColor: {r: 0.58431375, g: 0.58431375, b: 0.58431375, a: 1}
     m_SelectedColor: {r: 0, g: 0, b: 0, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 0, g: 0, b: 0, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -4151,7 +4151,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -15}
-  m_SizeDelta: {x: 350, y: 50}
+  m_SizeDelta: {x: 250, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &839795289
 MonoBehaviour:
@@ -4173,7 +4173,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 383321fb4e36a674fb448b0a63d44e25, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d3a067254ab4fcc49844eb0422794f5c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6419,7 +6419,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 475, y: 250}
+  m_AnchoredPosition: {x: 400, y: 250}
   m_SizeDelta: {x: 70, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1234881517
@@ -7774,7 +7774,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 400, y: 255}
+  m_AnchoredPosition: {x: 325, y: 255}
   m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1406519508
@@ -8775,6 +8775,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   difficult: 0
   type: 0
+  winType: 0
 --- !u!4 &1533265217
 Transform:
   m_ObjectHideFlags: 0
@@ -11203,8 +11204,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b90db844d62aef049aa69f25e424cb14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stars:
+  - star:
+    - {fileID: 1386665477}
+    - {fileID: 1335563228}
+    - {fileID: 1539303695}
+  - star:
+    - {fileID: 1647259621}
+    - {fileID: 388511053}
+    - {fileID: 1549962593}
+  - star:
+    - {fileID: 918601061}
+    - {fileID: 975134653}
+    - {fileID: 1711861952}
+  - star:
+    - {fileID: 1201150932}
+    - {fileID: 947210811}
+    - {fileID: 1477442490}
+  - star:
+    - {fileID: 1974010278}
+    - {fileID: 535080863}
+    - {fileID: 985126248}
+  newStarCounts: 0000000000000000000000000000000000000000
+  newUnlock: 0100000000
   sv:
     save: 0
+    starCounts: 
+    unlock: 
 --- !u!1 &2003957248
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,10 +8,12 @@ public class Difficulty : MonoBehaviour
     public int difficult;
     bool gameStart = false;
     public Type type = Type.White;
+    public Type winType;
     public enum Type
     {
         White,
-        Black
+        Black,
+        Draw
     }
     // Singleton örneði
     private static Difficulty _instance;

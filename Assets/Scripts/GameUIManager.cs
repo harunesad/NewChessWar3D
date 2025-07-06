@@ -9,16 +9,20 @@ using static Unity.VisualScripting.Member;
 
 public class GameUIManager : MonoBehaviour
 {
+    Difficulty difficulty;
     [SerializeField] Text timeText;
     [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn, soundOnOffBtn;
     [SerializeField] GameObject resumePanel, gameoverPanel, game;
     [SerializeField] ChessPoints chessPoints;
     [SerializeField] Sprite soundOn, soundOff;
     [SerializeField] AudioSource click;
-    [SerializeField] float time;
+    [SerializeField] GameSave gameSave;
+    public float time;
     public bool gameFinish = false;
     void Start()
     {
+        difficulty = FindAnyObjectByType<Difficulty>();
+
         if (PlayerPrefs.HasKey("Audio"))
         {
             if (PlayerPrefs.GetInt("Audio") == 1)
@@ -52,14 +56,20 @@ public class GameUIManager : MonoBehaviour
             time = 0;
             if (chessPoints.whitePoints < chessPoints.blackPoints)
             {
+                difficulty.winType = Difficulty.Type.Black;
+                gameSave.ChessSave();
                 GameoverMenuOpen("Black Win");
             }
             else if (chessPoints.whitePoints == chessPoints.blackPoints)
             {
+                difficulty.winType = Difficulty.Type.Draw;
+                gameSave.ChessSave();
                 GameoverMenuOpen("Draw");
             }
             else
             {
+                difficulty.winType = Difficulty.Type.White;
+                gameSave.ChessSave();
                 GameoverMenuOpen("White Win");
             }
             return;

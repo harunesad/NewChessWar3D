@@ -10,27 +10,31 @@ public class MoveUpdate : MonoBehaviour
     Transform parent;
     ChessPoints chessPoints;
     AudioManager audioManager;
-    public Piecetype piecetype;
-    public enum Piecetype
-    {
-        White,
-        Black
-    }
+    Difficulty difficulty;
+    GameSave gameSave;
+    public Difficulty.Type piecetype;
+    //public enum Piecetype
+    //{
+    //    White,
+    //    Black
+    //}
     void Start()
     {
-        parent = transform.parent;
-        transform.parent = null;
+        Invoke("ParentEmpty", 1);
 
         chessPoints = FindAnyObjectByType<ChessPoints>();
         audioManager = FindAnyObjectByType<AudioManager>();
+        difficulty = FindAnyObjectByType<Difficulty>();
+        gameSave = FindAnyObjectByType<GameSave>();
+
         if (character.GetComponent<MeshRenderer>().materials[0].color == Color.white)
         {
-            piecetype = Piecetype.White;
+            piecetype = Difficulty.Type.White;
             chessPoints.whitePoints += piecePoint;
         }
         else
         {
-            piecetype = Piecetype.Black;
+            piecetype = Difficulty.Type.Black;
             chessPoints.blackPoints += piecePoint;
         }
         chessPoints.whitePointText.text = "White Points: " + chessPoints.whitePoints;
@@ -41,6 +45,11 @@ public class MoveUpdate : MonoBehaviour
     void Update()
     {   
         
+    }
+    void ParentEmpty()
+    {
+        parent = transform.parent;
+        transform.parent = null;
     }
     public void PieceMove()
     {
@@ -54,14 +63,26 @@ public class MoveUpdate : MonoBehaviour
                 {
                     if (FindAnyObjectByType<GameUIManager>().gameFinish)
                     {
-                        if (piecetype == Piecetype.White)
+                        if (piecetype == Difficulty.Type.White)
                         {
+                            difficulty.winType = Difficulty.Type.White;
+                            gameSave.ChessSave();
                             FindAnyObjectByType<GameUIManager>().GameoverMenuOpen("White Win");
                         }
                         else
                         {
+                            difficulty.winType = Difficulty.Type.Black;
+                            gameSave.ChessSave();
                             FindAnyObjectByType<GameUIManager>().GameoverMenuOpen("Black Win");
                         }
+                        //if (piecetype == difficulty.type)
+                        //{
+
+                        //}
+                        //else
+                        //{
+
+                        //}
                     }
                 });
             });
@@ -70,7 +91,7 @@ public class MoveUpdate : MonoBehaviour
     public void PieceDestroy()
     {
         audioManager.Hit();
-        if (piecetype == Piecetype.White)
+        if (piecetype == Difficulty.Type.White)
         {
             chessPoints.whitePoints -= piecePoint;
         }
