@@ -4712,7 +4712,7 @@ MonoBehaviour:
   soundOff: {fileID: 21300000, guid: f1c6d64fd28683843adce00dc5fe4806, type: 3}
   click: {fileID: 1820189763}
   gameSave: {fileID: 212312309}
-  time: 300
+  time: 900
   gameFinish: 0
 --- !u!4 &2121386936
 Transform:
@@ -5076,12 +5076,17 @@ PrefabInstance:
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
       propertyPath: blackAIThinkTime
-      value: 2.2
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
       propertyPath: whiteAIThinkTime
       value: 2.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
+        type: 3}
+      propertyPath: aiUseAllThinkTime
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
@@ -5096,12 +5101,12 @@ PrefabInstance:
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
       propertyPath: blackChessAI._classRef
-      value: ChessEngine.AI.Guy.GuyChessAI, ChessEngine.AI.Guy
+      value: ChessEngine.AI.Riddle.RiddleChessAI, ChessEngine.AI.Riddle
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
       propertyPath: whiteChessAI._classRef
-      value: ChessEngine.AI.Guy.GuyChessAI, ChessEngine.AI.Guy
+      value: ChessEngine.AI.Riddle.RiddleChessAI, ChessEngine.AI.Riddle
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}

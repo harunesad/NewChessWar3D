@@ -101,7 +101,7 @@ public class MenuUIManager : MonoBehaviour
         MusicState(click);
         if (JsonSave.jsonSave.sv.unlock[difficult])
         {
-            difficulty.difficult = (difficult + 1) * 2;
+            difficulty.difficult = (difficult + 1) * 10;
             if (difficulty.type == Difficulty.Type.White)
             {
                 SceneManager.LoadScene(2);

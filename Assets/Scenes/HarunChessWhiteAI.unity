@@ -5079,18 +5079,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
+      propertyPath: aiUseAllThinkTime
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
+        type: 3}
       propertyPath: whiteAIThinkDepth
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
       propertyPath: blackChessAI._classRef
-      value: ChessEngine.AI.Guy.GuyChessAI, ChessEngine.AI.Guy
+      value: ChessEngine.AI.Riddle.RiddleChessAI, ChessEngine.AI.Riddle
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
       propertyPath: whiteChessAI._classRef
-      value: ChessEngine.AI.Guy.GuyChessAI, ChessEngine.AI.Guy
+      value: ChessEngine.AI.Riddle.RiddleChessAI, ChessEngine.AI.Riddle
       objectReference: {fileID: 0}
     - target: {fileID: 5396990770423882677, guid: e99374bbc19ca9c4ca39c4ec83afcd5e,
         type: 3}
