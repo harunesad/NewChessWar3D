@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class MenuUIManager : MonoBehaviour
 {
     [SerializeField] Difficulty difficulty;
-    [SerializeField] Button chessPlayBtn, chessTowerBtn, chessMarketBtn, chessMultiplayerBtn, whiteBtn, blackBtn, backBtn,
+    [SerializeField] Button PlayBtn, TowerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
         exitBtn, soundOnOffBtn;
     [SerializeField] CanvasGroup difficultMenu, mainMenu;
     [SerializeField] List<Button> difficultsBtn;
@@ -20,10 +20,11 @@ public class MenuUIManager : MonoBehaviour
     void Start()
     {
         MusicState(music);
-        chessPlayBtn.onClick.AddListener(Difficultopen);
-        chessTowerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
-        chessMarketBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
-        chessMultiplayerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        PlayBtn.onClick.AddListener(Difficultopen);
+        TowerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        shopBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        multiplayerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        twoPlayersBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
 
         whiteBtn.onClick.AddListener(WhiteSelect);
         blackBtn.onClick.AddListener(BlackSelect);
@@ -101,7 +102,7 @@ public class MenuUIManager : MonoBehaviour
         MusicState(click);
         if (JsonSave.jsonSave.sv.unlock[difficult])
         {
-            difficulty.difficult = (difficult + 1) * 10;
+            difficulty.difficult = (difficult + 1) * 4;
             if (difficulty.type == Difficulty.Type.White)
             {
                 SceneManager.LoadScene(2);
