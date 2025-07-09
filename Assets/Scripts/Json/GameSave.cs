@@ -19,31 +19,31 @@ public class GameSave : MonoBehaviour
     {
         if (difficulty.type == difficulty.winType)
         {
-            if (difficulty.difficult / 2 < 5)
+            if (difficulty.difficult / 4 < 10)
             {
-                sv.unlock[difficulty.difficult / 2] = true;
+                sv.unlock[difficulty.difficult / 4] = true;
             }
             if (gameUIManager.time > 0 &&gameUIManager.time <= 300)
             {
-                if (sv.starCounts[(difficulty.difficult / 2) - 1] < 1)
+                if (sv.starCounts[(difficulty.difficult / 4) - 1] < 1)
                 {
-                    sv.starCounts[(difficulty.difficult / 2) - 1] = 1;
+                    sv.starCounts[(difficulty.difficult / 4) - 1] = 1;
                 }
                 starCount = 1;
             }
             else if (gameUIManager.time > 300 && gameUIManager.time <= 600)
             {
-                if (sv.starCounts[(difficulty.difficult / 2) - 1] < 2)
+                if (sv.starCounts[(difficulty.difficult / 4) - 1] < 2)
                 {
-                    sv.starCounts[(difficulty.difficult / 2) - 1] = 2;
+                    sv.starCounts[(difficulty.difficult / 4) - 1] = 2;
                 }
                 starCount = 2;
             }
             else if (gameUIManager.time > 600 && gameUIManager.time <= 900)
             {
-                if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
+                if (sv.starCounts[(difficulty.difficult / 4) - 1] < 3)
                 {
-                    sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
+                    sv.starCounts[(difficulty.difficult / 4) - 1] = 3;
                 }
                 starCount = 3;
             }

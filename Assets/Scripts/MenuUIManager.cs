@@ -8,7 +8,6 @@ using UnityEngine.UI;
 
 public class MenuUIManager : MonoBehaviour
 {
-    [SerializeField] Difficulty difficulty;
     [SerializeField] Button PlayBtn, TowerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
         exitBtn, soundOnOffBtn;
     [SerializeField] CanvasGroup difficultMenu, mainMenu;
@@ -17,9 +16,11 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI warning;
     [SerializeField] AudioSource music, click;
     [SerializeField] Sprite soundOn, soundOff;
+    Difficulty difficulty;
     void Start()
     {
         MusicState(music);
+
         PlayBtn.onClick.AddListener(Difficultopen);
         TowerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
         shopBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
@@ -88,13 +89,17 @@ public class MenuUIManager : MonoBehaviour
     void WhiteSelect()
     {
         MusicState(click);
+        difficulty = FindAnyObjectByType<Difficulty>();
         difficulty.type = Difficulty.Type.White;
+        MessageShow(difficulty.type.ToString());
         select.anchoredPosition = new Vector3(-25, 0, 0);
     }
     void BlackSelect()
     {
         MusicState(click);
+        difficulty = FindAnyObjectByType<Difficulty>();
         difficulty.type = Difficulty.Type.Black;
+        MessageShow(difficulty.type.ToString());
         select.anchoredPosition = new Vector3(25, 0, 0);
     }
     void DifficultSelect(int difficult)

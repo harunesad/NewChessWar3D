@@ -8,13 +8,13 @@ public class CamSwerve : MonoBehaviour
 {
     float lastFrameFingerPositionX;
     public float moveFactorX;
-    [SerializeField]
-    List<Transform> camPos;
+    [SerializeField] List<Transform> camPos;
+    [SerializeField] Vector3 lookPos;
     public int camPosIndex;
     void Update()
     {
         System();
-        transform.LookAt(new Vector3(-.725f, 0, 0));
+        transform.LookAt(lookPos);
     }
     public void System()
     {

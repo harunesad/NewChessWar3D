@@ -13,11 +13,6 @@ public class MoveUpdate : MonoBehaviour
     Difficulty difficulty;
     GameSave gameSave;
     public Difficulty.Type piecetype;
-    //public enum Piecetype
-    //{
-    //    White,
-    //    Black
-    //}
     void Start()
     {
         Invoke("ParentEmpty", 1);
