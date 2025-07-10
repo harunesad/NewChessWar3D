@@ -43,7 +43,7 @@ public class GameSave : MonoBehaviour
             {
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
                 {
-                    sv.starCounts[(difficulty.difficult / 0) - 1] = 3;
+                    sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
                 }
                 starCount = 3;
             }
