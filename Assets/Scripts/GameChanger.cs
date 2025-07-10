@@ -10,7 +10,7 @@ public class GameChanger : MonoBehaviour
     void Start()
     {
         difficulty = FindAnyObjectByType<Difficulty>();
-        if (difficulty.type == Difficulty.Type.White)
+        if (PlayerPrefs.GetString("Type") == "White")
         {
             chessAIGameManager.blackAIThinkDepth = difficulty.difficult;
             chessAIGameManager.blackAIThinkTime = difficulty.difficult / 2;

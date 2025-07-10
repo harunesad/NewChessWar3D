@@ -19,6 +19,8 @@ public class MenuUIManager : MonoBehaviour
     Difficulty difficulty;
     void Start()
     {
+        PlayerPrefs.SetString("Type", "White");
+
         MusicState(music);
 
         PlayBtn.onClick.AddListener(Difficultopen);
@@ -90,25 +92,24 @@ public class MenuUIManager : MonoBehaviour
     {
         MusicState(click);
         difficulty = FindAnyObjectByType<Difficulty>();
-        difficulty.type = Difficulty.Type.White;
-        MessageShow(difficulty.type.ToString());
+        PlayerPrefs.SetString("Type", "White");
         select.anchoredPosition = new Vector3(-25, 0, 0);
     }
     void BlackSelect()
     {
         MusicState(click);
         difficulty = FindAnyObjectByType<Difficulty>();
-        difficulty.type = Difficulty.Type.Black;
-        MessageShow(difficulty.type.ToString());
+        PlayerPrefs.SetString("Type", "Black");
         select.anchoredPosition = new Vector3(25, 0, 0);
     }
     void DifficultSelect(int difficult)
     {
         MusicState(click);
+        difficulty = FindAnyObjectByType<Difficulty>();
         if (JsonSave.jsonSave.sv.unlock[difficult])
         {
-            difficulty.difficult = (difficult + 1) * 4;
-            if (difficulty.type == Difficulty.Type.White)
+            difficulty.difficult = (difficult + 1) * 2;
+            if (PlayerPrefs.GetString("Type") == "White")
             {
                 SceneManager.LoadScene(2);
             }

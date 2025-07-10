@@ -56,19 +56,19 @@ public class GameUIManager : MonoBehaviour
             time = 0;
             if (chessPoints.whitePoints < chessPoints.blackPoints)
             {
-                difficulty.winType = Difficulty.Type.Black;
+                PlayerPrefs.SetString("WinType", "Black");
                 gameSave.ChessSave();
                 GameoverMenuOpen("Black Win");
             }
             else if (chessPoints.whitePoints == chessPoints.blackPoints)
             {
-                difficulty.winType = Difficulty.Type.Draw;
+                PlayerPrefs.SetString("WinType", "Draw");
                 gameSave.ChessSave();
                 GameoverMenuOpen("Draw");
             }
             else
             {
-                difficulty.winType = Difficulty.Type.White;
+                PlayerPrefs.SetString("WinType", "White");
                 gameSave.ChessSave();
                 GameoverMenuOpen("White Win");
             }

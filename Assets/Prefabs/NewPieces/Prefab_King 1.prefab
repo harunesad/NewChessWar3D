@@ -900,3 +900,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   character: {fileID: 184517401518007042}
+  piecePoint: 0
+  white: 0
