@@ -46,18 +46,20 @@ public class MoveUpdate : MonoBehaviour
     }
     public void PieceMove()
     {
-        transform.DOMoveY(transform.position.y + 1, .2f).SetEase(Ease.Linear).OnComplete(() =>
+        transform.DOMoveY(transform.position.y + 1, .15f).SetEase(Ease.Linear).OnComplete(() =>
         {
             Vector3 newPos = new Vector3(parent.position.x, transform.position.y, parent.position.z);
             audioManager.Move();
-            transform.DOMove(newPos, .75f).SetEase(Ease.Linear).OnComplete(() =>
+            transform.DOMove(newPos, .4f).SetEase(Ease.Linear).OnComplete(() =>
             {
-                transform.DOMoveY(transform.position.y - 1, .2f).SetEase(Ease.Linear).OnComplete(() =>
+                transform.DOMoveY(transform.position.y - 1, .15f).SetEase(Ease.Linear).OnComplete(() =>
                 {
                     if (FindAnyObjectByType<GameUIManager>().gameFinish)
                     {
                         if (white == true)
                         {
+                            Debug.Log(white);
+                            transform.parent = audioManager.transform;
                             PlayerPrefs.SetString("WinType", "White");
                             gameSave.ChessSave();
                             FindAnyObjectByType<GameUIManager>().GameoverMenuOpen("White Win");
