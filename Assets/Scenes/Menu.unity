@@ -795,7 +795,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46138ceb38a92054a915affc058beb0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  difficulty: {fileID: 1533265216}
   PlayBtn: {fileID: 762258322}
   TowerBtn: {fileID: 1076106608}
   shopBtn: {fileID: 1480124686}
@@ -2234,6 +2233,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -2348,6 +2362,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: STRONG WARRIOR
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -2532,6 +2551,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -2646,6 +2680,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: CASTLE GUARD
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -3066,6 +3105,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -3180,6 +3234,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: DARK KNIGHT
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -3861,6 +3920,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -3975,6 +4049,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: EVIL WARLORD
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -4253,6 +4332,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -4367,6 +4461,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: CHESS MASTER
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -5324,8 +5423,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   difficult: 0
-  type: 0
-  winType: 0
 --- !u!4 &1533265217
 Transform:
   m_ObjectHideFlags: 0
@@ -5995,6 +6092,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -6109,6 +6221,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: BATTLE LEADER
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -6468,6 +6585,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -6582,6 +6714,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: ENEMY KING
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -6885,6 +7022,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -7000,6 +7152,11 @@ PrefabInstance:
       propertyPath: m_text
       value: BRAVE SOLDIER
       objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Name
@@ -7047,6 +7204,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
       objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -7162,6 +7334,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: SWORD FIGHTER
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
@@ -7357,6 +7534,21 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2613531426434799262, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999013718411579025, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_Color.a
+      value: 0.34901962
+      objectReference: {fileID: 0}
     - target: {fileID: 5319596705582367706, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
       propertyPath: m_Pivot.x
@@ -7466,6 +7658,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8265817042254002919, guid: 4cc030da317d7d44d9ac03984bc5e09d,
+        type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8610550467599519664, guid: 4cc030da317d7d44d9ac03984bc5e09d,
         type: 3}
