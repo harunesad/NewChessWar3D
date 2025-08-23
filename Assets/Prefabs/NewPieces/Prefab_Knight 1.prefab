@@ -381,10 +381,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   offset: {x: 0, y: 0, z: 0}
   m_RendererOverride: {fileID: 2781376726713068501}
-  m_WhiteMaterial: {fileID: 4637519048616892231, guid: 1f469a97226961f43ba0917255b722f2,
-    type: 3}
-  m_BlackMaterial: {fileID: -8352757202894166260, guid: 9970061ec52abfb4fa5be42f03ade844,
-    type: 3}
+  m_WhiteMaterial: {fileID: 2100000, guid: d6b3aa46cf891ed468c61922910c2794, type: 2}
+  m_BlackMaterial: {fileID: 2100000, guid: 0cb9490a84e283b43add05308d230972, type: 2}
   Moved:
     m_PersistentCalls:
       m_Calls:
@@ -739,7 +737,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   character: {fileID: 3048132212734647942}
   piecePoint: 30
-  piecetype: 0
+  white: 0
+  whiteMat: {fileID: 2100000, guid: d6b3aa46cf891ed468c61922910c2794, type: 2}
+  blackMat: {fileID: 2100000, guid: 0cb9490a84e283b43add05308d230972, type: 2}
 --- !u!1 &1996642209097702172
 GameObject:
   m_ObjectHideFlags: 0
