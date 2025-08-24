@@ -109,14 +109,16 @@ public class MenuUIManager : MonoBehaviour
         if (JsonSave.jsonSave.sv.unlock[difficult])
         {
             difficulty.difficult = (difficult + 1) * 2;
-            if (PlayerPrefs.GetString("Type") == "White")
-            {
-                SceneManager.LoadScene(2);
-            }
-            else
-            {
-                SceneManager.LoadScene(1);
-            }
+            AdsManager adsManager = FindAnyObjectByType<AdsManager>();
+            adsManager.ShowInterstitialAd();
+            //if (PlayerPrefs.GetString("Type") == "White")
+            //{
+            //    SceneManager.LoadScene(2);
+            //}
+            //else
+            //{
+            //    SceneManager.LoadScene(1);
+            //}
         }
         else
         {

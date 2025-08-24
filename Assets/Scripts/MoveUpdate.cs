@@ -21,32 +21,6 @@ public class MoveUpdate : MonoBehaviour
         audioManager = FindAnyObjectByType<AudioManager>();
         gameSave = FindAnyObjectByType<GameSave>();
 
-        //if (character.GetComponent<MeshRenderer>().materials[0].color.r > .95f)
-        //{
-        //    white = true;
-        //    chessPoints.whitePoints += piecePoint;
-        //    if (!chessPoints.rookWhite1 && transform.name.Contains("Rook"))
-        //    {
-        //        chessPoints.rookWhite1 = this;
-        //    }
-        //    else if (chessPoints.rookWhite1 && transform.name.Contains("Rook"))
-        //    {
-        //        chessPoints.rookWhite2 = this;
-        //    }
-        //}
-        //else
-        //{
-        //    white = false;
-        //    chessPoints.blackPoints += piecePoint;
-        //    if (!chessPoints.rookBlack1 && transform.name.Contains("Rook"))
-        //    {
-        //        chessPoints.rookBlack1 = this;
-        //    }
-        //    else if (chessPoints.rookBlack1 && transform.name.Contains("Rook"))
-        //    {
-        //        chessPoints.rookBlack2 = this;
-        //    }
-        //}
         if (character.GetComponent<MeshRenderer>().materials[0].color == whiteMat.color)
         {
             white = true;
