@@ -13,7 +13,7 @@ public class AdsManager : MonoBehaviour
     }
     #region IntersitialAd
 #if UNITY_ANDROID
-    private string adUnitId = "ca-app-pub-4860105960035905/8858418012";
+    private string adUnitId = "ca-app-pub-3940256099942544/1033173712";
 #endif
     public void LoadInterstitialAd()
     {
@@ -49,13 +49,13 @@ public class AdsManager : MonoBehaviour
         else
         {
             Debug.LogError("Not ready yet");
-            if (PlayerPrefs.GetString("Type") == "White")
+            if (PlayerPrefs.GetInt("Scene") == 0)
             {
-                SceneManager.LoadScene(2);
+                SceneManager.LoadScene(0);
             }
             else
             {
-                SceneManager.LoadScene(1);
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
             LoadInterstitialAd();
         }
@@ -65,26 +65,26 @@ public class AdsManager : MonoBehaviour
         interstitialAd.OnAdFullScreenContentClosed += () =>
         {
             Debug.Log("Full screen content closed.");
-            if (PlayerPrefs.GetString("Type") == "White")
+            if (PlayerPrefs.GetInt("Scene") == 0)
             {
-                SceneManager.LoadScene(2);
+                SceneManager.LoadScene(0);
             }
             else
             {
-                SceneManager.LoadScene(1);
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
             LoadInterstitialAd();
         };
         interstitialAd.OnAdFullScreenContentFailed += (AdError adError) =>
         {
             Debug.LogError("Failed" + "with error: " + adError);
-            if (PlayerPrefs.GetString("Type") == "White")
+            if (PlayerPrefs.GetInt("Scene") == 0)
             {
-                SceneManager.LoadScene(2);
+                SceneManager.LoadScene(0);
             }
             else
             {
-                SceneManager.LoadScene(1);
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
             LoadInterstitialAd();
         };

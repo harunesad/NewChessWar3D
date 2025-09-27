@@ -102,7 +102,10 @@ public class GameUIManager : MonoBehaviour
             click.Play();
         }
         Time.timeScale = 1;
-        SceneManager.LoadScene(0);
+        PlayerPrefs.SetInt("Scene", 0);
+        AdsManager adsManager = FindAnyObjectByType<AdsManager>();
+        adsManager.ShowInterstitialAd();
+        //SceneManager.LoadScene(0);
     }
     void RestartGame()
     {
@@ -111,7 +114,10 @@ public class GameUIManager : MonoBehaviour
             click.Play();
         }
         Time.timeScale = 1;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        PlayerPrefs.SetInt("Scene", 1);
+        AdsManager adsManager = FindAnyObjectByType<AdsManager>();
+        adsManager.ShowInterstitialAd();
+        //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
     void SoundfOnOff()
     {
