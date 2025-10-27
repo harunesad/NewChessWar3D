@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +9,14 @@ public class JsonSave : MonoBehaviour
     [SerializeField] List<Stars> stars;
     [SerializeField] List<int> newStarCounts;
     [SerializeField] List<bool> newUnlock;
+    [SerializeField] Text coinText;
+    ShopManager shopManager;
     public static JsonSave jsonSave;
     public SaveVariables sv;
     private void Awake()
     {
         jsonSave = this;
+        shopManager = FindAnyObjectByType<ShopManager>();
     }
     void Start()
     {
@@ -27,9 +30,11 @@ public class JsonSave : MonoBehaviour
                     stars[i].star[j].color = new Color(1, 1, 1, 1);
                 }
             }
+            shopManager.items = sv.items;
         }
         else
         {
+            sv.items = shopManager.items;
             sv.starCounts = newStarCounts;
             sv.unlock = newUnlock;
             sv.save = true;
@@ -46,6 +51,13 @@ public class JsonSave : MonoBehaviour
                 difficult.colors = colors;
             }
         }
+        CoinUpdate();
+    }
+    public void CoinUpdate()
+    {
+        CultureInfo turkceKultur = new CultureInfo("tr-TR");
+        string formatToCoin = sv.coin.ToString("N0", turkceKultur);
+        coinText.text = formatToCoin;
     }
 }
 [Serializable]

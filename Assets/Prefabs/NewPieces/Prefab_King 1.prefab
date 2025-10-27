@@ -897,6 +897,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f2236fd28336d44f80c328c75247958, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  materialChange:
+  - {fileID: 7983890984550080315}
   character: {fileID: 184517401518007042}
   piecePoint: 0
   white: 0

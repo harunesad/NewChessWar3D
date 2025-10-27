@@ -7,6 +7,10 @@ using UnityEngine;
 public class SaveVariables
 {
     public bool save;
+    public int coin;
+    public int adsCoin;
+    public string lastAdsResetDate;
     public List<int> starCounts;
     public List<bool> unlock;
+    public List<Items> items;
 }

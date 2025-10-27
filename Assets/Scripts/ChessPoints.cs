@@ -8,6 +8,7 @@ public class ChessPoints : MonoBehaviour
     public int blackPoints, whitePoints;
     public Text whitePointText, blackPointText;
     public MoveUpdate rookWhite1, rookWhite2, rookBlack1, rookBlack2;
+    public List<Color> piecesColors;
     void Start()
     {
         //whitePointText.text = "White Points: " + whitePoints;

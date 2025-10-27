@@ -1,13 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GameSave : MonoBehaviour
 {
     [SerializeField] GameUIManager gameUIManager;
-    [SerializeField] SaveVariables sv;
+    [SerializeField] TextMeshProUGUI coinText;
     [SerializeField] List<Image> stars;
+    public SaveVariables sv;
     Difficulty difficulty;
     int starCount;
     void Start()
@@ -28,6 +31,7 @@ public class GameSave : MonoBehaviour
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 1)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 1;
+                    sv.coin += ((difficulty.difficult / 2) * 1 * 10);
                 }
                 starCount = 1;
             }
@@ -36,6 +40,7 @@ public class GameSave : MonoBehaviour
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 2)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 2;
+                    sv.coin += ((difficulty.difficult / 2) * 2 * 10);
                 }
                 starCount = 2;
             }
@@ -44,15 +49,23 @@ public class GameSave : MonoBehaviour
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
+                    sv.coin += ((difficulty.difficult / 2) * 3 * 10);
                 }
                 starCount = 3;
             }
-            Debug.Log(starCount);
+
+            SaveManager.Save(sv);
             for (int i = 0; i < starCount; i++)
             {
-                stars[i].color= new Color(1, 1, 1, 1); ;
+                stars[i].color = new Color(1, 1, 1, 1); ;
             }
-            SaveManager.Save(sv);
         }
+        CoinUpdate();
+    }
+    void CoinUpdate()
+    {
+        CultureInfo turkceKultur = new CultureInfo("tr-TR");
+        string formatToCoin = sv.coin.ToString("N0", turkceKultur);
+        coinText.text = formatToCoin;
     }
 }

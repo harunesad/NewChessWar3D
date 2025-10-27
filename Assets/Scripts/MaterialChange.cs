@@ -5,7 +5,7 @@ using UnityEngine;
 public class MaterialChange : MonoBehaviour
 {
     [SerializeField] MeshRenderer newRend;
-    void Start()
+    public void Change()
     {
         Material firstMaterial = newRend.materials[0];
         GetComponent<MeshRenderer>().material = firstMaterial;

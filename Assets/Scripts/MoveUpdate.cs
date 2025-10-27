@@ -5,6 +5,7 @@ using DG.Tweening;
 
 public class MoveUpdate : MonoBehaviour
 {
+    [SerializeField] List<MaterialChange> materialChange;
     [SerializeField] GameObject character;
     [SerializeField] int piecePoint;
     [SerializeField] bool white;
@@ -33,6 +34,13 @@ public class MoveUpdate : MonoBehaviour
             {
                 chessPoints.rookWhite2 = this;
             }
+            for (int i = 0; i < gameSave.sv.items.Count; i++)
+            {
+                if (gameSave.sv.items[i].white && gameSave.sv.items[i].selected)
+                {
+                    character.GetComponent<MeshRenderer>().materials[0].color = chessPoints.piecesColors[i];
+                }
+            }
         }
         else
         {
@@ -46,9 +54,20 @@ public class MoveUpdate : MonoBehaviour
             {
                 chessPoints.rookBlack2 = this;
             }
+            for (int i = 0; i < gameSave.sv.items.Count; i++)
+            {
+                if (!gameSave.sv.items[i].white && gameSave.sv.items[i].selected)
+                {
+                    character.GetComponent<MeshRenderer>().materials[0].color = chessPoints.piecesColors[i];
+                }
+            }
         }
         chessPoints.whitePointText.text = "White Points: " + chessPoints.whitePoints;
         chessPoints.blackPointText.text = "Black Points: " + chessPoints.blackPoints;
+        for (int i = 0; i < materialChange.Count; i++)
+        {
+            materialChange[i].Change();
+        }
     }
 
     // Update is called once per frame
