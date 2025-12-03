@@ -6,10 +6,11 @@ using GoogleMobileAds.Api;
 public class RewardedAdsManager : MonoBehaviour
 {
     [Header("AdMob Configuration")]
-    [SerializeField] private string rewardedAdUnitId = "ca-app-pub-4860105960035905/8122020873"; // Test ID
+    [SerializeField] private string rewardedAdUnitId = "ca-app-pub-3940256099942544/5224354917";
     
     private RewardedAd rewardedAd;
     private bool isAdLoaded = false;
+    private bool isLoading = false;
     
     // Events
     public System.Action OnRewardEarned;
@@ -25,20 +26,27 @@ public class RewardedAdsManager : MonoBehaviour
         });
     }
     
-    void Update()
+    /*void Update()
     {
         // Optional: Check if ad is ready periodically
         if (!isAdLoaded && rewardedAd == null)
         {
             LoadRewardedAd();
         }
-    }
+    }*/
     
     /// <summary>
     /// Loads a rewarded ad
     /// </summary>
     public void LoadRewardedAd()
     {
+        // Prevent multiple simultaneous load requests
+        if (isLoading)
+        {
+            Debug.Log("Ad is already loading, skipping duplicate request");
+            return;
+        }
+        
         // Clean up the old ad before creating a new one
         if (rewardedAd != null)
         {
@@ -46,6 +54,8 @@ public class RewardedAdsManager : MonoBehaviour
             rewardedAd = null;
         }
         
+        isLoading = true;
+        isAdLoaded = false;
         Debug.Log("Loading rewarded ad...");
         
         // Create our request used to load the ad
@@ -54,6 +64,8 @@ public class RewardedAdsManager : MonoBehaviour
         // Send the request to load the ad
         RewardedAd.Load(rewardedAdUnitId, adRequest, (RewardedAd ad, LoadAdError error) =>
         {
+            isLoading = false;
+            
             // If error is not null, the load request failed
             if (error != null || ad == null)
             {
@@ -85,8 +97,7 @@ public class RewardedAdsManager : MonoBehaviour
                 Debug.Log($"Rewarded ad completed! Reward: {reward.Amount} {reward.Type}");
                 OnRewardEarned?.Invoke();
                 
-                // Reload ad for next time
-                LoadRewardedAd();
+                // Don't reload here - OnAdFullScreenContentClosed will handle it
             });
         }
         else
@@ -94,8 +105,11 @@ public class RewardedAdsManager : MonoBehaviour
             Debug.LogWarning("Rewarded ad is not ready yet");
             OnAdFailedToShow?.Invoke();
             
-            // Try to load a new ad
-            LoadRewardedAd();
+            // Try to load a new ad if not already loading
+            if (!isAdLoaded)
+            {
+                LoadRewardedAd();
+            }
         }
     }
     
@@ -140,7 +154,11 @@ public class RewardedAdsManager : MonoBehaviour
         ad.OnAdFullScreenContentClosed += () =>
         {
             Debug.Log("Rewarded ad full screen content closed");
-            LoadRewardedAd(); // Reload ad for next time
+            // Clean up the old ad
+            rewardedAd = null;
+            isAdLoaded = false;
+            // Reload ad for next time after a short delay
+            StartCoroutine(ReloadAdAfterDelay(0.5f));
         };
         
         // Raised when the ad failed to open full screen content
@@ -148,8 +166,21 @@ public class RewardedAdsManager : MonoBehaviour
         {
             Debug.LogError("Rewarded ad failed to open full screen content: " + error);
             OnAdFailedToShow?.Invoke();
-            LoadRewardedAd(); // Try to load a new ad
+            // Clean up the failed ad
+            rewardedAd = null;
+            isAdLoaded = false;
+            // Try to load a new ad after a short delay
+            StartCoroutine(ReloadAdAfterDelay(1f));
         };
+    }
+    
+    /// <summary>
+    /// Reloads ad after a delay to prevent too frequent requests
+    /// </summary>
+    private IEnumerator ReloadAdAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        LoadRewardedAd();
     }
     
     void OnDestroy()
