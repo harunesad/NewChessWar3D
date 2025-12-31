@@ -9,14 +9,21 @@ public class GameSave : MonoBehaviour
 {
     [SerializeField] GameUIManager gameUIManager;
     [SerializeField] TextMeshProUGUI coinText;
+    [SerializeField] Text healthText;
     [SerializeField] List<Image> stars;
     public SaveVariables sv;
+    public static GameSave gameSave;
     Difficulty difficulty;
     int starCount;
+    void Awake()
+    {
+        gameSave = this;
+    }
     void Start()
     {
         sv = SaveManager.Load();
         difficulty = FindAnyObjectByType<Difficulty>();
+        HealthUpdate();
     }
     public void ChessSave()
     {
@@ -67,5 +74,10 @@ public class GameSave : MonoBehaviour
         CultureInfo turkceKultur = new CultureInfo("tr-TR");
         string formatToCoin = sv.coin.ToString("N0", turkceKultur);
         coinText.text = formatToCoin;
+    }
+    public void HealthUpdate()
+    {
+        Debug.Log(sv.health + "" + healthText.text);
+        healthText.text = sv.health.ToString();
     }
 }

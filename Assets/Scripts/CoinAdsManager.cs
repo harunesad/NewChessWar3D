@@ -10,6 +10,29 @@ public class CoinAdsManager : MonoBehaviour
     [SerializeField] RewardedAdsManager rewardedAdsManager;
     [SerializeField] MenuUIManager menuUIManager;
     JsonSave jsonSave;
+    
+    // Store current event handlers to properly unsubscribe
+    private System.Action currentRewardHandler;
+    private System.Action currentFailureHandler;
+    
+    private void CleanupEventHandlers()
+    {
+        if (rewardedAdsManager != null)
+        {
+            if (currentRewardHandler != null)
+            {
+                rewardedAdsManager.OnRewardEarned -= currentRewardHandler;
+                currentRewardHandler = null;
+            }
+            if (currentFailureHandler != null)
+            {
+                rewardedAdsManager.OnAdFailedToShow -= currentFailureHandler;
+                currentFailureHandler = null;
+            }
+            rewardedAdsManager.OnAdClosed -= CleanupEventHandlers;
+        }
+    }
+    private int currentAdIndex = -1;
     private void Awake()
     {
         jsonSave = FindAnyObjectByType<JsonSave>();
@@ -66,26 +89,45 @@ public class CoinAdsManager : MonoBehaviour
         // Show rewarded ad first
         if (rewardedAdsManager != null && rewardedAdsManager.IsRewardedAdReady())
         {
-            // Clear any existing listeners first
-            rewardedAdsManager.OnRewardEarned = null;
-            rewardedAdsManager.OnAdFailedToShow = null;
+            // Unsubscribe from previous events to prevent duplicate calls
+            CleanupEventHandlers();
             
-            // Subscribe to reward earned event
-            rewardedAdsManager.OnRewardEarned += () => OnRewardEarned(index);
-            rewardedAdsManager.OnAdFailedToShow += () => OnAdFailed();
+            // Store the current index
+            currentAdIndex = index;
+            
+            // Create new handlers
+            currentRewardHandler = () => OnRewardEarned(currentAdIndex);
+            currentFailureHandler = OnAdFailed;
+            
+            // Subscribe to events
+            rewardedAdsManager.OnRewardEarned += currentRewardHandler;
+            rewardedAdsManager.OnAdFailedToShow += currentFailureHandler;
+            rewardedAdsManager.OnAdClosed += CleanupEventHandlers;
             
             // Show the rewarded ad
             rewardedAdsManager.ShowRewardedAd();
         }
         else
         {
-            menuUIManager.SendMessage("Rewarded ad is not ready yet");
+            if (menuUIManager != null)
+            {
+                menuUIManager.SendMessage("Rewarded ad is not ready yet. Please wait...");
+            }
             Debug.LogWarning("Rewarded ad is not ready yet");
+            
+            // Try to load the ad if it's not ready
+            if (rewardedAdsManager != null)
+            {
+                rewardedAdsManager.LoadRewardedAd();
+            }
         }
     }
     
     private void OnRewardEarned(int index)
     {
+        // Unsubscribe to prevent multiple calls
+        CleanupEventHandlers();
+        
         // Get coin amount from TextMeshPro text
         int coinAmount = GetCoinAmountFromText(index);
         
@@ -95,12 +137,23 @@ public class CoinAdsManager : MonoBehaviour
         SaveManager.Save(jsonSave.sv);
         UpdateUI();
         jsonSave.CoinUpdate();
+        
+        Debug.Log($"✓✓✓ COINS ADDED - Reward earned: {coinAmount} coins for ad index {index}");
+        Debug.Log($"✓✓✓ Total coins after reward: {jsonSave.sv.coin}, Ads watched today: {jsonSave.sv.adsCoin}");
+        currentAdIndex = -1;
     }
     
     private void OnAdFailed()
     {
-        menuUIManager.SendMessage("Rewarded ad failed to show");
+        // Unsubscribe to prevent multiple calls
+        CleanupEventHandlers();
+        
+        if (menuUIManager != null)
+        {
+            menuUIManager.SendMessage("Rewarded ad failed to show. Please try again.");
+        }
         Debug.LogWarning("Rewarded ad failed to show");
+        currentAdIndex = -1;
     }
     
     private int GetCoinAmountFromText(int index)

@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using ChessEngine.Game.Events;
+using DG.Tweening;
 
 namespace ChessEngine.Game
 {
@@ -24,6 +25,10 @@ namespace ChessEngine.Game
         [Header("Settings - Positioning")]
         [Tooltip("An offset to apply to this pieces' position.")]
         public Vector3 offset;
+        [Tooltip("Duration for movement animation in seconds.")]
+        public float moveDuration = 0.4f;
+        [Tooltip("Whether to animate the initial position (false = instant, true = animated).")]
+        [SerializeField] bool animateInitialPosition = false;
 
         [Header("Settings - Materials")]
         [Tooltip("(Optional) An editor set reference to the Renderer for this chess piece.")]
@@ -64,6 +69,9 @@ namespace ChessEngine.Game
         public Quaternion DefaultLocalRotation { get; set; }
         #endregion
 
+        // Private field(s).
+        private bool m_IsInitialized = false;
+
         // Unity callback(s).
         #region Unity Callbacks
         void Awake()
@@ -84,6 +92,16 @@ namespace ChessEngine.Game
 
         void OnDestroy()
         {
+            // Kill any active tweens on this transform.
+            transform.DOKill();
+
+            // Find AudioManager and play hit sound.
+            AudioManager audioManager = FindAnyObjectByType<AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.Hit();
+            }
+
             // Unsubscribe from piece events.
             UnsubscribeFromPieceEvents();
 
@@ -107,8 +125,11 @@ namespace ChessEngine.Game
             // Initialize renderer related stuff.
             UpdateVisuals();
 
-            // Update initial position for the chess piece.
-            UpdatePosition();
+            // Update initial position for the chess piece (without animation).
+            UpdatePosition(false);
+
+            // Mark as initialized.
+            m_IsInitialized = true;
 
             // Subscribe to 'Piece' events.
             SubscribeToPieceEvents();
@@ -137,13 +158,38 @@ namespace ChessEngine.Game
         #endregion
         #region Positioning
         /// <summary>Positions the chess piece appropriately on the chess table.</summary>
-        public void UpdatePosition()
+        /// <param name="animate">Whether to animate the movement. If false, position is set instantly.</param>
+        public void UpdatePosition(bool animate = true)
         {
-            // Set the local position of the piece.
-            transform.localPosition = VisualTable.GetVisualTile(Piece.Tile).GetLocalPosition(VisualTable) + offset;
+            // Calculate target position.
+            Vector3 targetPosition = VisualTable.GetVisualTile(Piece.Tile).GetLocalPosition(VisualTable) + offset;
 
-            // Invoke the 'PositionUpdated' Unity event.
-            PositionUpdated?.Invoke(this);
+            // If not initialized yet or animation is disabled, set position instantly.
+            if (!m_IsInitialized || !animate)
+            {
+                transform.localPosition = targetPosition;
+                PositionUpdated?.Invoke(this);
+                return;
+            }
+
+            // Kill any existing movement tweens.
+            transform.DOKill();
+
+            // Find AudioManager and play move sound.
+            AudioManager audioManager = FindAnyObjectByType<AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.Move();
+            }
+
+            // Animate movement using DOTween.
+            transform.DOLocalMove(targetPosition, moveDuration)
+                .SetEase(Ease.InOutQuad)
+                .OnComplete(() =>
+                {
+                    // Invoke the 'PositionUpdated' Unity event.
+                    PositionUpdated?.Invoke(this);
+                });
         }
 
         /// <summary>Resets the local rotation of the chess piece to 'DefaultLocalRotation'.</summary>
@@ -226,8 +272,8 @@ namespace ChessEngine.Game
         /// <param name="pPostCastleRookTile">The TileIndex of the rook after castling.</param>
         void OnRookCastled(ChessPiece pKing, TileIndex pPreCastleRookTile, TileIndex pPostCastleRookTile)
         {
-            // Update the pieces position.
-            UpdatePosition();
+            // Update the pieces position with animation.
+            UpdatePosition(true);
         }
         #endregion
     }

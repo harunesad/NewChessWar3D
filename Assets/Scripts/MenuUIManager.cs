@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class MenuUIManager : MonoBehaviour
 {
     [SerializeField] Button playBtn, towerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
-        exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn;
+        exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn;
     [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu;
     [SerializeField] List<Button> difficultsBtn;
     [SerializeField] RectTransform select;
@@ -26,6 +26,7 @@ public class MenuUIManager : MonoBehaviour
 
         coinAdsBtn.onClick.AddListener(CoinAdsMenuOpen);
         infoBtn.onClick.AddListener(InfoMenuOpen);
+        healthBtn.onClick.AddListener(HealthUpdate);
         playBtn.onClick.AddListener(delegate { MenuOpen(difficultMenu); });
         shopBtn.onClick.AddListener(delegate { MenuOpen(shopMenu); });
         towerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
@@ -46,6 +47,58 @@ public class MenuUIManager : MonoBehaviour
         exitBtn.onClick.AddListener(ExitGame);
         closeCoinAdsPanelBtn.onClick.AddListener(CoinAdsMenuClose);
         closeInfoPanelBtn.onClick.AddListener(InfoMenuClose);
+
+        // Start Health Button Pulse
+        StartPulse(healthBtn.transform.parent);
+    }
+    void StartPulse(Transform target)
+    {
+        target.DOKill();
+        Vector3 baseScale = target.localScale;
+        target.DOScale(baseScale * 1.1f, 0.8f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+    }
+    void HealthUpdate()
+    {
+        if (RewardedAdsManager.Instance != null && RewardedAdsManager.Instance.IsRewardedAdReady())
+        {
+            // Subscribe to events
+            RewardedAdsManager.Instance.OnRewardEarned += GiveHealthReward;
+            RewardedAdsManager.Instance.OnAdClosed += OnAdClosedCleanup;
+            
+            RewardedAdsManager.Instance.ShowRewardedAd();
+        }
+        else
+        {
+            MessageShow("Ad Not Ready");
+            // If ad is not ready, try to load one for next time
+            if (RewardedAdsManager.Instance != null)
+            {
+                RewardedAdsManager.Instance.LoadRewardedAd();
+            }
+        }
+    }
+
+    void GiveHealthReward()
+    {
+        JsonSave.jsonSave.sv.health++;
+        SaveManager.Save(JsonSave.jsonSave.sv);
+        JsonSave.jsonSave.HealthUpdate();
+        
+        // Cleanup after reward (also done in OnAdClosedCleanup, but safe to do here)
+        // We don't unsubscribe immediately here to avoid interfering with OnAdClosed if it fires after?
+        // Actually, let's just let OnAdClosedCleanup handle the unsubscription to be sure, 
+        // OR unsubscribe here to prevent double reward if something weird happens.
+        // But OnAdClosed is always called. Let's strictly separate or just use OnAdClosedCleanup.
+        // However, I want to ensure reward is given.
+    }
+
+    void OnAdClosedCleanup()
+    {
+        if (RewardedAdsManager.Instance != null)
+        {
+            RewardedAdsManager.Instance.OnRewardEarned -= GiveHealthReward;
+            RewardedAdsManager.Instance.OnAdClosed -= OnAdClosedCleanup;
+        }
     }
     void MusicState(AudioSource source)
     {

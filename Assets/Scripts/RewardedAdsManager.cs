@@ -12,10 +12,31 @@ public class RewardedAdsManager : MonoBehaviour
     private bool isAdLoaded = false;
     private bool isLoading = false;
     
+    // Singleton instance
+    public static RewardedAdsManager Instance { get; private set; }
+    
     // Events
     public System.Action OnRewardEarned;
     public System.Action OnAdFailedToLoad;
     public System.Action OnAdFailedToShow;
+    public System.Action OnAdOpened;
+    public System.Action OnAdClosed;
+    
+    void Awake()
+    {
+        // Singleton pattern implementation
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            // If another instance already exists, destroy this duplicate
+            Destroy(gameObject);
+            return;
+        }
+    }
     
     void Start()
     {
@@ -69,9 +90,14 @@ public class RewardedAdsManager : MonoBehaviour
             // If error is not null, the load request failed
             if (error != null || ad == null)
             {
-                Debug.LogError("Rewarded ad failed to load: " + error);
+                string errorDetails = error != null 
+                    ? $"Message: {error.GetMessage()}, Code: {error.GetCode()}, Domain: {error.GetDomain()}, Cause: {error.GetCause()}" 
+                    : "Ad is null";
+                Debug.LogError($"Rewarded ad failed to load: {errorDetails}");
                 isAdLoaded = false;
                 OnAdFailedToLoad?.Invoke();
+                // Retry loading after a delay
+                StartCoroutine(ReloadAdAfterDelay(3f));
                 return;
             }
             
@@ -92,21 +118,39 @@ public class RewardedAdsManager : MonoBehaviour
         if (rewardedAd != null && rewardedAd.CanShowAd())
         {
             Debug.Log("Showing rewarded ad");
-            rewardedAd.Show((Reward reward) =>
+            try
             {
-                Debug.Log($"Rewarded ad completed! Reward: {reward.Amount} {reward.Type}");
-                OnRewardEarned?.Invoke();
-                
-                // Don't reload here - OnAdFullScreenContentClosed will handle it
-            });
+                rewardedAd.Show((Reward reward) =>
+                {
+                    Debug.Log($"✓✓✓ REWARD EARNED - Rewarded ad completed! Reward: {reward.Amount} {reward.Type}");
+                    Debug.Log("✓✓✓ Invoking OnRewardEarned callback...");
+                    OnRewardEarned?.Invoke();
+                    Debug.Log("✓✓✓ OnRewardEarned callback completed");
+                    
+                    // Don't reload here - OnAdFullScreenContentClosed will handle it
+                });
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Exception while showing rewarded ad: {e.Message}");
+                OnAdFailedToShow?.Invoke();
+                // Clean up and reload
+                if (rewardedAd != null)
+                {
+                    rewardedAd.Destroy();
+                    rewardedAd = null;
+                }
+                isAdLoaded = false;
+                StartCoroutine(ReloadAdAfterDelay(1f));
+            }
         }
         else
         {
-            Debug.LogWarning("Rewarded ad is not ready yet");
+            Debug.LogWarning($"Rewarded ad is not ready yet. rewardedAd: {rewardedAd != null}, CanShowAd: {rewardedAd?.CanShowAd() ?? false}, isAdLoaded: {isAdLoaded}");
             OnAdFailedToShow?.Invoke();
             
             // Try to load a new ad if not already loading
-            if (!isAdLoaded)
+            if (!isLoading && !isAdLoaded)
             {
                 LoadRewardedAd();
             }
@@ -135,7 +179,7 @@ public class RewardedAdsManager : MonoBehaviour
         // Raised when an impression is recorded for an ad
         ad.OnAdImpressionRecorded += () =>
         {
-            Debug.Log("Rewarded ad recorded an impression");
+            Debug.Log("✓✓✓ IMPRESSION RECORDED - Rewarded ad recorded an impression (This is what AdMob counts!)");
         };
         
         // Raised when a click is recorded for an ad
@@ -147,13 +191,16 @@ public class RewardedAdsManager : MonoBehaviour
         // Raised when an ad opened full screen content
         ad.OnAdFullScreenContentOpened += () =>
         {
-            Debug.Log("Rewarded ad full screen content opened");
+            Debug.Log("✓✓✓ AD OPENED - Rewarded ad full screen content opened (User can now see the ad)");
+            OnAdOpened?.Invoke();
         };
         
         // Raised when the ad closed full screen content
         ad.OnAdFullScreenContentClosed += () =>
         {
-            Debug.Log("Rewarded ad full screen content closed");
+            Debug.Log("✓✓✓ AD CLOSED - Rewarded ad full screen content closed");
+            Debug.Log("NOTE: If impression was not recorded, user may have closed ad before completion");
+            OnAdClosed?.Invoke();
             // Clean up the old ad
             rewardedAd = null;
             isAdLoaded = false;
@@ -164,7 +211,7 @@ public class RewardedAdsManager : MonoBehaviour
         // Raised when the ad failed to open full screen content
         ad.OnAdFullScreenContentFailed += (AdError error) =>
         {
-            Debug.LogError("Rewarded ad failed to open full screen content: " + error);
+            Debug.LogError($"Rewarded ad failed to open full screen content: {error.GetMessage()} (Code: {error.GetCode()}, Domain: {error.GetDomain()}, Cause: {error.GetCause()})");
             OnAdFailedToShow?.Invoke();
             // Clean up the failed ad
             rewardedAd = null;

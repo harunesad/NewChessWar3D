@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
 using ChessEngine.Game.Events;
+using DG.Tweening;
 
 namespace ChessEngine.Game
 {
@@ -281,12 +282,13 @@ namespace ChessEngine.Game
                         {
                             // Move the piece.
                             MoveInfo moveInfo = Selected.visualPiece.Piece.Move(pVisualTile.Tile.TileIndex, visualPiece != null ? visualPiece.Piece : null);
+                            float delay = Selected.visualPiece.moveDuration;
 
                             // Reset selection.
                             Deselect();
 
                             // End the turn.
-                            ChessInstance.EndTurn(moveInfo);
+                            DOVirtual.DelayedCall(delay, () => ChessInstance.EndTurn(moveInfo));
                         }
                     }
                 }

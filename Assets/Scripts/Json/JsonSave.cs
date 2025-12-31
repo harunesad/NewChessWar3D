@@ -9,7 +9,7 @@ public class JsonSave : MonoBehaviour
     [SerializeField] List<Stars> stars;
     [SerializeField] List<int> newStarCounts;
     [SerializeField] List<bool> newUnlock;
-    [SerializeField] Text coinText;
+    [SerializeField] Text coinText, healthText;
     ShopManager shopManager;
     public static JsonSave jsonSave;
     public SaveVariables sv;
@@ -52,12 +52,17 @@ public class JsonSave : MonoBehaviour
             }
         }
         CoinUpdate();
+        HealthUpdate();
     }
     public void CoinUpdate()
     {
-        CultureInfo turkceKultur = new CultureInfo("tr-TR");
-        string formatToCoin = sv.coin.ToString("N0", turkceKultur);
+        CultureInfo türkishCulture = new CultureInfo("tr-TR");
+        string formatToCoin = sv.coin.ToString("N0", türkishCulture);
         coinText.text = formatToCoin;
+    }
+    public void HealthUpdate()
+    {
+        healthText.text = sv.health.ToString();
     }
 }
 [Serializable]
