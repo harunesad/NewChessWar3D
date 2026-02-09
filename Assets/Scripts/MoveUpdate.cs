@@ -51,4 +51,17 @@ public class MoveUpdate : MonoBehaviour
             materialChange[i].Change();
         }
     }
+    public void PieceDestroy()
+    {
+        if (white)
+        {
+            chessPoints.whitePoints -= piecePoint;
+        }
+        else
+        {
+            chessPoints.blackPoints -= piecePoint;
+        }
+        chessPoints.whitePointText.text = "White Points: " + chessPoints.whitePoints;
+        chessPoints.blackPointText.text = "Black Points: " + chessPoints.blackPoints;
+    }
 }

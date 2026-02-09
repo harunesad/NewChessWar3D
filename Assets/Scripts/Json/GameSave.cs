@@ -35,28 +35,43 @@ public class GameSave : MonoBehaviour
             }
             if (gameUIManager.time > 0 &&gameUIManager.time <= 300)
             {
+                int fullReward = ((difficulty.difficult / 2) * 1 * 10);
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 1)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 1;
-                    sv.coin += ((difficulty.difficult / 2) * 1 * 10);
+                    sv.coin += fullReward;
+                }
+                else
+                {
+                    sv.coin += fullReward / 10;
                 }
                 starCount = 1;
             }
             else if (gameUIManager.time > 300 && gameUIManager.time <= 600)
             {
+                int fullReward = ((difficulty.difficult / 2) * 2 * 10);
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 2)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 2;
-                    sv.coin += ((difficulty.difficult / 2) * 2 * 10);
+                    sv.coin += fullReward;
+                }
+                else
+                {
+                    sv.coin += fullReward / 10;
                 }
                 starCount = 2;
             }
             else if (gameUIManager.time > 600 && gameUIManager.time <= 900)
             {
+                int fullReward = ((difficulty.difficult / 2) * 3 * 10);
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
-                    sv.coin += ((difficulty.difficult / 2) * 3 * 10);
+                    sv.coin += fullReward;
+                }
+                else
+                {
+                    sv.coin += fullReward / 10;
                 }
                 starCount = 3;
             }

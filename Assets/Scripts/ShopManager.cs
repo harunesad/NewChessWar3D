@@ -29,7 +29,6 @@ public class ShopManager : MonoBehaviour
             {
                 item.GetComponent<Button>().onClick.AddListener(delegate { PieceSelect(j); });
                 item.transform.GetChild(0).gameObject.SetActive(false);
-                item.transform.GetChild(1).gameObject.SetActive(false);
             }
             else
             {
@@ -57,7 +56,7 @@ public class ShopManager : MonoBehaviour
         }
         else
         {
-            menuUIManager.MessageShow("Enough Coin");
+            menuUIManager.MessageShow("Not Enough Coins");
         }
     }
     void PieceSelect(int i)

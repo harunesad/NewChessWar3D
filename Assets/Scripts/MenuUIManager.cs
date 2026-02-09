@@ -11,8 +11,8 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] Button playBtn, towerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
         exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn;
     [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu;
+    [SerializeField] Sprite whiteSelected, whiteUnselected, blackSelected, blackUnselected;
     [SerializeField] List<Button> difficultsBtn;
-    [SerializeField] RectTransform select;
     [SerializeField] TextMeshProUGUI warning;
     [SerializeField] AudioSource music, click;
     [SerializeField] Sprite soundOn, soundOff;
@@ -21,6 +21,8 @@ public class MenuUIManager : MonoBehaviour
     void Start()
     {
         PlayerPrefs.SetString("Type", "White");
+        whiteBtn.image.sprite = whiteSelected;
+        blackBtn.image.sprite = blackUnselected;
 
         MusicState(music);
 
@@ -48,8 +50,9 @@ public class MenuUIManager : MonoBehaviour
         closeCoinAdsPanelBtn.onClick.AddListener(CoinAdsMenuClose);
         closeInfoPanelBtn.onClick.AddListener(InfoMenuClose);
 
-        // Start Health Button Pulse
+        // Start Health Button and CoinAds Button Pulse
         StartPulse(healthBtn.transform.parent);
+        StartPulse(coinAdsBtn.transform.parent);
     }
     void StartPulse(Transform target)
     {
@@ -63,6 +66,7 @@ public class MenuUIManager : MonoBehaviour
         {
             // Subscribe to events
             RewardedAdsManager.Instance.OnRewardEarned += GiveHealthReward;
+            RewardedAdsManager.Instance.OnAdFailedToShow += OnHealthAdFailed;
             RewardedAdsManager.Instance.OnAdClosed += OnAdClosedCleanup;
             
             RewardedAdsManager.Instance.ShowRewardedAd();
@@ -83,13 +87,12 @@ public class MenuUIManager : MonoBehaviour
         JsonSave.jsonSave.sv.health++;
         SaveManager.Save(JsonSave.jsonSave.sv);
         JsonSave.jsonSave.HealthUpdate();
-        
-        // Cleanup after reward (also done in OnAdClosedCleanup, but safe to do here)
-        // We don't unsubscribe immediately here to avoid interfering with OnAdClosed if it fires after?
-        // Actually, let's just let OnAdClosedCleanup handle the unsubscription to be sure, 
-        // OR unsubscribe here to prevent double reward if something weird happens.
-        // But OnAdClosed is always called. Let's strictly separate or just use OnAdClosedCleanup.
-        // However, I want to ensure reward is given.
+    }
+
+    void OnHealthAdFailed()
+    {
+        MessageShow("Ad Failed");
+        Debug.LogWarning("Health ad failed to show");
     }
 
     void OnAdClosedCleanup()
@@ -97,6 +100,7 @@ public class MenuUIManager : MonoBehaviour
         if (RewardedAdsManager.Instance != null)
         {
             RewardedAdsManager.Instance.OnRewardEarned -= GiveHealthReward;
+            RewardedAdsManager.Instance.OnAdFailedToShow -= OnHealthAdFailed;
             RewardedAdsManager.Instance.OnAdClosed -= OnAdClosedCleanup;
         }
     }
@@ -208,14 +212,16 @@ public class MenuUIManager : MonoBehaviour
         MusicState(click);
         difficulty = FindAnyObjectByType<Difficulty>();
         PlayerPrefs.SetString("Type", "White");
-        select.anchoredPosition = new Vector3(-25, 0, 0);
+        whiteBtn.image.sprite = whiteSelected;
+        blackBtn.image.sprite = blackUnselected;
     }
     void BlackSelect()
     {
         MusicState(click);
         difficulty = FindAnyObjectByType<Difficulty>();
         PlayerPrefs.SetString("Type", "Black");
-        select.anchoredPosition = new Vector3(25, 0, 0);
+        blackBtn.image.sprite = blackSelected;
+        whiteBtn.image.sprite = whiteUnselected;
     }
     void DifficultSelect(int difficult)
     {
@@ -301,5 +307,11 @@ public class MenuUIManager : MonoBehaviour
                 warning.GetComponent<CanvasGroup>().DOFade(0, .75f).SetEase(Ease.Linear);
             });
         });
+    }
+
+    void OnDestroy()
+    {
+        // Critical: Clean up ad event subscriptions to prevent memory leaks
+        OnAdClosedCleanup();
     }
 }

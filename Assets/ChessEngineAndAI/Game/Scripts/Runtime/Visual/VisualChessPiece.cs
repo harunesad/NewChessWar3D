@@ -69,8 +69,8 @@ namespace ChessEngine.Game
         public Quaternion DefaultLocalRotation { get; set; }
         #endregion
 
-        // Private field(s).
         private bool m_IsInitialized = false;
+        private bool m_IsAnimating = false;
 
         // Unity callback(s).
         #region Unity Callbacks
@@ -90,10 +90,21 @@ namespace ChessEngine.Game
             DefaultLocalRotation = transform.localRotation;
         }
 
-        void OnDestroy()
+        protected virtual void OnDestroy()
         {
             // Kill any active tweens on this transform.
             transform.DOKill();
+
+            // Eğer animasyon sırasında yok edildiyse sayacı azalt
+            if (m_IsAnimating)
+            {
+                GameUIManager uiManager = FindAnyObjectByType<GameUIManager>();
+                if (uiManager != null)
+                {
+                    uiManager.UnregisterAnimation();
+                }
+                m_IsAnimating = false;
+            }
 
             // Find AudioManager and play hit sound.
             AudioManager audioManager = FindAnyObjectByType<AudioManager>();
@@ -172,6 +183,15 @@ namespace ChessEngine.Game
                 return;
             }
 
+            // Animate movement using DOTween.
+            GameUIManager uiManager = FindAnyObjectByType<GameUIManager>();
+            
+            // Eğer zaten animasyondaysak, DOKill öncesi unregister yapalım
+            if (m_IsAnimating && uiManager != null)
+            {
+                uiManager.UnregisterAnimation();
+            }
+
             // Kill any existing movement tweens.
             transform.DOKill();
 
@@ -182,13 +202,24 @@ namespace ChessEngine.Game
                 audioManager.Move();
             }
 
-            // Animate movement using DOTween.
+            if (uiManager != null)
+            {
+                uiManager.RegisterAnimation();
+                m_IsAnimating = true;
+            }
+
             transform.DOLocalMove(targetPosition, moveDuration)
                 .SetEase(Ease.InOutQuad)
                 .OnComplete(() =>
                 {
                     // Invoke the 'PositionUpdated' Unity event.
                     PositionUpdated?.Invoke(this);
+
+                    if (uiManager != null && m_IsAnimating)
+                    {
+                        m_IsAnimating = false;
+                        uiManager.UnregisterAnimation();
+                    }
                 });
         }
 

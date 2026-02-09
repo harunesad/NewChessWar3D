@@ -9,6 +9,7 @@ public class CoinAdsManager : MonoBehaviour
     [SerializeField] List<CoinAdsManagerUI> coinAdsManagerUI;
     [SerializeField] RewardedAdsManager rewardedAdsManager;
     [SerializeField] MenuUIManager menuUIManager;
+    [SerializeField] List<int> coinAmounts;
     JsonSave jsonSave;
     
     // Store current event handlers to properly unsubscribe
@@ -66,7 +67,7 @@ public class CoinAdsManager : MonoBehaviour
     {
         for (int i = 0; i < jsonSave.sv.adsCoin; i++)
         {
-            coinAdsManagerUI[i].coinAdsBtn.transform.GetChild(1).gameObject.SetActive(true);
+            coinAdsManagerUI[i].coinAdsBtn.transform.GetChild(0).gameObject.SetActive(true);
             coinAdsManagerUI[i].coinAdsBtn.interactable = false;
         }
         if (jsonSave.sv.adsCoin < 6)
@@ -111,7 +112,7 @@ public class CoinAdsManager : MonoBehaviour
         {
             if (menuUIManager != null)
             {
-                menuUIManager.SendMessage("Rewarded ad is not ready yet. Please wait...");
+                menuUIManager.MessageShow("Ad Not Ready");
             }
             Debug.LogWarning("Rewarded ad is not ready yet");
             
@@ -127,10 +128,10 @@ public class CoinAdsManager : MonoBehaviour
     {
         // Unsubscribe to prevent multiple calls
         CleanupEventHandlers();
-        
+
         // Get coin amount from TextMeshPro text
-        int coinAmount = GetCoinAmountFromText(index);
-        
+        //int coinAmount = GetCoinAmountFromText(index);
+        int coinAmount = coinAmounts[index];
         // Increment coins based on TextMeshPro text value
         jsonSave.sv.adsCoin++;
         jsonSave.sv.coin += coinAmount;
@@ -150,7 +151,7 @@ public class CoinAdsManager : MonoBehaviour
         
         if (menuUIManager != null)
         {
-            menuUIManager.SendMessage("Rewarded ad failed to show. Please try again.");
+            menuUIManager.MessageShow("Ad Failed");
         }
         Debug.LogWarning("Rewarded ad failed to show");
         currentAdIndex = -1;

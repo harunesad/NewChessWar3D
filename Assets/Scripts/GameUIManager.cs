@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using static Unity.VisualScripting.Member;
 using ChessEngine.Game.UI;
 using ChessEngine.Game;
+using ChessEngine;
 using DG.Tweening;
 
 public class GameUIManager : MonoBehaviour
@@ -18,7 +19,7 @@ public class GameUIManager : MonoBehaviour
     undoBtn, healthBtn;
     [SerializeField] GameObject resumePanel, gameoverPanel, game;
     [SerializeField] ChessPoints chessPoints;
-    [SerializeField] Sprite soundOn, soundOff;
+    [SerializeField] Sprite soundOn, soundOff, resume, pause;
     [SerializeField] AudioSource click;
     [SerializeField] GameSave gameSave;
     [SerializeField] TurnIndicatorUI turnIndicatorUI;
@@ -28,12 +29,17 @@ public class GameUIManager : MonoBehaviour
     ChessUndoManager chessUndoManager;
     Difficulty difficulty;
     ChessGameManager chessGameManager;
+    string pendingGameOverMessage = "";
+    public int activeAnimations = 0; // Hareket eden taş sayısını takip eder
 
     void Start()
     {
         chessUndoManager = FindAnyObjectByType<ChessUndoManager>();
         difficulty = FindAnyObjectByType<Difficulty>();
         chessGameManager = FindAnyObjectByType<ChessGameManager>();
+        
+        // Oyuncunun rengini PlayerPrefs'ten al
+        turn = PlayerPrefs.GetString("Type", "White");
 
         if (PlayerPrefs.HasKey("Audio"))
         {
@@ -67,6 +73,8 @@ public class GameUIManager : MonoBehaviour
     }
     void Update()
     {
+        if (gameFinish) return;
+
         if (chessGameManager.ChessInstance.turn.ToString() == turn)
         {
             if (!undoBtn.gameObject.activeSelf)
@@ -88,11 +96,16 @@ public class GameUIManager : MonoBehaviour
         if (time < 0)
         {
             time = 0;
+            string winnerColor = "";
+            string resultMessage = "";
+            
             if (chessPoints.whitePoints < chessPoints.blackPoints)
             {
-                PlayerPrefs.SetString("WinType", "Black");
+                winnerColor = "Black";
+                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                PlayerPrefs.SetString("WinType", winnerColor);
                 gameSave.ChessSave();
-                GameoverMenuOpen("Black Win");
+                GameoverMenuOpen(resultMessage);
             }
             else if (chessPoints.whitePoints == chessPoints.blackPoints)
             {
@@ -102,9 +115,11 @@ public class GameUIManager : MonoBehaviour
             }
             else
             {
-                PlayerPrefs.SetString("WinType", "White");
+                winnerColor = "White";
+                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                PlayerPrefs.SetString("WinType", winnerColor);
                 gameSave.ChessSave();
-                GameoverMenuOpen("White Win");
+                GameoverMenuOpen(resultMessage);
             }
             return;
         }
@@ -126,12 +141,14 @@ public class GameUIManager : MonoBehaviour
         {
             // Subscribe to events
             RewardedAdsManager.Instance.OnRewardEarned += GiveHealthReward;
+            RewardedAdsManager.Instance.OnAdFailedToShow += OnHealthAdFailed;
             RewardedAdsManager.Instance.OnAdClosed += OnAdClosedCleanup;
 
             RewardedAdsManager.Instance.ShowRewardedAd();
         }
         else
         {
+            MessageShow("Ad Not Ready");
             Debug.LogWarning("Ad Not Ready");
             // If ad is not ready, try to load one for next time
             if (RewardedAdsManager.Instance != null)
@@ -152,11 +169,18 @@ public class GameUIManager : MonoBehaviour
         // Cleanup handled by OnAdClosedCleanup usually, but for safety:
     }
 
+    void OnHealthAdFailed()
+    {
+        MessageShow("Ad Failed");
+        Debug.LogWarning("Health ad failed to show");
+    }
+
     void OnAdClosedCleanup()
     {
         if (RewardedAdsManager.Instance != null)
         {
             RewardedAdsManager.Instance.OnRewardEarned -= GiveHealthReward;
+            RewardedAdsManager.Instance.OnAdFailedToShow -= OnHealthAdFailed;
             RewardedAdsManager.Instance.OnAdClosed -= OnAdClosedCleanup;
         }
     }
@@ -188,10 +212,12 @@ public class GameUIManager : MonoBehaviour
         if (Time.timeScale == 1)
         {
             Time.timeScale = 0;
+            pauseBtn.GetComponent<Image>().sprite = resume;
         }
         else
         {
             Time.timeScale = 1;
+            pauseBtn.GetComponent<Image>().sprite = pause;
         }
     }
     void MenuOpen()
@@ -244,13 +270,107 @@ public class GameUIManager : MonoBehaviour
         resumePanel.SetActive(false);
         game.SetActive(true);
         Time.timeScale = 1;
+        pauseBtn.GetComponent<Image>().sprite = pause;
     }
     public void GameFinish()
     {
         gameFinish = true;
     }
+
+    void OnEnable()
+    {
+        if (chessGameManager == null)
+            chessGameManager = FindAnyObjectByType<ChessGameManager>();
+
+        if (chessGameManager != null)
+            chessGameManager.GameOver.AddListener(OnChessGameOver);
+    }
+
+    void OnDisable()
+    {
+        if (chessGameManager != null)
+            chessGameManager.GameOver.RemoveListener(OnChessGameOver);
+    }
+
+    void OnDestroy()
+    {
+        // Critical: Clean up ad event subscriptions to prevent memory leaks
+        OnAdClosedCleanup();
+    }
+
+    private void OnChessGameOver(ChessColor pTeam, GameOverReason pReason)
+    {
+        // Eğer zaten bir mesaj bekliyorsa (mesela süre bittiyse), ikinci bir mesaj almayalım
+        if (!string.IsNullOrEmpty(pendingGameOverMessage)) 
+        {
+            return;
+        }
+
+        string resultMessage = "Game Over";
+        string winnerColor = "";
+
+        switch (pReason)
+        {
+            case GameOverReason.Won:
+                // Mat durumu: pTeam kazandı
+                winnerColor = pTeam.ToString();
+                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                PlayerPrefs.SetString("WinType", winnerColor);
+                break;
+            case GameOverReason.Draw:
+                // Beraberlik (Pat)
+                resultMessage = "Stalemate - Draw";
+                PlayerPrefs.SetString("WinType", "Draw");
+                break;
+            case GameOverReason.Forfeit:
+                // Terk: pTeam terk etti, karşı taraf kazandı
+                winnerColor = (pTeam == ChessColor.Black) ? "White" : "Black";
+                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                PlayerPrefs.SetString("WinType", winnerColor);
+                break;
+            case GameOverReason.TimeExpired:
+                // Süre bitti: pTeam'in süresi bitti, karşı taraf kazandı
+                winnerColor = (pTeam == ChessColor.Black) ? "White" : "Black";
+                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                PlayerPrefs.SetString("WinType", winnerColor);
+                break;
+        }
+
+        gameFinish = true;
+        pendingGameOverMessage = resultMessage;
+
+        // Eğer o an hareket eden taş yoksa (Süre bittiğinde veya Pat durumunda), paneli hemen aç.
+        if (activeAnimations <= 0)
+        {
+            CheckGameOverState();
+        }
+    }
+
+    public void RegisterAnimation()
+    {
+        activeAnimations++;
+    }
+
+    public void UnregisterAnimation()
+    {
+        activeAnimations--;
+        if (activeAnimations < 0) activeAnimations = 0;
+        
+        CheckGameOverState();
+    }
+
+    public void CheckGameOverState()
+    {
+        if (gameFinish && !string.IsNullOrEmpty(pendingGameOverMessage) && activeAnimations <= 0)
+        {
+            GameoverMenuOpen(pendingGameOverMessage);
+            pendingGameOverMessage = ""; // Reset after showing
+        }
+    }
+
     public void GameoverMenuOpen(string result)
     {
+        gameSave.ChessSave();
         pauseBtn.gameObject.SetActive(false);
         gameoverPanel.GetComponentInChildren<TextMeshProUGUI>().text = result;
         gameoverPanel.SetActive(true);

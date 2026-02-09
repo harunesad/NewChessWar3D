@@ -11,6 +11,8 @@ public class RewardedAdsManager : MonoBehaviour
     private RewardedAd rewardedAd;
     private bool isAdLoaded = false;
     private bool isLoading = false;
+    private int retryCount = 0;
+    private const int MAX_RETRIES = 5;
     
     // Singleton instance
     public static RewardedAdsManager Instance { get; private set; }
@@ -104,6 +106,7 @@ public class RewardedAdsManager : MonoBehaviour
             Debug.Log("Rewarded ad loaded successfully");
             rewardedAd = ad;
             isAdLoaded = true;
+            retryCount = 0; // Reset retry counter on successful load
             
             // Register to ad events to extend functionality
             RegisterEventHandlers(rewardedAd);
@@ -226,6 +229,14 @@ public class RewardedAdsManager : MonoBehaviour
     /// </summary>
     private IEnumerator ReloadAdAfterDelay(float delay)
     {
+        if (retryCount >= MAX_RETRIES)
+        {
+            Debug.LogError($"Max retry limit ({MAX_RETRIES}) reached for ad loading. Stopping retry attempts.");
+            yield break;
+        }
+        
+        retryCount++;
+        Debug.Log($"Retrying ad load... Attempt {retryCount}/{MAX_RETRIES}");
         yield return new WaitForSeconds(delay);
         LoadRewardedAd();
     }
