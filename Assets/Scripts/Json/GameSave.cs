@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameSave : MonoBehaviour
@@ -22,11 +23,16 @@ public class GameSave : MonoBehaviour
     void Start()
     {
         sv = SaveManager.Load();
-        difficulty = FindAnyObjectByType<Difficulty>();
-        HealthUpdate();
+        if (SceneManager.GetActiveScene().buildIndex != 3)
+        {
+            difficulty = FindAnyObjectByType<Difficulty>();
+            HealthUpdate();
+        }
     }
     public void ChessSave()
     {
+        if (SceneManager.GetActiveScene().buildIndex == 3) return;
+
         if (PlayerPrefs.GetString("WinType") == PlayerPrefs.GetString("Type"))
         {
             if (difficulty.difficult / 2 < 10)
@@ -92,7 +98,6 @@ public class GameSave : MonoBehaviour
     }
     public void HealthUpdate()
     {
-        Debug.Log(sv.health + "" + healthText.text);
         healthText.text = sv.health.ToString();
     }
 }

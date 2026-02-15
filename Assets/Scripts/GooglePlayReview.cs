@@ -8,7 +8,7 @@ public class GooglePlayReview : MonoBehaviour
     [SerializeField] private Button reviewButton;
     [SerializeField] private bool enableDebugLogs = true;
     [SerializeField] private bool fallbackToPlayStore = true; // Dialog gösterilmezse Play Store'a yönlendir
-    [SerializeField] private bool showPlayStoreAfterSuccess = true; // Başarılı durumda da Play Store'a yönlendir (dialog görünmüyorsa)
+    [SerializeField] private bool showPlayStoreAfterSuccess = false; // Başarılı durumda da Play Store'a yönlendir (dialog görünmüyorsa)
     [SerializeField] private float playStoreDelayAfterSuccess = 2f; // Başarılı durumda kaç saniye sonra Play Store'a yönlendir
     [SerializeField] private string packageName = "com.HEANDAMS.ChessWar3D"; // Package name
     
@@ -97,7 +97,7 @@ public class GooglePlayReview : MonoBehaviour
         }
 
         // UI'ın güncellenmesi için kısa bir bekleme
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSecondsRealtime(0.1f);
 
         // Review dialog'unu göster
         LogDebug("3. Adım: LaunchReviewFlow() çağrılıyor...");
@@ -179,7 +179,7 @@ public class GooglePlayReview : MonoBehaviour
     /// </summary>
     private IEnumerator OpenPlayStoreAfterDelay()
     {
-        yield return new WaitForSeconds(playStoreDelayAfterSuccess);
+        yield return new WaitForSecondsRealtime(playStoreDelayAfterSuccess);
         LogDebug("Başarılı durumda Play Store'a yönlendiriliyor (dialog görünmüyorsa)...");
         OpenPlayStorePage();
     }

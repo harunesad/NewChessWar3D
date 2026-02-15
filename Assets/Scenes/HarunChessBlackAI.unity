@@ -5141,6 +5141,56 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1253298670}
   m_LocalEulerAnglesHint: {x: 51.34, y: 0, z: 0}
+--- !u!1 &2001605871
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2001605873}
+  - component: {fileID: 2001605872}
+  m_Layer: 0
+  m_Name: GooglePlayReview
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2001605872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001605871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93473e90556ba6944a52aae1a75f4603, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reviewButton: {fileID: 0}
+  enableDebugLogs: 1
+  fallbackToPlayStore: 1
+  showPlayStoreAfterSuccess: 0
+  playStoreDelayAfterSuccess: 1
+  packageName: com.HEANDAMS.ChessWar3D
+--- !u!4 &2001605873
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2001605871}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2620.7334, y: 789.8777, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2034136506
 GameObject:
   m_ObjectHideFlags: 0
@@ -5462,9 +5512,9 @@ RectTransform:
   - {fileID: 1090296506}
   - {fileID: 642687820}
   - {fileID: 1293065477}
-  - {fileID: 507161222}
   - {fileID: 1326980404}
   - {fileID: 1791068811}
+  - {fileID: 507161222}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6773,4 +6823,5 @@ SceneRoots:
   - {fileID: 843671222}
   - {fileID: 1820189764}
   - {fileID: 212312308}
+  - {fileID: 2001605873}
   - {fileID: 1247311191}

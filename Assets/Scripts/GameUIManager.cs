@@ -1,11 +1,9 @@
-using Clickables;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static Unity.VisualScripting.Member;
 using ChessEngine.Game.UI;
 using ChessEngine.Game;
 using ChessEngine;
@@ -63,7 +61,7 @@ public class GameUIManager : MonoBehaviour
         menuBtn.onClick.AddListener(MenuOpen);
         restartBtn.onClick.AddListener(RestartGame);
         closeBtn.onClick.AddListener(ResumePanelOff);
-        soundOnOffBtn.onClick.AddListener(SoundfOnOff);
+        soundOnOffBtn.onClick.AddListener(SoundOnOff);
 
         gameoverPanel.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(MenuOpen);
         gameoverPanel.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RestartGame);
@@ -102,23 +100,37 @@ public class GameUIManager : MonoBehaviour
             if (chessPoints.whitePoints < chessPoints.blackPoints)
             {
                 winnerColor = "Black";
-                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
-                PlayerPrefs.SetString("WinType", winnerColor);
-                gameSave.ChessSave();
+                if (SceneManager.GetActiveScene().buildIndex != 3)
+                {
+                    resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                    PlayerPrefs.SetString("WinType", winnerColor);
+                }
+                else
+                {
+                    resultMessage = "Black Win!";
+                }
                 GameoverMenuOpen(resultMessage);
             }
             else if (chessPoints.whitePoints == chessPoints.blackPoints)
             {
-                PlayerPrefs.SetString("WinType", "Draw");
-                gameSave.ChessSave();
+                if (SceneManager.GetActiveScene().buildIndex != 3)
+                {
+                    PlayerPrefs.SetString("WinType", "Draw");
+                }
                 GameoverMenuOpen("Draw");
             }
             else
             {
                 winnerColor = "White";
-                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
-                PlayerPrefs.SetString("WinType", winnerColor);
-                gameSave.ChessSave();
+                if (SceneManager.GetActiveScene().buildIndex != 3)
+                {
+                    resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                    PlayerPrefs.SetString("WinType", winnerColor);
+                }
+                else
+                {
+                    resultMessage = "White Win!";
+                }
                 GameoverMenuOpen(resultMessage);
             }
             return;
@@ -244,7 +256,7 @@ public class GameUIManager : MonoBehaviour
         //adsManager.ShowInterstitialAd();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-    void SoundfOnOff()
+    void SoundOnOff()
     {
         if (PlayerPrefs.GetInt("Audio") == 1)
         {
@@ -314,25 +326,36 @@ public class GameUIManager : MonoBehaviour
             case GameOverReason.Won:
                 // Mat durumu: pTeam kazandı
                 winnerColor = pTeam.ToString();
-                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
-                PlayerPrefs.SetString("WinType", winnerColor);
+                if (SceneManager.GetActiveScene().buildIndex != 3)
+                {
+                    resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                    PlayerPrefs.SetString("WinType", winnerColor);
+                }
+                else
+                {
+                    resultMessage = winnerColor + "Win";
+                }
                 break;
             case GameOverReason.Draw:
                 // Beraberlik (Pat)
                 resultMessage = "Stalemate - Draw";
-                PlayerPrefs.SetString("WinType", "Draw");
+                if (SceneManager.GetActiveScene().buildIndex != 3)
+                {
+                    PlayerPrefs.SetString("WinType", "Draw");
+                }
                 break;
             case GameOverReason.Forfeit:
                 // Terk: pTeam terk etti, karşı taraf kazandı
                 winnerColor = (pTeam == ChessColor.Black) ? "White" : "Black";
-                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
-                PlayerPrefs.SetString("WinType", winnerColor);
-                break;
-            case GameOverReason.TimeExpired:
-                // Süre bitti: pTeam'in süresi bitti, karşı taraf kazandı
-                winnerColor = (pTeam == ChessColor.Black) ? "White" : "Black";
-                resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
-                PlayerPrefs.SetString("WinType", winnerColor);
+                if (SceneManager.GetActiveScene().buildIndex != 3)
+                {
+                    resultMessage = (winnerColor == turn) ? "You Win!" : "You Lose!";
+                    PlayerPrefs.SetString("WinType", winnerColor);
+                }
+                else
+                {
+                    resultMessage = winnerColor + "Win";
+                }
                 break;
         }
 
@@ -370,7 +393,26 @@ public class GameUIManager : MonoBehaviour
 
     public void GameoverMenuOpen(string result)
     {
-        gameSave.ChessSave();
+        if (SceneManager.GetActiveScene().buildIndex != 3)
+        {
+            gameSave.ChessSave();
+
+            // Automatc In-App Review Trigger
+            if (result == "You Win!")
+            {
+                int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
+                PlayerPrefs.SetInt("TotalWins", wins);
+                                
+                if (wins == 3)
+                {
+                    GooglePlayReview review = FindObjectOfType<GooglePlayReview>();
+                    if (review != null)
+                    {
+                        review.RequestReview();
+                    }
+                }
+            }
+        }
         pauseBtn.gameObject.SetActive(false);
         gameoverPanel.GetComponentInChildren<TextMeshProUGUI>().text = result;
         gameoverPanel.SetActive(true);

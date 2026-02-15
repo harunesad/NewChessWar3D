@@ -9,8 +9,8 @@ using UnityEngine.UI;
 public class MenuUIManager : MonoBehaviour
 {
     [SerializeField] Button playBtn, towerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
-        exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn;
-    [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu;
+        exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn, dailyRewardBtn;
+    [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu;
     [SerializeField] Sprite whiteSelected, whiteUnselected, blackSelected, blackUnselected;
     [SerializeField] List<Button> difficultsBtn;
     [SerializeField] TextMeshProUGUI warning;
@@ -33,7 +33,7 @@ public class MenuUIManager : MonoBehaviour
         shopBtn.onClick.AddListener(delegate { MenuOpen(shopMenu); });
         towerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
         multiplayerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
-        twoPlayersBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        twoPlayersBtn.onClick.AddListener(EnterTwoPlayers);
 
         whiteBtn.onClick.AddListener(WhiteSelect);
         blackBtn.onClick.AddListener(BlackSelect);
@@ -49,6 +49,7 @@ public class MenuUIManager : MonoBehaviour
         exitBtn.onClick.AddListener(ExitGame);
         closeCoinAdsPanelBtn.onClick.AddListener(CoinAdsMenuClose);
         closeInfoPanelBtn.onClick.AddListener(InfoMenuClose);
+        dailyRewardBtn.onClick.AddListener(DailyRewardMenuOpen);
 
         // Start Health Button and CoinAds Button Pulse
         StartPulse(healthBtn.transform.parent);
@@ -177,6 +178,15 @@ public class MenuUIManager : MonoBehaviour
         coinAdsMenu.blocksRaycasts = false;
         coinAdsMenu.interactable = false;
     }
+    public void DailyRewardMenuOpen()
+    {
+        if (dailyRewardMenu.alpha == 1) return; // Zaten açıksa tekrar açma
+        
+        DailyRewardManager drm = FindObjectOfType<DailyRewardManager>();
+        if (drm != null) drm.UpdateUI();
+        
+        MenuOpen(dailyRewardMenu);
+    }
     void MenuOpen(CanvasGroup openToMenu)
     {
         MusicState(click);
@@ -206,6 +216,10 @@ public class MenuUIManager : MonoBehaviour
                 openToMenu.blocksRaycasts = true;
             });
         });
+    }
+    void EnterTwoPlayers()
+    {
+        SceneManager.LoadScene(3);
     }
     void WhiteSelect()
     {
