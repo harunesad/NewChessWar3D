@@ -8,6 +8,7 @@ using ChessEngine.Game.UI;
 using ChessEngine.Game;
 using ChessEngine;
 using DG.Tweening;
+using GameAnalyticsSDK;
 
 public class GameUIManager : MonoBehaviour
 {
@@ -117,7 +118,7 @@ public class GameUIManager : MonoBehaviour
                 {
                     PlayerPrefs.SetString("WinType", "Draw");
                 }
-                GameoverMenuOpen("Draw");
+                GameoverMenuOpen("Draw!");
             }
             else
             {
@@ -333,7 +334,7 @@ public class GameUIManager : MonoBehaviour
                 }
                 else
                 {
-                    resultMessage = winnerColor + "Win";
+                    resultMessage = winnerColor + " Win!";
                 }
                 break;
             case GameOverReason.Draw:
@@ -354,7 +355,7 @@ public class GameUIManager : MonoBehaviour
                 }
                 else
                 {
-                    resultMessage = winnerColor + "Win";
+                    resultMessage = winnerColor + " Win!";
                 }
                 break;
         }
@@ -400,6 +401,7 @@ public class GameUIManager : MonoBehaviour
             // Automatc In-App Review Trigger
             if (result == "You Win!")
             {
+                GameAnalytics.NewDesignEvent("GameOutcome:Win:" + SceneManager.GetActiveScene().name);
                 int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
                 PlayerPrefs.SetInt("TotalWins", wins);
                                 
@@ -411,6 +413,10 @@ public class GameUIManager : MonoBehaviour
                         review.RequestReview();
                     }
                 }
+            }
+            else if (result == "You Lose!")
+            {
+                GameAnalytics.NewDesignEvent("GameOutcome:Loss:" + SceneManager.GetActiveScene().name);
             }
         }
         pauseBtn.gameObject.SetActive(false);

@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using Google.Play.Review;
+using TMPro;
 
 public class GooglePlayReview : MonoBehaviour
 {
@@ -66,6 +67,19 @@ public class GooglePlayReview : MonoBehaviour
         
         LogDebug("=== Google Play In-App Review başlatılıyor ===");
 
+        // UNITY EDITOR KONTROLÜ
+        if (Application.isEditor)
+        {
+            LogDebug("UYARI: Google Play In-App Review sadece gerçek Android cihazlarda çalışır!");
+            ShowMessageToUser("Review system works on Android devices only (Editor fallback)");
+            if (fallbackToPlayStore)
+            {
+                OpenPlayStorePage();
+            }
+            _isRequestingReview = false;
+            yield break;
+        }
+
         // Review bilgisini al
         LogDebug("1. Adım: RequestReviewFlow() çağrılıyor...");
         var requestFlowOperation = _reviewManager.RequestReviewFlow();
@@ -78,9 +92,16 @@ public class GooglePlayReview : MonoBehaviour
         {
             string errorMessage = GetErrorMessage(requestFlowOperation.Error);
             LogDebug($"HATA - Review isteği başarısız: {errorMessage} (Error Code: {requestFlowOperation.Error})");
-            
-            // Hata mesajlarını göster
-            ShowErrorToUser(errorMessage);
+
+            // Eğer Play Store hatasıysa veya uygulama yüklü değilse fallback yap
+            if (fallbackToPlayStore)
+            {
+                OpenPlayStorePage();
+            }
+            else
+            {
+                ShowMessageToUser(errorMessage);
+            }
             
             _isRequestingReview = false;
             yield break;
@@ -88,10 +109,10 @@ public class GooglePlayReview : MonoBehaviour
 
         _playReviewInfo = requestFlowOperation.GetResult();
         LogDebug("2. Adım: Review bilgisi başarıyla alındı!");
-
         if (_playReviewInfo == null)
         {
             LogDebug("HATA: PlayReviewInfo null!");
+            if (fallbackToPlayStore) OpenPlayStorePage();
             _isRequestingReview = false;
             yield break;
         }
@@ -114,15 +135,13 @@ public class GooglePlayReview : MonoBehaviour
             string errorMessage = GetErrorMessage(launchFlowOperation.Error);
             LogDebug($"HATA - Review dialog açılamadı: {errorMessage} (Error Code: {launchFlowOperation.Error})");
             
-            // Hata varsa Play Store'a yönlendir
             if (fallbackToPlayStore)
             {
-                LogDebug("Fallback: Play Store sayfasına yönlendiriliyor...");
                 OpenPlayStorePage();
             }
             else
             {
-                ShowErrorToUser(errorMessage);
+                ShowMessageToUser(errorMessage);
             }
         }
         else
@@ -130,14 +149,11 @@ public class GooglePlayReview : MonoBehaviour
             LogDebug("✓ BAŞARILI: Google Play In-App Review dialog'u gösterildi!");
             _dialogShown = true;
             
-            // Not: Google Play In-App Review API'si bazen dialog göstermez (rate limiting)
-            // Bu durumda kullanıcıya bilgi verip Play Store'a yönlendirme seçeneği sunabiliriz
-            // Ancak API başarılı olduğu için dialog'un gösterilip gösterilmediğini kesin olarak bilemeyiz
-            
-            // Eğer dialog görünmüyorsa, kullanıcıya Play Store'a yönlendirme seçeneği sun
+            // ÖNEMLİ NOT: Google bazen API başarılı olsa bile kota dolduğu için pencereyi göstermez.
+            // Bu durumda kullanıcıya "Teşekkürler" mesajı veya Play Store yönlendirmesi yapılabilir.
+
             if (showPlayStoreAfterSuccess && fallbackToPlayStore)
             {
-                LogDebug($"Dialog gösterildi (veya gösterilmedi). {playStoreDelayAfterSuccess} saniye sonra Play Store'a yönlendirilecek...");
                 StartCoroutine(OpenPlayStoreAfterDelay());
             }
         }
@@ -164,13 +180,21 @@ public class GooglePlayReview : MonoBehaviour
         }
     }
 
-    private void ShowErrorToUser(string errorMessage)
+    private void ShowMessageToUser(string message)
     {
-        // MenuUIManager varsa mesaj göster
-        MenuUIManager menuUIManager = FindObjectOfType<MenuUIManager>();
-        if (menuUIManager != null)
+        // 1. Önce Menu UI Manager'ı dene
+        MenuUIManager menuUI = FindObjectOfType<MenuUIManager>();
+        if (menuUI != null)
         {
-            menuUIManager.MessageShow(errorMessage);
+            menuUI.MessageShow(message);
+            return;
+        }
+
+        // 2. Olmazsa Game UI Manager'ı dene
+        GameUIManager gameUI = FindObjectOfType<GameUIManager>();
+        if (gameUI != null)
+        {
+            gameUI.MessageShow(message);
         }
     }
 

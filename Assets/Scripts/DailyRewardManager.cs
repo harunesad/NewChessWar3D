@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using GameAnalyticsSDK;
 
 public class DailyRewardManager : MonoBehaviour
 {
@@ -136,6 +137,15 @@ public class DailyRewardManager : MonoBehaviour
             int nextStreak = (index + 1) % 7;
             PlayerPrefs.SetInt(REWARD_STREAK, nextStreak);
             PlayerPrefs.Save();
+
+            GameAnalytics.NewDesignEvent("DailyReward:Claimed:Day" + (index + 1));
+
+            // Bildirim Planla: Yarın sabah 09:00 için (veya 24 saat sonra)
+            if (NotificationManager.Instance != null)
+            {
+                // Basitlik için 24 saat sonrasına kuruyoruz
+                NotificationManager.Instance.ScheduleDailyRewardNotification(TimeSpan.FromHours(24));
+            }
 
             ShowMessage("Tebrikler! Ödülünü aldın.");
             UpdateUI();

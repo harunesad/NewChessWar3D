@@ -1,4 +1,5 @@
 using DG.Tweening;
+using GameAnalyticsSDK;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -20,6 +21,9 @@ public class MenuUIManager : MonoBehaviour
     CanvasGroup currentMenu;
     void Start()
     {
+        // Initialize GameAnalytics explicitly
+        GameAnalytics.Initialize();
+
         PlayerPrefs.SetString("Type", "White");
         whiteBtn.image.sprite = whiteSelected;
         blackBtn.image.sprite = blackUnselected;
@@ -88,6 +92,8 @@ public class MenuUIManager : MonoBehaviour
         JsonSave.jsonSave.sv.health++;
         SaveManager.Save(JsonSave.jsonSave.sv);
         JsonSave.jsonSave.HealthUpdate();
+        
+        GameAnalytics.NewDesignEvent("Ads:HealthReward:Success");
     }
 
     void OnHealthAdFailed()

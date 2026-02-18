@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using GameAnalyticsSDK;
 
 public class CoinAdsManager : MonoBehaviour
 {
@@ -138,6 +139,8 @@ public class CoinAdsManager : MonoBehaviour
         SaveManager.Save(jsonSave.sv);
         UpdateUI();
         jsonSave.CoinUpdate();
+        
+        GameAnalytics.NewDesignEvent("Ads:CoinReward:Success:Index" + index);
         
         Debug.Log($"✓✓✓ COINS ADDED - Reward earned: {coinAmount} coins for ad index {index}");
         Debug.Log($"✓✓✓ Total coins after reward: {jsonSave.sv.coin}, Ads watched today: {jsonSave.sv.adsCoin}");

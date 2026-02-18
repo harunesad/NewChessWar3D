@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GameAnalyticsSDK;
 
 public class AdsManager : MonoBehaviour
 {
@@ -43,6 +44,7 @@ public class AdsManager : MonoBehaviour
         if (interstitialAd != null && interstitialAd.CanShowAd())
         {
             Debug.Log("Show");
+            GameAnalytics.NewDesignEvent("Ads:Interstitial:Show");
             interstitialAd.Show();
             //RegisterReloadHandler(interstitialAd);
         }
