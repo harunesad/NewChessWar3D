@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2659618610554355361
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2560922637232112111}
+  - component: {fileID: 1988483636619927473}
+  - component: {fileID: 1198318938590721408}
+  m_Layer: 0
+  m_Name: Bodylink
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2560922637232112111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2659618610554355361}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1988483636619927473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2659618610554355361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 126644ac232854b9c9941ac1b0aa48f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Bodylink
+  initializeOnStart: 0
+  calibrateOnStart: 0
+  autoRecalibrate: 0
+  resumeOnSceneChange: 0
+  calibrationWaitTime: 1
+  visibilityThreshold: 0.5
+  visibilityWaitingTime: 1
+  calibrationDistanceThreshold: 15
+  showSkeleton: 0
+  numberOfPlayers: 1
+  calibrationType: 1
+  matchPointLimit: 1
+  poseLandmarkerRunnerPrefab: {fileID: 3916941111009931683, guid: 08fec04ee399b4955a2ddb6a904b7a19, type: 3}
+--- !u!114 &1198318938590721408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2659618610554355361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 431c8ae3ea59042659861a88b2891cd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkEvents
+  EnableHeadEvents: 0
+  EnableHandEvents: 0
+  EnableBodyEvents: 0
+  handGestureDetector: {fileID: 0}
+  bodyMovementDetector: {fileID: 0}
+  headGestureDetector: {fileID: 0}
