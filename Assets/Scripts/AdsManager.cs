@@ -25,7 +25,7 @@ public class AdsManager : MonoBehaviour
         }
         Debug.Log("Load");
         var adRequest = new AdRequest();
-
+#if UNITY_ANDROID
         InterstitialAd.Load(adUnitId, adRequest, (InterstitialAd ad, LoadAdError adError) =>
         {
             if (adError != null || ad == null)
@@ -38,6 +38,7 @@ public class AdsManager : MonoBehaviour
 
             RegisterReloadHandler(interstitialAd);
         });
+#endif
     }
     public void ShowInterstitialAd()
     {

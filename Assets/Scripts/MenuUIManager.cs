@@ -147,6 +147,19 @@ public class MenuUIManager : MonoBehaviour
         infoMenu.alpha = 1;
         infoMenu.blocksRaycasts = true;
         infoMenu.interactable = true;
+        if (currentMenu != null)
+        {
+            backBtn.gameObject.SetActive(false);
+            currentMenu.alpha = 0;
+            currentMenu.blocksRaycasts = false;
+            currentMenu.interactable = false;
+        }
+        else
+        {
+            mainMenu.alpha = 0;
+            mainMenu.blocksRaycasts = false;
+            mainMenu.interactable = false;
+        }
         if (coinAdsMenu.alpha == 1)
         {
             coinAdsMenu.alpha = 0;
@@ -157,7 +170,21 @@ public class MenuUIManager : MonoBehaviour
     void InfoMenuClose()
     {
         MusicState(click);
-        warning.transform.parent = mainMenu.transform;
+        if (currentMenu != null)
+        {
+            backBtn.gameObject.SetActive(true);
+            currentMenu.alpha = 1;
+            currentMenu.blocksRaycasts = true;
+            currentMenu.interactable = true;
+            warning.transform.parent = currentMenu.transform;
+        }
+        else
+        {
+            mainMenu.alpha = 1;
+            mainMenu.blocksRaycasts = true;
+            mainMenu.interactable = true;
+            warning.transform.parent = mainMenu.transform;
+        }
         infoMenu.alpha = 0;
         infoMenu.blocksRaycasts = false;
         infoMenu.interactable = false;
@@ -169,6 +196,19 @@ public class MenuUIManager : MonoBehaviour
         coinAdsMenu.alpha = 1;
         coinAdsMenu.blocksRaycasts = true;
         coinAdsMenu.interactable = true;
+        if (currentMenu != null)
+        {
+            backBtn.gameObject.SetActive(false);
+            currentMenu.alpha = 0;
+            currentMenu.blocksRaycasts = false;
+            currentMenu.interactable = false;
+        }
+        else
+        {
+            mainMenu.alpha = 0;
+            mainMenu.blocksRaycasts = false;
+            mainMenu.interactable = false;
+        }
         if (infoMenu.alpha == 1)
         {
             infoMenu.alpha = 0;
@@ -179,7 +219,21 @@ public class MenuUIManager : MonoBehaviour
     void CoinAdsMenuClose()
     {
         MusicState(click);
-        warning.transform.parent = mainMenu.transform;
+        if (currentMenu != null)
+        {
+            backBtn.gameObject.SetActive(true);
+            currentMenu.alpha = 1;
+            currentMenu.blocksRaycasts = true;
+            currentMenu.interactable = true;
+            warning.transform.parent = currentMenu.transform;
+        }
+        else
+        {
+            mainMenu.alpha = 1;
+            mainMenu.blocksRaycasts = true;
+            mainMenu.interactable = true;
+            warning.transform.parent = mainMenu.transform;
+        }
         coinAdsMenu.alpha = 0;
         coinAdsMenu.blocksRaycasts = false;
         coinAdsMenu.interactable = false;
@@ -268,18 +322,6 @@ public class MenuUIManager : MonoBehaviour
     {
         CanvasGroup closeToMenu = currentMenu;
         MusicState(click);
-        if (infoMenu.alpha == 1)
-        {
-            infoMenu.alpha = 0;
-            infoMenu.blocksRaycasts = false;
-            infoMenu.interactable = false;
-        }
-        if (coinAdsMenu.alpha == 1)
-        {
-            coinAdsMenu.alpha = 0;
-            coinAdsMenu.blocksRaycasts = false;
-            coinAdsMenu.interactable = false;
-        }
         closeToMenu.interactable = false;
         closeToMenu.blocksRaycasts = false;
         closeToMenu.DOFade(0, 1).SetEase(Ease.Linear).OnComplete(() =>
