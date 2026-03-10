@@ -41,9 +41,19 @@ public class BodylinkUIInteractor : MonoBehaviour
     [SerializeField] private float hoverDuration = 2.0f;
     [SerializeField] private float hoverMoveThreshold = 50f; // İmleç bu kadar hareket ederse sayaç sıfırlanır
     
+    [Header("Scroll (Pinch & Drag) Settings")]
+    [SerializeField] private bool usePinchScroll = true;
+    [SerializeField] private float pinchThreshold = 0.05f; // Baş ve işaret parmağı mesafesi
+    [SerializeField] private float scrollSensitivity = 1.5f; // Kaydırma hızı çarpanı
+    
     private float hoverTimer = 0f;
     private Vector2 lastHoverPos;
     private Image cursorImage;
+
+    // Scroll Değişkenleri
+    private bool isPinching = false;
+    private float lastPinchY = 0f;
+    private ScrollRect activeScrollRect;
 
     void Start()
     {
@@ -274,9 +284,104 @@ public class BodylinkUIInteractor : MonoBehaviour
         }
 
         // HOVER CLICK LOGIC
-        if (useHoverClick && !isGestureActive)
+        if (useHoverClick && !isGestureActive && !isPinching)
         {
             HandleHoverLogic();
+        }
+
+        // SCROLL (PINCH & DRAG) LOGIC
+        if (usePinchScroll)
+        {
+            HandleScrollLogic(player);
+        }
+    }
+
+    private void HandleScrollLogic(BodylinkPlayerAvatar player)
+    {
+        var hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
+        if (hand == null || hand.handLandmark == null || hand.handLandmark.Count < 9)
+        {
+            ReleaseScroll();
+            return;
+        }
+
+        var thumbTip = hand.handLandmark[4];
+        var indexTip = hand.handLandmark[8];
+
+        float distance = Vector2.Distance(new Vector2(thumbTip.x, thumbTip.y), new Vector2(indexTip.x, indexTip.y));
+
+        if (distance < pinchThreshold)
+        {
+            // PINCH BAŞLADI / DEVAM EDİYOR
+            if (!isPinching)
+            {
+                // İlk tutuşta ScrollRect ara
+                activeScrollRect = FindScrollRectUnderPointer();
+                if (activeScrollRect != null)
+                {
+                    isPinching = true;
+                    lastPinchY = currentScreenPos.y;
+                    
+                    // Görsel geri bildirim
+                    if (cursorImage != null) cursorImage.color = Color.cyan;
+                    cursorVisual.transform.localScale = Vector3.one * 0.8f;
+                }
+            }
+            else if (activeScrollRect != null && activeScrollRect.gameObject.activeInHierarchy)
+            {
+                // Kaydırma (Drag) işlemi
+                float deltaY = currentScreenPos.y - lastPinchY;
+                
+                // Screen deltaY'yi ScrollRect'in content yapısına uyarla
+                // Bu basit bir oranlamadır, gerekirse geliştirilebilir
+                float scrollAmount = (deltaY / Screen.height) * scrollSensitivity;
+                
+                // ScrollRect'i hareket ettir (sadece dikey)
+                if (activeScrollRect.vertical)
+                {
+                    float newPos = activeScrollRect.verticalNormalizedPosition + scrollAmount;
+                    activeScrollRect.verticalNormalizedPosition = Mathf.Clamp01(newPos);
+                }
+
+                lastPinchY = currentScreenPos.y; // Güncelle
+            }
+        }
+        else
+        {
+            ReleaseScroll();
+        }
+    }
+
+    private ScrollRect FindScrollRectUnderPointer()
+    {
+        if (eventSystem == null) return null;
+
+        pointerData.position = currentScreenPos;
+        raycastResults.Clear();
+        eventSystem.RaycastAll(pointerData, raycastResults);
+
+        foreach (var result in raycastResults)
+        {
+            GameObject target = result.gameObject;
+            while (target != null)
+            {
+                ScrollRect scroll = target.GetComponent<ScrollRect>();
+                if (scroll != null) return scroll;
+
+                if (target.transform.parent == null) break;
+                target = target.transform.parent.gameObject;
+            }
+        }
+        return null;
+    }
+
+    private void ReleaseScroll()
+    {
+        if (isPinching)
+        {
+            isPinching = false;
+            activeScrollRect = null;
+            ResetHover(); // Rengi ve boyutu eski haline getirir
         }
     }
 
