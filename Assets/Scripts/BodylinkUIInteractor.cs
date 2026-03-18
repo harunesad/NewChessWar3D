@@ -93,99 +93,11 @@ public class BodylinkUIInteractor : MonoBehaviour
     {
         if (bodylink == null) return;
         
-        HideBodylinkVisuals();
-        
         // İlk açılışta görüntüyü garantilemek için feed'i aktif et
         bodylink.DisplayCameraFeed(true);
-        
-        // Mini-Cam oluşturmayı başlat
-        StopCoroutine("CreateMiniCamRoutine");
-        StartCoroutine("CreateMiniCamRoutine");
     }
 
-    private void HideBodylinkVisuals()
-    {
-        if (bodylink == null || bodylink.PoseLandmarkerRunnerInstance == null) return;
 
-        // 1) SDK'nın oluşturduğu tüm Canvas bileşenlerini bul ve devre dışı bırak
-        // Bu, silüet, maske ve UI panellerini tamamen gizler ama scriptlerin çalışmasını bozmaz.
-        var canvases = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Canvas>(true);
-        foreach (var canvas in canvases)
-        {
-            canvas.enabled = false;
-        }
-
-        // 2) Diğer yardımcı görselleştiricileri de pasif yap
-        var maskAnnotations = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Mediapipe.Unity.MultiPoseLandmarkListWithMaskAnnotation>(true);
-        foreach (var mask in maskAnnotations)
-            mask.gameObject.SetActive(false);
-
-        var handAnnotations = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Mediapipe.Unity.MultiHandLandmarkListAnnotation>(true);
-        foreach (var hand in handAnnotations)
-            hand.gameObject.SetActive(false);
-
-        if (bodylink.skeletonVisualizers != null)
-        {
-            foreach (var skel in bodylink.skeletonVisualizers)
-                skel.gameObject.SetActive(false);
-        }
-
-        Debug.Log("Bodylink: SDK görselleri (Canvas/Silüet/Maske) tamamen gizlendi.");
-    }
-
-    private IEnumerator CreateMiniCamRoutine()
-    {
-        // Bodylink ve CameraScreen hazır olana kadar bekle
-        while (bodylink == null || bodylink.cameraScreen == null)
-            yield return null;
-
-        // Texture hazır olana kadar bekle (İlk açılışta donanımın ısınması zaman alabilir)
-        // Sabit bir timeout yerine, akış gelene kadar bekleyelim 
-        // Ama SDK'yı da hafifçe dürtelim
-        int retryCount = 0;
-        while (bodylink.cameraScreen.texture == null)
-        {
-            retryCount++;
-            if (retryCount % 100 == 0) // Periyodik olarak akışı tazele
-            {
-                bodylink.DisplayCameraFeed(true);
-                if (bodylink.imageSource != null) StartCoroutine(bodylink.imageSource.Resume());
-            }
-            yield return null;
-        }
-
-        // 1) Sahnedeki mevcut ana Canvas'ı bul
-        Canvas mainCanvas = FindAnyObjectByType<Canvas>();
-        if (mainCanvas == null)
-        {
-            Debug.LogWarning("Bodylink UI: Sahnede Canvas bulunamadı.");
-            yield break;
-        }
-
-        // Varsa eski Mini-Cam'i temizle
-        GameObject oldCam = GameObject.Find("Bodylink_MiniCam");
-        if (oldCam != null) Destroy(oldCam);
-        yield return new WaitForEndOfFrame(); // Yok olma işlemini bekle
-
-            // 2) RawImage (Görüntü) oluştur ve mevcut Canvas'a bağla
-        GameObject rawImageObj = new GameObject("Bodylink_MiniCam");
-        rawImageObj.transform.SetParent(mainCanvas.transform, false);
-        miniCamRawImage = rawImageObj.AddComponent<UnityEngine.UI.RawImage>();
-
-        // 3) Konumlandırma (Sağ Alt Köşe)
-        RectTransform rect = miniCamRawImage.rectTransform;
-        rect.anchorMin = new Vector2(1, 0);
-        rect.anchorMax = new Vector2(1, 0);
-        rect.pivot = new Vector2(1, 0);
-        rect.anchoredPosition = new Vector2(-250, 20); 
-        rect.sizeDelta = new Vector2(240, 135); 
-
-        // 4) Şeffaflık ve Aynalama
-        miniCamRawImage.color = new Color(1, 1, 1, 0.4f); 
-        rect.localScale = new Vector3(-1, 1, 1); 
-
-        Debug.Log("Bodylink UI: Mini-Cam objesi oluşturuldu, senkronizasyon Update'de sürecek.");
-    }
 
     void OnDestroy()
     {
@@ -216,17 +128,6 @@ public class BodylinkUIInteractor : MonoBehaviour
 
     void Update()
     {
-        if (bodylink == null || !bodylink.IsInitialized) return;
-
-        // Mini-Cam Texture Senkronizasyonu
-        if (miniCamRawImage != null && bodylink.cameraScreen != null)
-        {
-            if (miniCamRawImage.texture != bodylink.cameraScreen.texture)
-            {
-                miniCamRawImage.texture = bodylink.cameraScreen.texture;
-            }
-        }
-
         if (bodylink.players == null || bodylink.players.Length == 0) return;
 
         UpdateCursorPosition();

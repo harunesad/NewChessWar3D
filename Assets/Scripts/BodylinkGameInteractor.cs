@@ -111,83 +111,10 @@ public class BodylinkGameInteractor : MonoBehaviour
     private void InitializeBodylinkComponents()
     {
         if (bodylink == null) return;
-
-        HideBodylinkVisuals();
-        
-        // İlk açılışta görüntüyü garantilemek için feed'i aktif et
         bodylink.DisplayCameraFeed(true);
-
-        // Mini-Cam oluşturmayı bir Coroutine ile başlat
-        StopCoroutine("CreateMiniCamRoutine");
-        StartCoroutine("CreateMiniCamRoutine");
     }
 
-    private void HideBodylinkVisuals()
-    {
-        if (bodylink == null || bodylink.PoseLandmarkerRunnerInstance == null) return;
 
-        var canvases = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Canvas>(true);
-        foreach (var canvas in canvases)
-            canvas.enabled = false;
-
-        var maskAnnotations = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Mediapipe.Unity.MultiPoseLandmarkListWithMaskAnnotation>(true);
-        foreach (var mask in maskAnnotations)
-            mask.gameObject.SetActive(false);
-
-        var handAnnotations = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Mediapipe.Unity.MultiHandLandmarkListAnnotation>(true);
-        foreach (var hand in handAnnotations)
-            hand.gameObject.SetActive(false);
-
-        if (bodylink.skeletonVisualizers != null)
-        {
-            foreach (var skel in bodylink.skeletonVisualizers)
-                skel.gameObject.SetActive(false);
-        }
-    }
-
-    private IEnumerator CreateMiniCamRoutine()
-    {
-        // Bodylink ve CameraScreen hazır olana kadar bekle
-        while (bodylink == null || bodylink.cameraScreen == null)
-            yield return null;
-
-        // Texture hazır olana kadar bekle (Periyodik olarak SDK'yı dürt)
-        int retryCount = 0;
-        while (bodylink.cameraScreen.texture == null)
-        {
-            retryCount++;
-            if (retryCount % 100 == 0)
-            {
-                bodylink.DisplayCameraFeed(true);
-                if (bodylink.imageSource != null) StartCoroutine(bodylink.imageSource.Resume());
-            }
-            yield return null;
-        }
-
-        Canvas mainCanvas = FindAnyObjectByType<Canvas>();
-        if (mainCanvas == null) yield break;
-
-        // Varsa eski Mini-Cam'i temizle
-        GameObject oldCam = GameObject.Find("Bodylink_MiniCam");
-        if (oldCam != null) Destroy(oldCam);
-        yield return new WaitForEndOfFrame();
-
-        GameObject rawImageObj = new GameObject("Bodylink_MiniCam");
-        rawImageObj.transform.SetParent(mainCanvas.transform, false);
-        miniCamRawImage = rawImageObj.AddComponent<UnityEngine.UI.RawImage>();
-
-        RectTransform rect = miniCamRawImage.rectTransform;
-        rect.anchorMin = new Vector2(1, 0);
-        rect.anchorMax = new Vector2(1, 0);
-        rect.pivot = new Vector2(1, 0);
-        rect.anchoredPosition = new Vector2(-250, 20);
-        rect.sizeDelta = new Vector2(240, 135);
-
-        miniCamRawImage.color = new Color(1, 1, 1, 0.4f);
-        rect.localScale = new Vector3(-1, 1, 1);
-        
-        Debug.Log("Bodylink Game: Mini-Cam objesi oluşturuldu, senkronizasyon Update'de sürecek.");
-    }
 
     void OnDestroy()
     {
@@ -258,17 +185,6 @@ public class BodylinkGameInteractor : MonoBehaviour
 
     void Update()
     {
-        if (bodylink == null || !bodylink.IsInitialized) return;
-
-        // Mini-Cam Texture Senkronizasyonu
-        if (miniCamRawImage != null && bodylink.cameraScreen != null)
-        {
-            if (miniCamRawImage.texture != bodylink.cameraScreen.texture)
-            {
-                miniCamRawImage.texture = bodylink.cameraScreen.texture;
-            }
-        }
-
         if (bodylink.players == null || bodylink.players.Length == 0) return;
 
         UpdateCursorPosition();

@@ -49,68 +49,17 @@ public class BodylinkChessInteractor : MonoBehaviour
         {
             bodylink.inputEvents.OnPoseDetection += HandlePoseDetection;
             bodylink.OnInitialized += () => {
-                HideBodylinkVisuals();
-                CreateMiniCam();
+                bodylink.DisplayCameraFeed(true);
             };
             
             if (bodylink.IsInitialized)
             {
-                HideBodylinkVisuals();
-                CreateMiniCam();
+                bodylink.DisplayCameraFeed(true);
             }
         }
     }
 
-    private void HideBodylinkVisuals()
-    {
-        if (bodylink == null || bodylink.PoseLandmarkerRunnerInstance == null) return;
 
-        var canvases = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Canvas>(true);
-        foreach (var canvas in canvases)
-            canvas.enabled = false;
-
-        var maskAnnotations = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Mediapipe.Unity.MultiPoseLandmarkListWithMaskAnnotation>(true);
-        foreach (var mask in maskAnnotations)
-            mask.gameObject.SetActive(false);
-
-        var handAnnotations = bodylink.PoseLandmarkerRunnerInstance.GetComponentsInChildren<Mediapipe.Unity.MultiHandLandmarkListAnnotation>(true);
-        foreach (var hand in handAnnotations)
-            hand.gameObject.SetActive(false);
-
-        if (bodylink.skeletonVisualizers != null)
-        {
-            foreach (var skel in bodylink.skeletonVisualizers)
-                skel.gameObject.SetActive(false);
-        }
-
-        Debug.Log("Bodylink: SDK görselleri (Canvas/Silüet/Maske) temizlendi.");
-    }
-
-    private void CreateMiniCam()
-    {
-        if (bodylink == null || bodylink.cameraScreen == null) return;
-
-        Canvas mainCanvas = FindAnyObjectByType<Canvas>();
-        if (mainCanvas == null) return;
-
-        GameObject rawImageObj = new GameObject("Bodylink_MiniCam");
-        rawImageObj.transform.SetParent(mainCanvas.transform, false);
-        var rawImage = rawImageObj.AddComponent<UnityEngine.UI.RawImage>();
-
-        rawImage.texture = bodylink.cameraScreen.texture;
-
-        RectTransform rect = rawImage.rectTransform;
-        rect.anchorMin = new Vector2(1, 0);
-        rect.anchorMax = new Vector2(1, 0);
-        rect.pivot = new Vector2(1, 0);
-        rect.anchoredPosition = new Vector2(-250, 20);
-        rect.sizeDelta = new Vector2(240, 135);
-
-        rawImage.color = new Color(1, 1, 1, 0.4f);
-        rect.localScale = new Vector3(-1, 1, 1);
-
-        Debug.Log($"Bodylink: Şeffaf Mini-Cam '{mainCanvas.name}' altına eklendi.");
-    }
 
     void OnDestroy()
     {

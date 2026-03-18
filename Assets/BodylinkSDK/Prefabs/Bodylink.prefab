@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2560922637232112111}
   - component: {fileID: 1988483636619927473}
   - component: {fileID: 1198318938590721408}
+  - component: {fileID: 3160049730504079208}
   m_Layer: 0
   m_Name: Bodylink
   m_TagString: Untagged
@@ -30,7 +31,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 5060519772595459251}
+  - {fileID: 854651234273721831}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1988483636619927473
@@ -45,19 +48,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 126644ac232854b9c9941ac1b0aa48f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bodylink
-  initializeOnStart: 0
-  calibrateOnStart: 0
-  autoRecalibrate: 0
-  resumeOnSceneChange: 0
+  initializeOnStart: 1
+  calibrateOnStart: 1
+  _autoRecalibrate: 1
+  resumeOnSceneChange: 1
   calibrationWaitTime: 1
-  visibilityThreshold: 0.5
-  visibilityWaitingTime: 1
-  calibrationDistanceThreshold: 15
-  showSkeleton: 0
-  numberOfPlayers: 1
-  calibrationType: 1
-  matchPointLimit: 1
-  poseLandmarkerRunnerPrefab: {fileID: 3916941111009931683, guid: 08fec04ee399b4955a2ddb6a904b7a19, type: 3}
+  _visibilityThreshold: 0.5
+  _visibilityWaitingTime: 1
+  _calibrationDistanceThreshold: 15
+  showSkeleton: 1
+  _showCameraFeed: 1
+  _cam: {fileID: 0}
+  _numberOfPlayers: 1
+  _calibrationType: 2
+  _matchPointLimit: 1
+  poseLandmarkerRunnerPrefab: {fileID: 3916941111009931683, guid: 08fec04ee399b4955a2ddb6a904b7a19,
+    type: 3}
 --- !u!114 &1198318938590721408
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -71,8 +77,126 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BodylinkEvents
   EnableHeadEvents: 0
-  EnableHandEvents: 0
-  EnableBodyEvents: 0
-  handGestureDetector: {fileID: 0}
-  bodyMovementDetector: {fileID: 0}
+  EnableHandEvents: 1
+  EnableBodyEvents: 1
+  handGestureDetector: {fileID: 7638867189998159349}
+  bodyMovementDetector: {fileID: 2455021092172567831}
   headGestureDetector: {fileID: 0}
+--- !u!114 &3160049730504079208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2659618610554355361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaa248cd88f7446817ab2cadfa95f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkCameraUpdater
+--- !u!1 &3462563957653943340
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 854651234273721831}
+  - component: {fileID: 2455021092172567831}
+  m_Layer: 0
+  m_Name: BodyMovementDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &854651234273721831
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3462563957653943340}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1046.5835, y: -595.07385, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2560922637232112111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2455021092172567831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3462563957653943340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 235c22431661d9440a551e5660783ecd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkSDK.BodyMovementDetector
+  jumpThreshold: 0.03
+  armRaiseThreshold: 0.2
+  moveSensitivity: 0.025
+  sampleDuration: 0.3
+  gestureCooldown: 0.35
+  EnableMoveLeft: 0
+  EnableMoveRight: 0
+  EnableJump: 0
+  EnableArmRaise: 0
+  EnableBothArmRaise: 0
+--- !u!1 &4100036332210777540
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5060519772595459251}
+  - component: {fileID: 7638867189998159349}
+  m_Layer: 0
+  m_Name: HandGestureDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5060519772595459251
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4100036332210777540}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1046.5835, y: -595.07385, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2560922637232112111}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7638867189998159349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4100036332210777540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15a72aa013e2cff4dbe72dc8dee4de93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkSDK.HandGestureDetector
+  bufferSize: 8
+  swipeThreshold: 0.3
+  maxSwipeTime: 0.5
+  EnableSwipeLeft: 1
+  EnableSwipeRight: 1
+  EnableSwipeUp: 0
+  EnableSwipeDown: 0
+  EnablePoseDetect: 1

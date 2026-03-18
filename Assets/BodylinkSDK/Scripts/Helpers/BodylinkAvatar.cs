@@ -429,12 +429,11 @@ namespace BodylinkSDK
 
                 ShowImages(false);
                 players[0].ShowImages(false);
+                
                 if (Bodylink.Instance.showCameraFeed)
                 {
-                    players[0].ShowMiniCamera(true);
+                    Bodylink.Instance.DisplayCameraFeed(true);
                 }
-
-                players[0].SetMiniCameraScreen();
                 if (isMultiplayerEnabled)
                 {
                     players[1].ShowImages(false);

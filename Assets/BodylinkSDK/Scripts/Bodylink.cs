@@ -277,22 +277,7 @@ namespace BodylinkSDK
             MultiPoseLandmarkListWithMaskAnnotation multiPoseLandmarkListWithMaskAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiPoseLandmarkListWithMaskAnnotation>();
             MultiHandLandmarkListAnnotation multiHandLandmarkListAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiHandLandmarkListAnnotation>();
 
-            if (showSkeleton)
-            {
-                multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(15);
-                multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(1);
-
-                multiHandLandmarkListAnnotation.SetLandmarkRadius(15);
-                multiHandLandmarkListAnnotation.SetConnectionWidth(1);
-            }
-            else
-            {
-                multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(0);
-                multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(0);
-
-                multiHandLandmarkListAnnotation.SetLandmarkRadius(0);
-                multiHandLandmarkListAnnotation.SetConnectionWidth(0);
-            }
+            ToggleSkeleton(showSkeleton);
 
             BodylinkMultiPoseList.onPlayerFound = (playerCount, player_1_pointListAnnotation, player_2_pointListAnnotation) =>
             {
@@ -385,7 +370,23 @@ namespace BodylinkSDK
             {
                 PoseLandmarkerRunnerInstance.Resume();
                 handGestureRunnerInstance.Resume();
+                
+                // Sahne geçişinde Canvas'ın texture bağlantısı veya iskeletler silindiği için yeniden besliyoruz:
+                StartCoroutine(RestoreDebugViews());
             }
+        }
+
+        private IEnumerator RestoreDebugViews()
+        {
+            // SDK'nın toparlanması için 1 saniye bekle
+            yield return new WaitForSeconds(1f);
+            
+            if (_showCameraFeed)
+            {
+                DisplayCameraFeed(true);
+            }
+            
+            ToggleSkeleton(showSkeleton);
         }
 
 
@@ -441,6 +442,27 @@ namespace BodylinkSDK
             return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.legLength;
         }
 
+        public void ToggleSkeleton(bool show)
+        {
+            showSkeleton = show;
+            if (PoseLandmarkerRunnerInstance != null)
+            {
+                MultiPoseLandmarkListWithMaskAnnotation multiPoseLandmarkListWithMaskAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiPoseLandmarkListWithMaskAnnotation>();
+                MultiHandLandmarkListAnnotation multiHandLandmarkListAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiHandLandmarkListAnnotation>();
+
+                if (show)
+                {
+                    if (multiPoseLandmarkListWithMaskAnnotation != null) { multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(15); multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(1); }
+                    if (multiHandLandmarkListAnnotation != null) { multiHandLandmarkListAnnotation.SetLandmarkRadius(15); multiHandLandmarkListAnnotation.SetConnectionWidth(1); }
+                }
+                else
+                {
+                    if (multiPoseLandmarkListWithMaskAnnotation != null) { multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(0); multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(0); }
+                    if (multiHandLandmarkListAnnotation != null) { multiHandLandmarkListAnnotation.SetLandmarkRadius(0); multiHandLandmarkListAnnotation.SetConnectionWidth(0); }
+                }
+            }
+        }
+
         public void Show3DSkeleton(bool show, int playerIndex = 0, float size = .1f)
         {
             skeletonVisualizers[playerIndex].ShowSkelton(show, size);
@@ -449,8 +471,81 @@ namespace BodylinkSDK
         public void DisplayCameraFeed(bool show)
         {
             showCameraFeed = show;
-            players[0].SetMiniCameraScreen();
-            players[0].ShowMiniCamera(show);
+            if (cameraScreen != null)
+            {
+                var screenRawImage = cameraScreen.GetComponent<UnityEngine.UI.RawImage>();
+                if (screenRawImage != null)
+                {
+                    screenRawImage.enabled = show;
+                }
+            }
+            
+            // Kullanıcının Menu Canvas'ı "Overlay" modunda olduğu için SDK Canvas'ı eziliyor.
+            // Bu yüzden SDK'nın devasa Canvas'ını Mini PIP formatına dönüştürüp en öne (Overlay) alıyoruz:
+            if (PoseLandmarkerRunnerInstance != null)
+            {
+                Canvas sdkCanvas = PoseLandmarkerRunnerInstance.GetComponentInChildren<Canvas>();
+                if (sdkCanvas != null && show)
+                {
+                    // Her zaman en üstte kalması için Overlay moduna çek
+                    sdkCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    sdkCanvas.sortingOrder = 999;
+
+                    // Arka plan panelini bul, ufalt ve sağ alta sabitle
+                    Transform containerName = sdkCanvas.transform.Find("Container Panel");
+                    if (containerName != null)
+                    {
+                        RectTransform container = containerName.GetComponent<RectTransform>();
+                        
+                        // Ekranın matematiğini bozmamak için Anchor'ları tam ekran (0,0)-(1,1) bırakalım
+                        // Sadece Pivot'u sağ-alta (1,0) alıp objeyi %20 (%0.2) Scale ile küçültelim.
+                        // Böylece MediaPipe işleme matematiği 1920x1080 olarak çalışır ama ekranda 384x216 gözükür!
+                        container.anchorMin = new Vector2(0, 0); 
+                        container.anchorMax = new Vector2(1, 1); 
+                        
+                        // Pivot köşesini sağ alta sabitliyoruz ki küçüldüğünde oraya çekilsin
+                        container.pivot = new Vector2(1, 0);
+                        
+                        container.offsetMin = Vector2.zero;
+                        container.offsetMax = Vector2.zero;
+                        
+                        // Küçültme (Ölçek) - Ekranın %15'i boyutunda
+                        container.localScale = new Vector3(0.15f, 0.15f, 1f);
+                        
+                        // Sağ alt köşe hizasına sıfır oturur ama çerçeveden uzaklaştırmak için padding yapalım:
+                        container.anchoredPosition = new Vector2(-20, 20); // 20px sağdan, 20px alttan boşluk
+                        
+                        // Eğer Calibration HUD varsa onu da gizle:
+                        Transform maskScreen = containerName.Find("Body/Mask Screen");
+                        if (maskScreen != null) { maskScreen.gameObject.SetActive(false); }
+                    }
+
+                    // Dev beyaz "AvatarPanel" silüet görüntüsünü gizle (Container altında değil Canvas altında):
+                    Transform avatarPanel = sdkCanvas.transform.Find("AvatarPanel");
+                    if (avatarPanel != null) 
+                    { 
+                        // Objeyi kapatırsak içindeki BodylinkPlayerAvatar scriptleri de durur ve "Coroutine couldn't start" hatası verir.
+                        // Bu yüzden sadece Image bileşenlerini görünmez yapıyoruz:
+                        foreach(var img in avatarPanel.GetComponentsInChildren<UnityEngine.UI.Image>(true))
+                        {
+                            img.enabled = false;
+                        }
+                    }
+                }
+            }
+            
+            // Eğer ortada dev beyaz 3D Skelton (SkeletonVisualizer) varsa onu gizle:
+            if (skeletonVisualizers != null)
+            {
+                foreach (var skel in skeletonVisualizers)
+                    if (skel != null) skel.gameObject.SetActive(false);
+            }
+            
+            // Özelleştirilmiş mini kamerayı iptal edip tamamen gizliyoruz:
+            if (players != null && players.Length > 0 && players[0] != null)
+            {
+                players[0].ShowMiniCamera(false);
+            }
         }
 
         public void SetCameraFeedSize(float size)
