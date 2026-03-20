@@ -43,8 +43,9 @@ public class BodylinkUIInteractor : MonoBehaviour
     
     [Header("Scroll (Pinch & Drag) Settings")]
     [SerializeField] private bool usePinchScroll = true;
-    [SerializeField] private float pinchThreshold = 0.05f; // Baş ve işaret parmağı mesafesi
-    [SerializeField] private float scrollSensitivity = 1.5f; // Kaydırma hızı çarpanı
+    [SerializeField] private float pinchThreshold = 0.065f; // Tutma eşiği
+    [SerializeField] private float releaseThreshold = 0.09f; // Bırakma eşiği (Hysteresis)
+    [SerializeField] private float scrollSensitivity = 1.5f; 
     
     private float hoverTimer = 0f;
     private Vector2 lastHoverPos;
@@ -209,48 +210,54 @@ public class BodylinkUIInteractor : MonoBehaviour
         var thumbTip = hand.handLandmark[4];
         var indexTip = hand.handLandmark[8];
 
-        float distance = Vector2.Distance(new Vector2(thumbTip.x, thumbTip.y), new Vector2(indexTip.x, indexTip.y));
+        // 3D Mesafe (Normalleştirilmiş Z dahil)
+        float distance = Vector3.Distance(
+            new Vector3(thumbTip.x, thumbTip.y, thumbTip.z), 
+            new Vector3(indexTip.x, indexTip.y, indexTip.z)
+        );
 
-        if (distance < pinchThreshold)
+        if (!isPinching)
         {
-            // PINCH BAŞLADI / DEVAM EDİYOR
-            if (!isPinching)
+            if (distance < pinchThreshold)
             {
-                // İlk tutuşta ScrollRect ara
+                // PINCH BAŞLADI
                 activeScrollRect = FindScrollRectUnderPointer();
                 if (activeScrollRect != null)
                 {
                     isPinching = true;
                     lastPinchY = currentScreenPos.y;
                     
-                    // Görsel geri bildirim
                     if (cursorImage != null) cursorImage.color = Color.cyan;
                     cursorVisual.transform.localScale = Vector3.one * 0.8f;
                 }
+            }
+        }
+        else
+        {
+            // PINCH DEVAM EDİYOR
+            if (distance > releaseThreshold)
+            {
+                ReleaseScroll();
             }
             else if (activeScrollRect != null && activeScrollRect.gameObject.activeInHierarchy)
             {
                 // Kaydırma (Drag) işlemi
                 float deltaY = currentScreenPos.y - lastPinchY;
-                
-                // Screen deltaY'yi ScrollRect'in content yapısına uyarla
-                // Bu basit bir oranlamadır, gerekirse geliştirilebilir
                 float scrollAmount = (deltaY / Screen.height) * scrollSensitivity;
                 
-                // ScrollRect'i hareket ettir (sadece dikey)
                 if (activeScrollRect.vertical)
                 {
                     float newPos = activeScrollRect.verticalNormalizedPosition + scrollAmount;
                     activeScrollRect.verticalNormalizedPosition = Mathf.Clamp01(newPos);
                 }
 
-                lastPinchY = currentScreenPos.y; // Güncelle
+                lastPinchY = currentScreenPos.y; 
             }
         }
-        else
-        {
-            ReleaseScroll();
-        }
+    }
+
+    private void HandleScrollMovement() // Yardımcı metod (yapısal temizlik için eklendi sayılır ama mevcut akışta kalsın)
+    {
     }
 
     private ScrollRect FindScrollRectUnderPointer()

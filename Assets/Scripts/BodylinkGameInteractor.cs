@@ -48,7 +48,8 @@ public class BodylinkGameInteractor : MonoBehaviour
     private Image cursorImage;
 
     [Header("Pinch Grab Settings")]
-    [SerializeField] private float pinchThreshold = 0.05f; 
+    [SerializeField] private float pinchThreshold = 0.065f; // Baş ve işaret ucu birleşmesi 
+    [SerializeField] private float releaseThreshold = 0.09f; // Bırakma mesafesi (Hysteresis)
     [SerializeField] private float liftAmount = 1.5f; 
     [SerializeField] private float pinchGraceTime = 0.2f; // Titremeyi önlemek için ek süre (sn)
     
@@ -203,7 +204,7 @@ public class BodylinkGameInteractor : MonoBehaviour
         bool found = false;
 
         var hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
-        if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 12)
+        if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
         {
             // İşaret parmağı ucu imleç pozisyonu için
             var indexTip = hand.handLandmark[8];
@@ -213,23 +214,17 @@ public class BodylinkGameInteractor : MonoBehaviour
 
             // Pinch (Cımbız) Mesafesi Hesapla
             float dist = CalculatePinchDistance(hand);
-            bool pinchDetected = dist < pinchThreshold;
-
-            if (pinchDetected)
+            
+            // Histerezis (Hysteresis) Mantığı
+            if (!isPinching)
             {
-                pinchGraceTimer = pinchGraceTime;
-                if (!isPinching) StartPinch();
+                // Yakalamak için pinchThreshold altına inmeli
+                if (dist < pinchThreshold) StartPinch();
             }
             else
             {
-                if (pinchGraceTimer > 0)
-                {
-                    pinchGraceTimer -= Time.unscaledDeltaTime;
-                }
-                else if (isPinching)
-                {
-                    EndPinch();
-                }
+                // Bırakmak için releaseThreshold üzerine çıkmalı (daha geniş bir boşluk)
+                if (dist > releaseThreshold) EndPinch();
             }
         }
         else
@@ -282,23 +277,21 @@ public class BodylinkGameInteractor : MonoBehaviour
 
     private float CalculatePinchDistance(BodylinkSDK.BodylinkHandPoints hand)
     {
-        var p4 = hand.handLandmark[4]; // Baş
-        var p8 = hand.handLandmark[8]; // İşaret
-        var p12 = hand.handLandmark[12]; // Orta
+        // Sadece Baş Parmak (4) ve İşaret Parmağı (8) ucu mesafesi
+        // 3D Landmark kullanıyoruz çünkü derinlik farkı iki parmağın üst üste bindiği "sahte" pinch'leri önler
+        var p4 = hand.handLandmark[4]; // Baş parmak ucu
+        var p8 = hand.handLandmark[8]; // İşaret parmağı ucu
 
-        float d48 = Vector3.Distance(new Vector3(p4.x, p4.y, p4.z), new Vector3(p8.x, p8.y, p8.z));
-        float d812 = Vector3.Distance(new Vector3(p8.x, p8.y, p8.z), new Vector3(p12.x, p12.y, p12.z));
-        float d412 = Vector3.Distance(new Vector3(p4.x, p4.y, p4.z), new Vector3(p12.x, p12.y, p12.z));
+        // NormalizedLandmark -> Vector3 çevirisi 
+        Vector3 thumb = new Vector3(p4.x, p4.y, p4.z);
+        Vector3 index = new Vector3(p8.x, p8.y, p8.z);
 
-        float avgDist = (d48 + d812 + d412) / 3f;
+        float dist = Vector3.Distance(thumb, index);
         
-        // Debug için konsolda her karede değil, mesafe düşükken log basabiliriz
-        if (avgDist < pinchThreshold * 2f)
-        {
-            // Debug.Log($"Bodylink: Mevcut Pinch Mesafesi: {avgDist:F4} (Hedef: < {pinchThreshold})");
-        }
+        // Debug için konsolda mesafe takibi yapılabilir (Opsiyonel)
+        // Debug.Log($"Bodylink: Pinch Distance: {dist:F4}");
 
-        return avgDist;
+        return dist;
     }
 
     private void StartPinch()
@@ -373,10 +366,14 @@ public class BodylinkGameInteractor : MonoBehaviour
                     tile.Select(); // Hamle yapmayı dene
                 }
             }
-            
-            // ÖNEMLİ: Taş bırakıldığında her durumda UpdatePosition'ı çağırıyoruz.
-            // Eğer hamle geçerliyse zaten Chess Engine tarafından animasyonla yeni yerine gider.
-            // Eğer hamle geçersizse, taş animasyonla ESKİ yerine otomatik döner.
+
+            // KRİTİK DÜZELTME V2: Bırakma işlemi bittiğine göre, eğer hala bir şey seçili kalmışsa
+            // (kareye isabet etmemiş olabilir veya hamle geçersiz olabilir), seçimi temizle.
+            if (chessGameManager != null && chessGameManager.Selected.visualPiece != null)
+            {
+                chessGameManager.Deselect();
+            }
+
             VisualChessPiece pieceToReset = grabbedPiece;
             grabbedPiece = null;
             pieceToReset.UpdatePosition(true);

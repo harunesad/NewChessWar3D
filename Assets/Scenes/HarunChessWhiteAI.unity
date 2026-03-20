@@ -436,14 +436,15 @@ MonoBehaviour:
   activeHand: 1
   useSmoothedPoints: 1
   mirrorX: 0
-  sensitivity: 1.8
+  sensitivity: 2
   yOffset: 0.15
   xOffset: 0
   smoothSpeed: 0.15
   useHoverClick: 1
   hoverDuration: 1
   hoverMoveThreshold: 50
-  pinchThreshold: 0.07
+  pinchThreshold: 0.065
+  releaseThreshold: 0.09
   liftAmount: 1.5
   pinchGraceTime: 0.2
 --- !u!4 &85696933
