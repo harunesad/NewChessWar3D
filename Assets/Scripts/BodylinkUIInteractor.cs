@@ -144,9 +144,12 @@ public class BodylinkUIInteractor : MonoBehaviour
         var hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
         if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
         {
-            var point = hand.handLandmark[8];
-            x = point.x;
-            y = 1f - point.y;
+            // Enoch FeedBack Fix: İmleci baş ve işaret parmağı ortasına alıyoruz
+            var thumbTip = hand.handLandmark[4];
+            var indexTip = hand.handLandmark[8];
+            
+            x = (thumbTip.x + indexTip.x) / 2f;
+            y = 1f - ((thumbTip.y + indexTip.y) / 2f);
             found = true;
         }
         else

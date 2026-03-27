@@ -206,10 +206,13 @@ public class BodylinkGameInteractor : MonoBehaviour
         var hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
         if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
         {
-            // İşaret parmağı ucu imleç pozisyonu için
+            // Enoch FeedBack Fix: İmleci baş parmak ve işaret parmağı ORTASINA alıyoruz.
+            // Bu sayede 'kıskacın' tam merkeziyle tutma yapılmış olur.
+            var thumbTip = hand.handLandmark[4];
             var indexTip = hand.handLandmark[8];
-            x = indexTip.x;
-            y = 1f - indexTip.y;
+            
+            x = (thumbTip.x + indexTip.x) / 2f;
+            y = 1f - ((thumbTip.y + indexTip.y) / 2f);
             found = true;
 
             // Pinch (Cımbız) Mesafesi Hesapla
