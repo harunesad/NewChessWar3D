@@ -29,4 +29,12 @@ namespace BodylinkSDK
         Victory,
         ILoveYou
     }
+
+    public enum BodylinkCalibrationMode
+    {
+        Target_Points_Match,
+        Free_Points_Position,
+        T_or_Idle_Pose_Detection,
+        Continuous_Auto
+    }
 }

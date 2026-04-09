@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 public class HandPoseExample : MonoBehaviour
 {
-    public Text playerOnePoseText, playerTwoPoseText;
+    public Text playerOneLeftPoseText, playerOneRightPoseText, playerTwoLeftPoseText, playerTwoRightPoseText;
+
     public Canvas canvas;
 
     IEnumerator Start()
@@ -15,7 +16,8 @@ public class HandPoseExample : MonoBehaviour
         Bodylink.Instance.OnInitialized += () =>
         {
             canvas.gameObject.SetActive(true);
-            playerTwoPoseText.gameObject.SetActive(Bodylink.Instance.isMultiplayerEnabled);
+            playerTwoLeftPoseText.gameObject.SetActive(Bodylink.Instance.isMultiplayerEnabled);
+            playerTwoRightPoseText.gameObject.SetActive(Bodylink.Instance.isMultiplayerEnabled);
         };
 
         Bodylink.Instance.inputEvents.OnPoseDetection += OnHandPoseDetection;
@@ -32,11 +34,25 @@ public class HandPoseExample : MonoBehaviour
     {
         if (playerIndex == 0)
         {
-            playerOnePoseText.text = "Player 1: \n" + "Hand Side: " + side.ToString() + "\nPose" + ": " + handPose.ToString();
+            if (side == Side.Left)
+            {
+                playerOneLeftPoseText.text = "Player 1: \n" + "Hand Side: " + side.ToString() + "\nPose" + ": " + handPose.ToString();
+            }
+            else
+            {
+                playerOneRightPoseText.text = "Player 1: \n" + "Hand Side: " + side.ToString() + "\nPose" + ": " + handPose.ToString();
+            }
         }
         else
         {
-            playerTwoPoseText.text = "Player 2: \n" + "Hand Side: " + side.ToString() + "\nPose" + ": " + handPose.ToString();
+            if (side == Side.Left)
+            {
+                playerTwoLeftPoseText.text = "Player 2: \n" + "Hand Side: " + side.ToString() + "\nPose" + ": " + handPose.ToString();
+            }
+            else
+            {
+                playerTwoRightPoseText.text = "Player 2: \n" + "Hand Side: " + side.ToString() + "\nPose" + ": " + handPose.ToString();
+            }
         }
     }
 }

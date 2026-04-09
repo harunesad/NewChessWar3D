@@ -4,8 +4,7 @@ using BodylinkSDK;
 
 /// <summary>
 /// Sahne değişiminde Bodylink SDK'sındaki Camera referansını otomatik günceller.
-/// Bodylink DontDestroyOnLoad olduğundan sahnedeki kamera yok olduğunda
-/// referans null kalır. Bu script yeni sahnenin Main Camera'sını atar.
+/// Android'de ön kamera seçimi artık Bodylink.cs içinde pipeline kurulmadan önce yapılıyor.
 /// </summary>
 [RequireComponent(typeof(Bodylink))]
 public class BodylinkCameraUpdater : MonoBehaviour
@@ -29,7 +28,6 @@ public class BodylinkCameraUpdater : MonoBehaviour
 
     private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
     {
-        // Yeni sahnenin Main Camera'sını bul ve Bodylink'e ata
         Camera mainCam = Camera.main;
         if (mainCam != null)
         {

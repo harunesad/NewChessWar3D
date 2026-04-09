@@ -9,6 +9,8 @@ using Mediapipe.Tasks.Components.Containers;
 
 public class BodylinkGameInteractor : MonoBehaviour
 {
+    public static BodylinkGameInteractor Instance { get; private set; }
+
     [Header("References")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private ChessGameManager chessGameManager;
@@ -19,6 +21,7 @@ public class BodylinkGameInteractor : MonoBehaviour
     [SerializeField] private float maxRaycastDistance = 1000f;
     [SerializeField] private LayerMask tileLayer = ~0; // Varsayılan olarak her şeyi tara (Default dahil)
     [SerializeField] private Side activeHand = Side.Right;
+    [SerializeField] private bool autoSelectHand = true; 
     [SerializeField] private bool useSmoothedPoints = true;
     [SerializeField] private bool mirrorX = true;
 
@@ -30,11 +33,11 @@ public class BodylinkGameInteractor : MonoBehaviour
     [Range(-0.5f, 0.5f)]
     [SerializeField] private float xOffset = 0f;
     [Range(0.01f, 1f)]
-    [SerializeField] private float smoothSpeed = 0.15f;
+    [SerializeField] private float smoothFactor = 0.15f; // EMA filter factor
 
     private Bodylink bodylink;
-    private Vector2 currentScreenPos;
-    private bool isGestureActive = false;
+    public Vector2 currentScreenPos;
+    public bool isGestureActive = false;
     private PointerEventData pointerData;
     private List<RaycastResult> raycastResults = new List<RaycastResult>();
     
@@ -48,12 +51,14 @@ public class BodylinkGameInteractor : MonoBehaviour
     private Image cursorImage;
 
     [Header("Pinch Grab Settings")]
-    [SerializeField] private float pinchThreshold = 0.065f; // Baş ve işaret ucu birleşmesi 
-    [SerializeField] private float releaseThreshold = 0.09f; // Bırakma mesafesi (Hysteresis)
+    [SerializeField] private float pinchThreshold = 0.065f; 
+    [SerializeField] private float releaseThreshold = 0.09f; 
     [SerializeField] private float liftAmount = 1.5f; 
-    [SerializeField] private float pinchGraceTime = 0.2f; // Titremeyi önlemek için ek süre (sn)
+    [SerializeField] private float pinchGraceTime = 0.2f; 
     
-    private bool isPinching = false;
+    private float smoothedPinchDist = 0.5f; 
+    
+    public bool isPinching = false;
     private float pinchGraceTimer = 0f;
     private VisualChessPiece grabbedPiece = null;
     private Vector3 originalPiecePos;
@@ -62,6 +67,11 @@ public class BodylinkGameInteractor : MonoBehaviour
     private RawImage miniCamRawImage; // Texture senkronizasyonu için referans
 
     private const float MIN_VISIBILITY = 0.05f;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -127,7 +137,10 @@ public class BodylinkGameInteractor : MonoBehaviour
 
     private void HandlePoseDetection(int playerIndex, string poseName, Side side, HandPose pose)
     {
-        if (playerIndex != 0 || side != activeHand) return;
+        if (playerIndex != 0) return;
+        
+        // Otomatik el seçiminde her iki ele de bak
+        if (!autoSelectHand && side != activeHand) return;
 
         if (pose == HandPose.Victory)
         {
@@ -203,11 +216,34 @@ public class BodylinkGameInteractor : MonoBehaviour
         float x = 0, y = 0;
         bool found = false;
 
-        var hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
+        // DUAL-HAND LOGIC: Hangi el o an görülüyorsa ona geçiş yap
+        BodylinkHandPoints hand = null;
+        var leftH = player.handPoints[0];
+        var rightH = player.handPoints[1];
+        
+        bool leftValid = leftH != null && leftH.handLandmark != null && leftH.handLandmark.Count > 10;
+        bool rightValid = rightH != null && rightH.handLandmark != null && rightH.handLandmark.Count > 10;
+
+        if (autoSelectHand)
+        {
+            // Eğer iki el de varsa, o anki aktif eli korumaya çalış, yoksa görülen eli seç
+            if (leftValid && rightValid) hand = (activeHand == Side.Left) ? leftH : rightH;
+            else if (leftValid) { hand = leftH; activeHand = Side.Left; }
+            else if (rightValid) { hand = rightH; activeHand = Side.Right; }
+        }
+        else
+        {
+            hand = (activeHand == Side.Left) ? leftH : rightH;
+            // Manuel seçimde de el bulunamazsa diğerine fallback yap (opsiyonel ama daha stabil)
+            if ((hand == null || hand.handLandmark == null) && (leftValid || rightValid))
+            {
+                hand = leftValid ? leftH : rightH;
+                activeHand = leftValid ? Side.Left : Side.Right;
+            }
+        }
+
         if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
         {
-            // Enoch FeedBack Fix: İmleci baş parmak ve işaret parmağı ORTASINA alıyoruz.
-            // Bu sayede 'kıskacın' tam merkeziyle tutma yapılmış olur.
             var thumbTip = hand.handLandmark[4];
             var indexTip = hand.handLandmark[8];
             
@@ -215,29 +251,41 @@ public class BodylinkGameInteractor : MonoBehaviour
             y = 1f - ((thumbTip.y + indexTip.y) / 2f);
             found = true;
 
-            // Pinch (Cımbız) Mesafesi Hesapla
+            // Pinch Mesafesi (EMA Filtresi uygulanmış haliyle)
             float dist = CalculatePinchDistance(hand);
             
-            // Histerezis (Hysteresis) Mantığı
             if (!isPinching)
             {
-                // Yakalamak için pinchThreshold altına inmeli
-                if (dist < pinchThreshold) StartPinch();
+                if (dist < pinchThreshold) 
+                {
+                    pinchGraceTimer = 0;
+                    StartPinch();
+                }
             }
             else
             {
-                // Bırakmak için releaseThreshold üzerine çıkmalı (daha geniş bir boşluk)
-                if (dist > releaseThreshold) EndPinch();
+                // Bırakma kontrolünde Grace Time (Zarif Bırakma Süresi) kullan
+                if (dist > releaseThreshold) 
+                {
+                    pinchGraceTimer += Time.deltaTime;
+                    if (pinchGraceTimer >= pinchGraceTime)
+                    {
+                        EndPinch();
+                    }
+                }
+                else
+                {
+                    pinchGraceTimer = 0; // Mesafe tekrar daralırsa süreyi sıfırla
+                }
             }
         }
         else
         {
-            // El kaybolursa hemen bırak
             if (isPinching) EndPinch();
             
             NormalizedLandmark wrist = (activeHand == Side.Left) 
                 ? (useSmoothedPoints ? player.body2DSmoothed.leftWrist : player.body2D.leftWrist)
-                : (useSmoothedPoints ? player.body2DSmoothed.rightWrist : player.body2D.rightWrist);
+                : (useSmoothedPoints ? player.body2D.rightWrist : player.body2DSmoothed.rightWrist);
 
             if (wrist.visibility >= MIN_VISIBILITY)
             {
@@ -264,7 +312,7 @@ public class BodylinkGameInteractor : MonoBehaviour
         y = Mathf.Clamp01(y);
 
         Vector2 targetScreenPos = new Vector2(x * Screen.width, y * Screen.height);
-        currentScreenPos = Vector2.Lerp(currentScreenPos, targetScreenPos, smoothSpeed);
+        currentScreenPos = Vector2.Lerp(currentScreenPos, targetScreenPos, smoothFactor);
 
         if (cursorVisual != null)
         {
@@ -289,12 +337,12 @@ public class BodylinkGameInteractor : MonoBehaviour
         Vector3 thumb = new Vector3(p4.x, p4.y, p4.z);
         Vector3 index = new Vector3(p8.x, p8.y, p8.z);
 
-        float dist = Vector3.Distance(thumb, index);
+        float rawDist = Vector3.Distance(thumb, index);
         
-        // Debug için konsolda mesafe takibi yapılabilir (Opsiyonel)
-        // Debug.Log($"Bodylink: Pinch Distance: {dist:F4}");
+        // EMA Filter for pinch distance
+        smoothedPinchDist = Mathf.Lerp(smoothedPinchDist, rawDist, 0.4f); 
 
-        return dist;
+        return smoothedPinchDist;
     }
 
     private void StartPinch()
@@ -399,7 +447,8 @@ public class BodylinkGameInteractor : MonoBehaviour
             if (hit.collider.transform.IsChildOf(grabbedPiece.transform)) return;
 
             Vector3 targetPos = hit.point + Vector3.up * liftAmount;
-            grabbedPiece.transform.position = Vector3.Lerp(grabbedPiece.transform.position, targetPos, 0.2f);
+            // Tutulan taşı sürüklerken de düzgün yumuşatma uygula
+            grabbedPiece.transform.position = Vector3.Lerp(grabbedPiece.transform.position, targetPos, smoothFactor * 1.5f);
         }
     }
 

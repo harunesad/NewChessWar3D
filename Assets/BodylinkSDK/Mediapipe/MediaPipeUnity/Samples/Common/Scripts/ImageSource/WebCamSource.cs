@@ -133,16 +133,6 @@ namespace Mediapipe.Unity
       if (availableSources != null && availableSources.Length > 0)
       {
         webCamDevice = availableSources[0];
-        
-        // Try to find a front-facing camera specifically
-        foreach (var device in availableSources)
-        {
-          if (device.isFrontFacing)
-          {
-            webCamDevice = device;
-            break;
-          }
-        }
       }
     }
 

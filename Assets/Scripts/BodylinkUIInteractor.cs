@@ -14,18 +14,19 @@ public class BodylinkUIInteractor : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private Side activeHand = Side.Right;
+    [SerializeField] private bool autoSelectHand = true; 
     [SerializeField] private bool useSmoothedPoints = true;
     [SerializeField] private bool mirrorX = true;
 
     [Header("Mapping & Sensitivity")]
     [Range(1f, 5f)]
-    [SerializeField] private float sensitivity = 1.8f; // CursorPointer hissi için biraz artırıldı
+    [SerializeField] private float sensitivity = 1.8f; 
     [Range(-0.5f, 0.5f)]
-    [SerializeField] private float yOffset = 0.15f; // Üst butonlara erişim için ideal ofset
+    [SerializeField] private float yOffset = 0.15f; 
     [Range(-0.5f, 0.5f)]
     [SerializeField] private float xOffset = 0f;
     [Range(0.01f, 1f)]
-    [SerializeField] private float smoothSpeed = 0.15f; // CursorPointer'daki gibi akıcı hareket
+    [SerializeField] private float smoothFactor = 0.15f; // EMA smoothing factor (0.01 = very smooth, 1 = raw)
 
     private Bodylink bodylink;
     private Vector2 currentScreenPos;
@@ -110,7 +111,10 @@ public class BodylinkUIInteractor : MonoBehaviour
 
     private void HandlePoseDetection(int playerIndex, string poseName, Side side, HandPose pose)
     {
-        if (playerIndex != 0 || side != activeHand) return;
+        if (playerIndex != 0) return;
+        
+        // Eğer otomatik moddaysak hem sağ hem sol ele bak, değilse sadece seçili ele
+        if (!autoSelectHand && side != activeHand) return;
 
         // "Victory" (Zafer İşareti - İki parmak) jestini tıklama olarak kabul et
         if (pose == HandPose.Victory)
@@ -129,22 +133,45 @@ public class BodylinkUIInteractor : MonoBehaviour
 
     void Update()
     {
-        if (bodylink.players == null || bodylink.players.Length == 0) return;
-
         UpdateCursorPosition();
     }
 
     private void UpdateCursorPosition()
     {
-        // El (Hand) Landmarkları veya Vücut (Pose) Landmarkları ile pozisyon hesapla
+        if (bodylink.players == null || bodylink.players.Length == 0) return;
+        
         var player = bodylink.players[0];
         float x = 0, y = 0;
         bool found = false;
 
-        var hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
+        // DUAL-HAND LOGIC: Hangi el o an daha aktifse onu kullan
+        BodylinkHandPoints hand = null;
+        
+        if (autoSelectHand)
+        {
+            var leftHand = player.handPoints[0];
+            var rightHand = player.handPoints[1];
+            
+            // Hangi elin Landmark sayısı daha fazlaysa veya hangisi daha "vurguluysa" onu seç
+            bool leftValid = leftHand != null && leftHand.handLandmark != null && leftHand.handLandmark.Count > 8;
+            bool rightValid = rightHand != null && rightHand.handLandmark != null && rightHand.handLandmark.Count > 8;
+            
+            if (leftValid && rightValid)
+            {
+                // İki el de varsa, daha önceden hangi el aktifse ona bir miktar öncelik ver (Zıplamayı önlemek için)
+                if (activeHand == Side.Left) hand = leftHand;
+                else hand = rightHand;
+            }
+            else if (leftValid) { hand = leftHand; activeHand = Side.Left; }
+            else if (rightValid) { hand = rightHand; activeHand = Side.Right; }
+        }
+        else
+        {
+            hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
+        }
+
         if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
         {
-            // Enoch FeedBack Fix: İmleci baş ve işaret parmağı ortasına alıyoruz
             var thumbTip = hand.handLandmark[4];
             var indexTip = hand.handLandmark[8];
             
@@ -156,7 +183,7 @@ public class BodylinkUIInteractor : MonoBehaviour
         {
             NormalizedLandmark wrist = (activeHand == Side.Left) 
                 ? (useSmoothedPoints ? player.body2DSmoothed.leftWrist : player.body2D.leftWrist)
-                : (useSmoothedPoints ? player.body2DSmoothed.rightWrist : player.body2D.rightWrist);
+                : (useSmoothedPoints ? player.body2D.rightWrist : player.body2DSmoothed.rightWrist); 
 
             if (wrist.visibility >= MIN_VISIBILITY)
             {
@@ -181,7 +208,9 @@ public class BodylinkUIInteractor : MonoBehaviour
         y = Mathf.Clamp01(y);
 
         Vector2 targetScreenPos = new Vector2(x * Screen.width, y * Screen.height);
-        currentScreenPos = Vector2.Lerp(currentScreenPos, targetScreenPos, smoothSpeed);
+        
+        // EMA (Exponential Moving Average) FILTERING: Daha kararlı imleç
+        currentScreenPos = Vector2.Lerp(currentScreenPos, targetScreenPos, smoothFactor);
 
         if (cursorVisual != null)
         {

@@ -167,6 +167,38 @@ namespace BodylinkSDK
 
         private void HandleKeyboardFallbacks()
         {
+            Vector2 leftKeyboardStick = ReadKeyboardStick(KeyCode.A, KeyCode.D, KeyCode.S, KeyCode.W);
+            if (leftKeyboardStick.sqrMagnitude > 0f)
+            {
+                leftStickValue = leftKeyboardStick;
+            }
+
+            Vector2 rightKeyboardStick = ReadKeyboardStick(KeyCode.J, KeyCode.L, KeyCode.K, KeyCode.I);
+            if (rightKeyboardStick.sqrMagnitude > 0f)
+            {
+                rightStickValue = rightKeyboardStick;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                leftTriggerPressed = true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                leftStickButtonPressed = true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                rightTriggerPressed = true;
+            }
+
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                rightStickButtonPressed = true;
+            }
+
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 oButtonPressed = true;
@@ -181,6 +213,35 @@ namespace BodylinkSDK
             {
                 menuPressed = true;
             }
+        }
+
+        private static Vector2 ReadKeyboardStick(KeyCode left, KeyCode right, KeyCode down, KeyCode up)
+        {
+            float x = 0f;
+            float y = 0f;
+
+            if (Input.GetKey(left))
+            {
+                x -= 1f;
+            }
+
+            if (Input.GetKey(right))
+            {
+                x += 1f;
+            }
+
+            if (Input.GetKey(down))
+            {
+                y -= 1f;
+            }
+
+            if (Input.GetKey(up))
+            {
+                y += 1f;
+            }
+
+            Vector2 stick = new Vector2(x, y);
+            return stick.sqrMagnitude > 1f ? stick.normalized : stick;
         }
 
         public static bool GetKeyDown(Key bodylinkKeyCode)

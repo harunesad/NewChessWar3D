@@ -11,9 +11,17 @@ using Mediapipe.Unity.Sample.HandLandmarkDetection;
 using Mediapipe.Tasks.Components.Containers;
 using Mediapipe.Tasks.Vision.GestureRecognizer;
 using UnityEngine.Serialization;
+using System.IO;
+using System.Linq;
 
 namespace BodylinkSDK
 {
+    public enum BodylinkInputStreamType
+    {
+        WebCam = 0,
+        Video = 1
+    }
+
     public class Bodylink : MonoBehaviour
     {
         // === Singleton Instance ===
@@ -41,13 +49,22 @@ namespace BodylinkSDK
         [SerializeField] private bool _showCameraFeed = false;
         [FormerlySerializedAs("cam")]
         [SerializeField] private Camera _cam;
+        [Header("Input Stream")]
+        [SerializeField] private BodylinkInputStreamType _inputStream = BodylinkInputStreamType.WebCam;
+        [SerializeField] private UnityEngine.Object _selectedVideoAsset;
+        [SerializeField, HideInInspector] private string _selectedVideoFile = string.Empty;
+        [SerializeField] private bool _playVideoInLoop = true;
         private const float referenceHeight = 1.65f; // average height for normalization
+        private static readonly string[] SupportedVideoExtensions = { ".mp4", ".mov", ".m4v", ".avi", ".mpeg", ".mpg", ".webm" };
 
         [Range(1, 2)]
         [FormerlySerializedAs("numberOfPlayers")]
         [SerializeField] private int _numberOfPlayers = 1;
 
         public bool isCalibrating { get; set; }
+
+        [FormerlySerializedAs("Calibration Mode")]
+        [SerializeField] private BodylinkCalibrationMode calibrationMode;
 
 
         [FormerlySerializedAs("calibrationType")]
@@ -93,6 +110,32 @@ namespace BodylinkSDK
             set => _cam = value;
         }
 
+        public BodylinkInputStreamType inputStream
+        {
+            get => _inputStream;
+            set => _inputStream = value;
+        }
+
+        public string selectedVideoFile
+        {
+            get => _selectedVideoFile;
+            set => _selectedVideoFile = value;
+        }
+
+        public UnityEngine.Object selectedVideoAsset
+        {
+            get => _selectedVideoAsset;
+            set => _selectedVideoAsset = value;
+        }
+
+        public bool playVideoInLoop
+        {
+            get => _playVideoInLoop;
+            set => _playVideoInLoop = value;
+        }
+
+        public string videoRecordingsFolderPath => Path.Combine(Application.dataPath, "Videos");
+
         public int numberOfPlayers
         {
             get => _numberOfPlayers;
@@ -103,6 +146,12 @@ namespace BodylinkSDK
         {
             get => _calibrationType;
             set => _calibrationType = value;
+        }
+
+        public BodylinkCalibrationMode selectedCalibrationMode
+        {
+            get => calibrationMode;
+            set => calibrationMode = value;
         }
 
         public int matchPointLimit
@@ -151,6 +200,12 @@ namespace BodylinkSDK
 
         private PoseLandmarkDetectionConfig poseConfig; //used to change no of players
         private GestureRecognizerConfig handConfig;
+        private Coroutine inputStreamApplyRoutine;
+        private Coroutine startupCalibrationRoutine;
+        private BodylinkCalibrationMode startupCalibrationMode;
+        private BodylinkCalibrationType startupCalibrationType;
+        private int startupMatchPointLimit;
+        private float startupCalibrationWaitTime;
 
         public BodyPoints3DGameObject bodyPoints3DGameObject { get; private set; }
         public BodyPoints2DGameObject bodyPoints2DGameObject { get; private set; }
@@ -186,6 +241,10 @@ namespace BodylinkSDK
             // Clamp the selected limit to the available tracked points for the chosen calibration type
             int maxAllowed = GetMaxMatchPoints(calibrationType);
             matchPointLimit = Mathf.Clamp(matchPointLimit, 1, maxAllowed);
+#if UNITY_EDITOR
+            SyncSelectedVideoPathFromAsset();
+#endif
+            EnsureSelectedVideoIsValid();
         }
 
         private int GetMaxMatchPoints(BodylinkCalibrationType type)
@@ -216,6 +275,10 @@ namespace BodylinkSDK
 
             Instance = this;
             cachedInputEvents = GetComponent<BodylinkEvents>();
+            startupCalibrationMode = calibrationMode;
+            startupCalibrationType = _calibrationType;
+            startupMatchPointLimit = _matchPointLimit;
+            startupCalibrationWaitTime = calibrationWaitTime;
             DontDestroyOnLoad(gameObject);
 
             // Subscribe to scene change events
@@ -224,11 +287,16 @@ namespace BodylinkSDK
 
         private void Start()
         {
-            if (initializeOnStart) Initialize(() =>
+            if (!initializeOnStart)
             {
-                if (calibrateOnStart) Calibrate();
-            });
+                return;
+            }
 
+            Initialize();
+            if (calibrateOnStart)
+            {
+                StartStartupCalibration();
+            }
         }
 
         // === Core Functions ===
@@ -277,7 +345,22 @@ namespace BodylinkSDK
             MultiPoseLandmarkListWithMaskAnnotation multiPoseLandmarkListWithMaskAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiPoseLandmarkListWithMaskAnnotation>();
             MultiHandLandmarkListAnnotation multiHandLandmarkListAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiHandLandmarkListAnnotation>();
 
-            ToggleSkeleton(showSkeleton);
+            if (showSkeleton)
+            {
+                multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(15);
+                multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(1);
+
+                multiHandLandmarkListAnnotation.SetLandmarkRadius(15);
+                multiHandLandmarkListAnnotation.SetConnectionWidth(1);
+            }
+            else
+            {
+                multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(0);
+                multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(0);
+
+                multiHandLandmarkListAnnotation.SetLandmarkRadius(0);
+                multiHandLandmarkListAnnotation.SetConnectionWidth(0);
+            }
 
             BodylinkMultiPoseList.onPlayerFound = (playerCount, player_1_pointListAnnotation, player_2_pointListAnnotation) =>
             {
@@ -300,6 +383,12 @@ namespace BodylinkSDK
                 callback?.Invoke();
             };
 
+            if (inputStreamApplyRoutine != null)
+            {
+                StopCoroutine(inputStreamApplyRoutine);
+            }
+            inputStreamApplyRoutine = StartCoroutine(ApplyInputStreamWhenReady());
+
         }
 
         public void Calibrate(Action callback = null)
@@ -309,8 +398,20 @@ namespace BodylinkSDK
                 Debug.LogWarning("[Bodylink] Cannot calibrate before initialization.");
                 return;
             }
+
+            StartCalibrationWithCurrentSettings(callback);
+        }
+
+        private void StartCalibrationWithCurrentSettings(Action callback = null)
+        {
+            if (bodylinkAvatar == null)
+            {
+                Debug.LogWarning("[Bodylink] Cannot calibrate before avatar components are ready.");
+                return;
+            }
+
             IsCalibrated = false;
-            bodylinkAvatar.Calibrate(calibrationType, () =>
+            bodylinkAvatar.Calibrate(selectedCalibrationMode, calibrationType, () =>
             {
                 IsCalibrated = true;
                 //Debug.Log("[Bodylink] Calibrated.");
@@ -325,6 +426,63 @@ namespace BodylinkSDK
 
         }
 
+        private void StartCalibrationWithSettings(
+            BodylinkCalibrationMode calibrationModeToUse,
+            BodylinkCalibrationType calibrationTypeToUse,
+            int matchPointLimitToUse,
+            float calibrationWaitTimeToUse,
+            Action callback = null)
+        {
+            if (bodylinkAvatar == null)
+            {
+                Debug.LogWarning("[Bodylink] Cannot calibrate before avatar components are ready.");
+                return;
+            }
+
+            matchPointLimit = matchPointLimitToUse;
+            IsCalibrated = false;
+            bodylinkAvatar.Calibrate(calibrationModeToUse, calibrationTypeToUse, () =>
+            {
+                IsCalibrated = true;
+                OnCalibrated?.Invoke();
+                callback?.Invoke();
+            }, calibrationWaitTimeToUse);
+        }
+
+        private void StartStartupCalibration()
+        {
+            if (startupCalibrationRoutine != null)
+            {
+                StopCoroutine(startupCalibrationRoutine);
+            }
+
+            startupCalibrationRoutine = StartCoroutine(CalibrateOnStartWhenReady());
+        }
+
+        private IEnumerator CalibrateOnStartWhenReady()
+        {
+            yield return new WaitUntil(() =>
+                bodylinkAvatar != null &&
+                players != null &&
+                players.Length > 0 &&
+                players[0] != null &&
+                players[0].bodyLimbCalibration2D != null);
+
+            startupCalibrationRoutine = null;
+
+            if (!calibrateOnStart || isCalibrating)
+            {
+                yield break;
+            }
+
+            // Startup calibration uses the inspector values captured in Awake().
+            StartCalibrationWithSettings(
+                startupCalibrationMode,
+                startupCalibrationType,
+                startupMatchPointLimit,
+                startupCalibrationWaitTime);
+        }
+
         public void DisableCalibration()
         {
             IsCalibrated = true;
@@ -335,6 +493,11 @@ namespace BodylinkSDK
         {
             IsInitialized = false;
             IsCalibrated = false;
+            if (inputStreamApplyRoutine != null)
+            {
+                StopCoroutine(inputStreamApplyRoutine);
+                inputStreamApplyRoutine = null;
+            }
             if (PoseLandmarkerRunnerInstance != null)
             {
                 PoseLandmarkerRunnerInstance.Stop();
@@ -351,42 +514,285 @@ namespace BodylinkSDK
             OnDisposed?.Invoke();
         }
 
+        private IEnumerator ApplyInputStreamWhenReady()
+        {
+            const float timeoutSeconds = 10f;
+            float timeoutAt = Time.realtimeSinceStartup + timeoutSeconds;
+
+            while (ImageSourceProvider.ImageSource == null && Time.realtimeSinceStartup < timeoutAt)
+            {
+                yield return null;
+            }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Android'de kamera izni verilene kadar bekle (WebCamTexture.devices boş döner)
+            float deviceWaitStart = Time.realtimeSinceStartup;
+            while (WebCamTexture.devices.Length == 0 && Time.realtimeSinceStartup < deviceWaitStart + 10f)
+            {
+                yield return null;
+            }
+
+            // Ön kamerayı pipeline başlamadan önce seç
+            if (_inputStream != BodylinkInputStreamType.Video && ImageSourceProvider.ImageSource != null)
+            {
+                PreSelectFrontCamera(ImageSourceProvider.ImageSource);
+            }
+#endif
+
+            ApplyInputStreamSettings(true);
+            inputStreamApplyRoutine = null;
+        }
+
         public void SelectSource(int index)
         {
             imageSource.SelectSource(index);
-            if (PoseLandmarkerRunnerInstance.isActiveAndEnabled)
+            if (PoseLandmarkerRunnerInstance != null && PoseLandmarkerRunnerInstance.isActiveAndEnabled)
             {
                 PoseLandmarkerRunnerInstance.Resume();
             }
-            else
+            else if (PoseLandmarkerRunnerInstance != null)
             {
                 PoseLandmarkerRunnerInstance.Play();
             }
+
+            // handGestureRunnerInstance da yeniden başlatılmalı
+            if (handGestureRunnerInstance != null && handGestureRunnerInstance.isActiveAndEnabled)
+            {
+                handGestureRunnerInstance.Resume();
+            }
+            else if (handGestureRunnerInstance != null)
+            {
+                handGestureRunnerInstance.Play();
+            }
         }
+
+        /// <summary>
+        /// Pipeline başlamadan önce activeSource üzerinde ön kamerayı seçer (Android only).
+        /// </summary>
+        private void PreSelectFrontCamera(ImageSource activeSource)
+        {
+            WebCamDevice[] devices = WebCamTexture.devices;
+            string[] sources = imageSourcesNames;
+
+            if (devices == null || devices.Length == 0)
+            {
+                Debug.LogWarning("[Bodylink] Hiç kamera bulunamadı.");
+                return;
+            }
+
+            // Tüm cihazları logla (debugging için)
+            for (int i = 0; i < devices.Length; i++)
+                Debug.Log($"[Bodylink] WebCam {i}: {devices[i].name}, isFrontFacing: {devices[i].isFrontFacing}");
+
+            // isFrontFacing == true olan kamerayı bul
+            string frontCameraName = null;
+            foreach (var device in devices)
+            {
+                if (device.isFrontFacing)
+                {
+                    frontCameraName = device.name;
+                    break;
+                }
+            }
+
+            if (frontCameraName == null)
+            {
+                Debug.LogWarning("[Bodylink] Ön kamera (isFrontFacing) bulunamadı.");
+                return;
+            }
+
+            // imageSourcesNames içinde bu isme göre index bul
+            if (sources != null)
+            {
+                for (int i = 0; i < sources.Length; i++)
+                {
+                    if (sources[i] == frontCameraName)
+                    {
+                        Debug.Log($"[Bodylink] Ön kamera seçildi: index {i} - {frontCameraName}");
+                        SelectSource(i);
+                        return;
+                    }
+                }
+            }
+
+            // İsim eşleşmezse index 1'i dene
+            if (sources != null && sources.Length > 1)
+            {
+                Debug.LogWarning($"[Bodylink] '{frontCameraName}' SDK listesinde bulunamadı, index 1 deneniyor.");
+                SelectSource(1);
+            }
+        }
+
+        public string[] GetRecordedVideoFileNames()
+        {
+            string selectedVideoPath = GetSelectedVideoAbsolutePath();
+            if (!File.Exists(selectedVideoPath))
+            {
+                return Array.Empty<string>();
+            }
+
+            return new[] { Path.GetFileName(selectedVideoPath) };
+        }
+
+        public void ApplyInputStreamSettings(bool restartRunners = true)
+        {
+            bool configured = TryConfigureImageSource();
+            if (!configured)
+            {
+                return;
+            }
+
+            if (restartRunners && Application.isPlaying)
+            {
+                RestartRunnersForImageSource();
+            }
+        }
+
+        private bool TryConfigureImageSource()
+        {
+            ImageSourceType desiredType = _inputStream == BodylinkInputStreamType.Video
+                ? ImageSourceType.Video
+                : ImageSourceType.WebCamera;
+
+            ImageSourceProvider.Switch(desiredType);
+            ImageSource activeSource = ImageSourceProvider.ImageSource;
+            if (activeSource == null)
+            {
+                return false;
+            }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Not: Ön kamera seçimi ApplyInputStreamWhenReady coroutine'inde yapılıyor
+            // (çünkü izin verilmeden önce WebCamTexture.devices boş döner)
+#endif
+
+            // Video inputs are mirrored before MediaPipe processing so prerecorded clips
+            // behave like front-facing camera feeds.
+            activeSource.isHorizontallyFlipped = _inputStream == BodylinkInputStreamType.Video;
+
+            if (_inputStream != BodylinkInputStreamType.Video)
+            {
+                return true;
+            }
+
+            if (!(activeSource is VideoSource videoSource))
+            {
+                Debug.LogWarning("[Bodylink] Active image source is not a VideoSource.");
+                return false;
+            }
+
+            return TryConfigureVideoSource(videoSource);
+        }
+
+        private bool TryConfigureVideoSource(VideoSource videoSource)
+        {
+            string selectedVideoPath = GetSelectedVideoAbsolutePath();
+            if (!IsSupportedVideoPath(selectedVideoPath) || !File.Exists(selectedVideoPath))
+            {
+                Debug.LogWarning("[Bodylink] No valid video selected. Drag and drop a video file in the Bodylink inspector. Falling back to WebCam.");
+                _inputStream = BodylinkInputStreamType.WebCam;
+                ImageSourceProvider.Switch(ImageSourceType.WebCamera);
+                if (ImageSourceProvider.ImageSource != null)
+                {
+                    ImageSourceProvider.ImageSource.isHorizontallyFlipped = false;
+                }
+                return ImageSourceProvider.ImageSource != null;
+            }
+
+            videoSource.SetExternalSourcePaths(new[] { selectedVideoPath }, true);
+            videoSource.loop = _playVideoInLoop;
+            videoSource.SelectSource(0);
+            return true;
+        }
+
+        private void RestartRunnersForImageSource()
+        {
+            if (PoseLandmarkerRunnerInstance != null && PoseLandmarkerRunnerInstance.isActiveAndEnabled)
+            {
+                PoseLandmarkerRunnerInstance.Play();
+            }
+
+            if (handGestureRunnerInstance != null && handGestureRunnerInstance.isActiveAndEnabled)
+            {
+                handGestureRunnerInstance.Play();
+            }
+        }
+
+        private void EnsureSelectedVideoIsValid()
+        {
+            if (_inputStream != BodylinkInputStreamType.Video)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_selectedVideoFile))
+            {
+                return;
+            }
+
+            string selectedVideoPath = GetSelectedVideoAbsolutePath();
+            if (!IsSupportedVideoPath(selectedVideoPath))
+            {
+                _selectedVideoFile = string.Empty;
+            }
+        }
+
+        private string GetSelectedVideoAbsolutePath()
+        {
+            if (string.IsNullOrWhiteSpace(_selectedVideoFile))
+            {
+                return string.Empty;
+            }
+
+            string configuredPath = _selectedVideoFile.Trim();
+            if (Path.IsPathRooted(configuredPath))
+            {
+                return Path.GetFullPath(configuredPath);
+            }
+
+            string normalizedPath = configuredPath.Replace('\\', '/');
+            if (normalizedPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+            {
+                string relativePath = normalizedPath.Substring("Assets/".Length);
+                return Path.GetFullPath(Path.Combine(Application.dataPath, relativePath));
+            }
+
+            // Backward compatibility: older setup stored file name only.
+            return Path.GetFullPath(Path.Combine(videoRecordingsFolderPath, configuredPath));
+        }
+
+        private bool IsSupportedVideoPath(string videoPath)
+        {
+            if (string.IsNullOrWhiteSpace(videoPath))
+            {
+                return false;
+            }
+
+            string extension = Path.GetExtension(videoPath);
+            return SupportedVideoExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase);
+        }
+
+#if UNITY_EDITOR
+        private void SyncSelectedVideoPathFromAsset()
+        {
+            if (_selectedVideoAsset == null)
+            {
+                _selectedVideoFile = string.Empty;
+                return;
+            }
+
+            string assetPath = UnityEditor.AssetDatabase.GetAssetPath(_selectedVideoAsset);
+            _selectedVideoFile = string.IsNullOrWhiteSpace(assetPath) ? string.Empty : assetPath.Replace('\\', '/');
+        }
+#endif
 
         private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
-            if (resumeOnSceneChange && IsInitialized && IsCalibrated && poseLandmarkerRunnerPrefab != null)
+            if (resumeOnSceneChange && IsInitialized && poseLandmarkerRunnerPrefab != null)
             {
                 PoseLandmarkerRunnerInstance.Resume();
                 handGestureRunnerInstance.Resume();
-                
-                // Sahne geçişinde Canvas'ın texture bağlantısı veya iskeletler silindiği için yeniden besliyoruz:
-                StartCoroutine(RestoreDebugViews());
             }
-        }
-
-        private IEnumerator RestoreDebugViews()
-        {
-            // SDK'nın toparlanması için 1 saniye bekle
-            yield return new WaitForSeconds(1f);
-            
-            if (_showCameraFeed)
-            {
-                DisplayCameraFeed(true);
-            }
-            
-            ToggleSkeleton(showSkeleton);
         }
 
 
@@ -396,6 +802,35 @@ namespace BodylinkSDK
             // logicalPlayerIndex → 0 = left player, 1 = right player
             int realMpIndex = bodylinkAvatar.stablePlayerIndex[playerIndex];
             return skeletonVisualizers[realMpIndex];
+        }
+
+        public bool TryGetPlayerCurrentData(int playerIndex, out BodyCalibrationData2D data)
+        {
+            data = null;
+            if (!IsInitialized || bodylinkAvatar == null || bodylinkAvatar.players == null)
+            {
+                return false;
+            }
+
+            if (playerIndex < 0 || playerIndex >= bodylinkAvatar.players.Length || bodylinkAvatar.players[playerIndex] == null)
+            {
+                return false;
+            }
+
+            BodyLimbCalibration2D calibration = bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D;
+            if (calibration == null)
+            {
+                return false;
+            }
+
+            BodyCalibrationData2D sourceData = calibration.currentFrameData ?? calibration.calibrationData;
+            if (sourceData == null)
+            {
+                return false;
+            }
+
+            data = BodyLimbCalibration2D.Clone(sourceData);
+            return data != null;
         }
 
         public float GetPlayerCurrentHeight(int playerIndex = 0)
@@ -442,27 +877,6 @@ namespace BodylinkSDK
             return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.legLength;
         }
 
-        public void ToggleSkeleton(bool show)
-        {
-            showSkeleton = show;
-            if (PoseLandmarkerRunnerInstance != null)
-            {
-                MultiPoseLandmarkListWithMaskAnnotation multiPoseLandmarkListWithMaskAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiPoseLandmarkListWithMaskAnnotation>();
-                MultiHandLandmarkListAnnotation multiHandLandmarkListAnnotation = PoseLandmarkerRunnerInstance.GetComponentInChildren<MultiHandLandmarkListAnnotation>();
-
-                if (show)
-                {
-                    if (multiPoseLandmarkListWithMaskAnnotation != null) { multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(15); multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(1); }
-                    if (multiHandLandmarkListAnnotation != null) { multiHandLandmarkListAnnotation.SetLandmarkRadius(15); multiHandLandmarkListAnnotation.SetConnectionWidth(1); }
-                }
-                else
-                {
-                    if (multiPoseLandmarkListWithMaskAnnotation != null) { multiPoseLandmarkListWithMaskAnnotation.SetLandmarkRadius(0); multiPoseLandmarkListWithMaskAnnotation.SetConnectionWidth(0); }
-                    if (multiHandLandmarkListAnnotation != null) { multiHandLandmarkListAnnotation.SetLandmarkRadius(0); multiHandLandmarkListAnnotation.SetConnectionWidth(0); }
-                }
-            }
-        }
-
         public void Show3DSkeleton(bool show, int playerIndex = 0, float size = .1f)
         {
             skeletonVisualizers[playerIndex].ShowSkelton(show, size);
@@ -471,81 +885,8 @@ namespace BodylinkSDK
         public void DisplayCameraFeed(bool show)
         {
             showCameraFeed = show;
-            if (cameraScreen != null)
-            {
-                var screenRawImage = cameraScreen.GetComponent<UnityEngine.UI.RawImage>();
-                if (screenRawImage != null)
-                {
-                    screenRawImage.enabled = show;
-                }
-            }
-            
-            // Kullanıcının Menu Canvas'ı "Overlay" modunda olduğu için SDK Canvas'ı eziliyor.
-            // Bu yüzden SDK'nın devasa Canvas'ını Mini PIP formatına dönüştürüp en öne (Overlay) alıyoruz:
-            if (PoseLandmarkerRunnerInstance != null)
-            {
-                Canvas sdkCanvas = PoseLandmarkerRunnerInstance.GetComponentInChildren<Canvas>();
-                if (sdkCanvas != null && show)
-                {
-                    // Her zaman en üstte kalması için Overlay moduna çek
-                    sdkCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                    sdkCanvas.sortingOrder = 999;
-
-                    // Arka plan panelini bul, ufalt ve sağ alta sabitle
-                    Transform containerName = sdkCanvas.transform.Find("Container Panel");
-                    if (containerName != null)
-                    {
-                        RectTransform container = containerName.GetComponent<RectTransform>();
-                        
-                        // Ekranın matematiğini bozmamak için Anchor'ları tam ekran (0,0)-(1,1) bırakalım
-                        // Sadece Pivot'u sağ-alta (1,0) alıp objeyi %20 (%0.2) Scale ile küçültelim.
-                        // Böylece MediaPipe işleme matematiği 1920x1080 olarak çalışır ama ekranda 384x216 gözükür!
-                        container.anchorMin = new Vector2(0, 0); 
-                        container.anchorMax = new Vector2(1, 1); 
-                        
-                        // Pivot köşesini sağ alta sabitliyoruz ki küçüldüğünde oraya çekilsin
-                        container.pivot = new Vector2(1, 0);
-                        
-                        container.offsetMin = Vector2.zero;
-                        container.offsetMax = Vector2.zero;
-                        
-                        // Küçültme (Ölçek) - Ekranın %15'i boyutunda
-                        container.localScale = new Vector3(0.15f, 0.15f, 1f);
-                        
-                        // Sağ alt köşe hizasına sıfır oturur ama çerçeveden uzaklaştırmak için padding yapalım:
-                        container.anchoredPosition = new Vector2(-20, 20); // 20px sağdan, 20px alttan boşluk
-                        
-                        // Eğer Calibration HUD varsa onu da gizle:
-                        Transform maskScreen = containerName.Find("Body/Mask Screen");
-                        if (maskScreen != null) { maskScreen.gameObject.SetActive(false); }
-                    }
-
-                    // Dev beyaz "AvatarPanel" silüet görüntüsünü gizle (Container altında değil Canvas altında):
-                    Transform avatarPanel = sdkCanvas.transform.Find("AvatarPanel");
-                    if (avatarPanel != null) 
-                    { 
-                        // Objeyi kapatırsak içindeki BodylinkPlayerAvatar scriptleri de durur ve "Coroutine couldn't start" hatası verir.
-                        // Bu yüzden sadece Image bileşenlerini görünmez yapıyoruz:
-                        foreach(var img in avatarPanel.GetComponentsInChildren<UnityEngine.UI.Image>(true))
-                        {
-                            img.enabled = false;
-                        }
-                    }
-                }
-            }
-            
-            // Eğer ortada dev beyaz 3D Skelton (SkeletonVisualizer) varsa onu gizle:
-            if (skeletonVisualizers != null)
-            {
-                foreach (var skel in skeletonVisualizers)
-                    if (skel != null) skel.gameObject.SetActive(false);
-            }
-            
-            // Özelleştirilmiş mini kamerayı iptal edip tamamen gizliyoruz:
-            if (players != null && players.Length > 0 && players[0] != null)
-            {
-                players[0].ShowMiniCamera(false);
-            }
+            players[0].SetMiniCameraScreen();
+            players[0].ShowMiniCamera(show);
         }
 
         public void SetCameraFeedSize(float size)
@@ -560,6 +901,16 @@ namespace BodylinkSDK
 
         private void OnDestroy()
         {
+            if (inputStreamApplyRoutine != null)
+            {
+                StopCoroutine(inputStreamApplyRoutine);
+                inputStreamApplyRoutine = null;
+            }
+            if (startupCalibrationRoutine != null)
+            {
+                StopCoroutine(startupCalibrationRoutine);
+                startupCalibrationRoutine = null;
+            }
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
         }
     }

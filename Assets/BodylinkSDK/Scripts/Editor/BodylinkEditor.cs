@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEditor;
 using BodylinkSDK;
-using System.Collections.Generic;
+using System;
+using System.IO;
 
 [CustomEditor(typeof(Bodylink))]
 public class BodylinkEditor : Editor
 {
+    private static readonly string[] SupportedVideoExtensions = { ".mp4", ".mov", ".m4v", ".avi", ".mpeg", ".mpg", ".webm" };
+
     SerializedProperty initializeOnStart;
     SerializedProperty calibrateOnStart;
     SerializedProperty autoCalibrate;
@@ -15,12 +18,17 @@ public class BodylinkEditor : Editor
     SerializedProperty visibilityWaitingTime;
     SerializedProperty calibrationDistanceThreshold;
     SerializedProperty numberOfPlayers;
+    SerializedProperty calibrationMode;
     SerializedProperty calibrationType;
     SerializedProperty showSkeleton;
     SerializedProperty matchPointLimit;
     SerializedProperty poseLandmarkerRunnerPrefab;
     SerializedProperty camera;
     SerializedProperty showCameraFeed;
+    SerializedProperty inputStream;
+    SerializedProperty selectedVideoAsset;
+    SerializedProperty selectedVideoFile;
+    SerializedProperty playVideoInLoop;
 
     void OnEnable()
     {
@@ -33,17 +41,24 @@ public class BodylinkEditor : Editor
         visibilityWaitingTime = serializedObject.FindProperty("_visibilityWaitingTime");
         calibrationDistanceThreshold = serializedObject.FindProperty("_calibrationDistanceThreshold");
         numberOfPlayers = serializedObject.FindProperty("_numberOfPlayers");
+        calibrationMode = serializedObject.FindProperty("calibrationMode");
         calibrationType = serializedObject.FindProperty("_calibrationType");
         showSkeleton = serializedObject.FindProperty("showSkeleton");
         matchPointLimit = serializedObject.FindProperty("_matchPointLimit");
         poseLandmarkerRunnerPrefab = serializedObject.FindProperty("poseLandmarkerRunnerPrefab");
         camera = serializedObject.FindProperty("_cam");
         showCameraFeed = serializedObject.FindProperty("_showCameraFeed");
+        inputStream = serializedObject.FindProperty("_inputStream");
+        selectedVideoAsset = serializedObject.FindProperty("_selectedVideoAsset");
+        selectedVideoFile = serializedObject.FindProperty("_selectedVideoFile");
+        playVideoInLoop = serializedObject.FindProperty("_playVideoInLoop");
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
+        Bodylink bodylink = (Bodylink)target;
+        bool inputSettingsChanged = false;
 
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         // Show first toggle
@@ -59,6 +74,7 @@ public class BodylinkEditor : Editor
         EditorGUILayout.PropertyField(resumeOnSceneChange, new GUIContent("Resume OnSceneChange"));
         EditorGUILayout.PropertyField(showSkeleton, new GUIContent("Show Skeleton"));
         EditorGUILayout.PropertyField(showCameraFeed, new GUIContent("Show Camera Feed"));
+        inputSettingsChanged = DrawInputSourceSettings();
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.PropertyField(calibrationWaitTime, new GUIContent("Calibration WaitTime"));
@@ -66,17 +82,117 @@ public class BodylinkEditor : Editor
         EditorGUILayout.PropertyField(visibilityWaitingTime, new GUIContent("Visibility WaitingTime"));
         EditorGUILayout.PropertyField(calibrationDistanceThreshold, new GUIContent("Calibration DistanceThreshold"));
         EditorGUILayout.PropertyField(numberOfPlayers, new GUIContent("NumberOfPlayers"));
-        EditorGUILayout.PropertyField(calibrationType, new GUIContent("CalibrationType"));
+        EditorGUILayout.PropertyField(calibrationMode, new GUIContent("Calibration Mode"));
 
-        // Draw match point limit with a dynamic max based on calibration type
-        var type = (BodylinkCalibrationType)calibrationType.enumValueIndex;
-        int maxMatchPoints = GetMaxMatchPoints(type);
-        matchPointLimit.intValue = EditorGUILayout.IntSlider(new GUIContent("Match Point Limit"), matchPointLimit.intValue, 1, maxMatchPoints);
+        BodylinkCalibrationMode selectedMode = (BodylinkCalibrationMode)calibrationMode.enumValueIndex;
+        if (selectedMode == BodylinkCalibrationMode.Target_Points_Match ||
+            selectedMode == BodylinkCalibrationMode.Free_Points_Position)
+        {
+            EditorGUILayout.PropertyField(calibrationType, new GUIContent("Calibration Type"));
+
+            // Clamp the slider to the tracked points available for the selected calibration type.
+            var type = (BodylinkCalibrationType)calibrationType.enumValueIndex;
+            int maxMatchPoints = GetMaxMatchPoints(type);
+            matchPointLimit.intValue = EditorGUILayout.IntSlider(new GUIContent("Match Point Limit"), matchPointLimit.intValue, 1, maxMatchPoints);
+        }
 
         EditorGUILayout.PropertyField(poseLandmarkerRunnerPrefab, new GUIContent("Pose Landmarker RunnerPrefab"));
         EditorGUILayout.PropertyField(camera, new GUIContent("Camera"));
 
         serializedObject.ApplyModifiedProperties();
+
+        if (Application.isPlaying && inputSettingsChanged)
+        {
+            bodylink.ApplyInputStreamSettings(true);
+        }
+    }
+
+    private bool DrawInputSourceSettings()
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Input Source", EditorStyles.boldLabel);
+
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(inputStream, new GUIContent("Input Stream"));
+        bool videoPathChanged = false;
+
+        if ((BodylinkInputStreamType)inputStream.enumValueIndex == BodylinkInputStreamType.Video)
+        {
+            EditorGUILayout.PropertyField(playVideoInLoop, new GUIContent("Play Video In Loop"));
+            selectedVideoAsset.objectReferenceValue = EditorGUILayout.ObjectField(
+                new GUIContent("Video File"),
+                selectedVideoAsset.objectReferenceValue,
+                typeof(UnityEngine.Object),
+                false);
+
+            string assetPath = GetAssetPath(selectedVideoAsset.objectReferenceValue);
+            if (!string.Equals(selectedVideoFile.stringValue, assetPath, StringComparison.Ordinal))
+            {
+                selectedVideoFile.stringValue = assetPath;
+                videoPathChanged = true;
+            }
+
+            if (selectedVideoAsset.objectReferenceValue == null)
+            {
+                EditorGUILayout.HelpBox("Drag and drop a video file from the Project window.", MessageType.Info);
+            }
+            else if (!IsSupportedVideoAssetPath(assetPath))
+            {
+                EditorGUILayout.HelpBox("Unsupported file type. Use: .mp4, .mov, .m4v, .avi, .mpeg, .mpg, .webm", MessageType.Warning);
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Resolved Path", ResolveAbsolutePath(assetPath).Replace('\\', '/'));
+            }
+        }
+
+        return EditorGUI.EndChangeCheck() || videoPathChanged;
+    }
+
+    private static string GetAssetPath(UnityEngine.Object asset)
+    {
+        if (asset == null)
+        {
+            return string.Empty;
+        }
+
+        string assetPath = AssetDatabase.GetAssetPath(asset);
+        return string.IsNullOrWhiteSpace(assetPath) ? string.Empty : assetPath.Replace('\\', '/');
+    }
+
+    private static bool IsSupportedVideoAssetPath(string assetPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetPath))
+        {
+            return false;
+        }
+
+        string extension = Path.GetExtension(assetPath);
+        return Array.Exists(
+            SupportedVideoExtensions,
+            supportedExtension => string.Equals(supportedExtension, extension, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string ResolveAbsolutePath(string assetPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetPath))
+        {
+            return string.Empty;
+        }
+
+        if (Path.IsPathRooted(assetPath))
+        {
+            return Path.GetFullPath(assetPath);
+        }
+
+        string normalizedPath = assetPath.Replace('\\', '/');
+        if (normalizedPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            string relativePath = normalizedPath.Substring("Assets/".Length);
+            return Path.GetFullPath(Path.Combine(Application.dataPath, relativePath));
+        }
+
+        return assetPath;
     }
 
     private int GetMaxMatchPoints(BodylinkCalibrationType type)

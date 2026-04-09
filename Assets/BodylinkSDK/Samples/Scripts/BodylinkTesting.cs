@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class BodylinkTesting : MonoBehaviour
 {
     public Dropdown camerasDropdown;
-
+    public Dropdown calibrationModeDropdown;
     public Dropdown calibrationDropdown;
     public Dropdown playerDropDown;
     public Button initButton, calibrateButton, resetButton;
@@ -17,8 +17,11 @@ public class BodylinkTesting : MonoBehaviour
     public Text playerOneEventsText;
     public Text playerOneHandPosText;
     public Text playerOneHeightText;
+    public Text playerOneHeightRatioText;
+    public Text playerOneArmLengthText;
     public Text playerOneArmRatioText;
     public Text playerOneTorsoRatioText;
+    public Text playerOneLegLengthText;
     public Text playerOneLegRatioText;
 
 
@@ -26,8 +29,11 @@ public class BodylinkTesting : MonoBehaviour
     public Text playerTwoEventsText;
     public Text playerTwoHandPosText;
     public Text playerTwoHeightText;
+    public Text playerTwoHeightRatioText;
+    public Text playerTwoArmLengthText;
     public Text playerTwoArmRatioText;
     public Text playerTwoTorsoRatioText;
+    public Text playerTwoLegLengthText;
     public Text playerTwoLegRatioText;
 
 
@@ -56,6 +62,13 @@ public class BodylinkTesting : MonoBehaviour
             camerasDropdown.ClearOptions();
             camerasDropdown.onValueChanged.RemoveAllListeners();
         });
+
+        calibrationModeDropdown.onValueChanged.AddListener((val) =>
+        {
+            Bodylink.Instance.selectedCalibrationMode = (BodylinkCalibrationMode)val;
+            UpdateCalibrationDropdownState();
+        });
+
         calibrationDropdown.onValueChanged.AddListener((val) =>
         {
             Bodylink.Instance.calibrationType = (BodylinkCalibrationType)val;
@@ -105,6 +118,9 @@ public class BodylinkTesting : MonoBehaviour
                 playerTwoHandPosText.text = "Pose Detected: " + gestureName + "  Side: " + side + " Pose: " + pose;
         };
 
+        Bodylink.Instance.selectedCalibrationMode = (BodylinkCalibrationMode)calibrationModeDropdown.value;
+        UpdateCalibrationDropdownState();
+
     }
 
 
@@ -117,22 +133,110 @@ public class BodylinkTesting : MonoBehaviour
 
         //        rawImage.texture = Bodylink.Instance.cameraScreen.texture;
 
-        if (bodylinkInstance.IsInitialized == false || bodylinkInstance.IsCalibrated == false) return;
-        playerOneHeightText.text = "Height :  " + bodylinkInstance.GetPlayerCurrentHeight();
-        playerOneArmRatioText.text = "Arm Ratio :  " + bodylinkInstance.GetPlayerArmRatio();
-        playerOneTorsoRatioText.text = "Torso Ratio :  " + bodylinkInstance.GetPlayerTorsoRatio();
-        playerOneLegRatioText.text = "Leg ratio :  " + bodylinkInstance.GetPlayerLegRatio();
-
         playerTwoParent.SetActive(bodylinkInstance.isMultiplayerEnabled);
-
-        if (bodylinkInstance.isMultiplayerEnabled)
+        if (bodylinkInstance.IsInitialized == false)
         {
-            playerTwoHeightText.text = "Height :  " + bodylinkInstance.GetPlayerCurrentHeight(1);
-            playerTwoArmRatioText.text = "Arm Ratio :  " + bodylinkInstance.GetPlayerArmRatio(1);
-            playerTwoTorsoRatioText.text = "Torso Ratio :  " + bodylinkInstance.GetPlayerTorsoRatio(1);
-            playerTwoLegRatioText.text = "Leg ratio :  " + bodylinkInstance.GetPlayerLegRatio(1);
+            UpdatePlayerStats(
+                -1,
+                playerOneHeightText,
+                playerOneHeightRatioText,
+                playerOneArmLengthText,
+                playerOneArmRatioText,
+                playerOneTorsoRatioText,
+                playerOneLegLengthText,
+                playerOneLegRatioText);
+
+            UpdatePlayerStats(
+                -1,
+                playerTwoHeightText,
+                playerTwoHeightRatioText,
+                playerTwoArmLengthText,
+                playerTwoArmRatioText,
+                playerTwoTorsoRatioText,
+                playerTwoLegLengthText,
+                playerTwoLegRatioText);
+            return;
         }
 
+        UpdatePlayerStats(
+            0,
+            playerOneHeightText,
+            playerOneHeightRatioText,
+            playerOneArmLengthText,
+            playerOneArmRatioText,
+            playerOneTorsoRatioText,
+            playerOneLegLengthText,
+            playerOneLegRatioText);
+
+        UpdatePlayerStats(
+            bodylinkInstance.isMultiplayerEnabled ? 1 : -1,
+            playerTwoHeightText,
+            playerTwoHeightRatioText,
+            playerTwoArmLengthText,
+            playerTwoArmRatioText,
+            playerTwoTorsoRatioText,
+            playerTwoLegLengthText,
+            playerTwoLegRatioText);
+
+    }
+
+    private void UpdatePlayerStats(
+        int playerIndex,
+        Text heightText,
+        Text heightRatioText,
+        Text armLengthText,
+        Text armRatioText,
+        Text torsoRatioText,
+        Text legLengthText,
+        Text legRatioText)
+    {
+        BodyCalibrationData2D data = null;
+        bool hasPlayerData = playerIndex >= 0 && bodylinkInstance.TryGetPlayerCurrentData(playerIndex, out data);
+
+        SetStatText(heightText, "Height", hasPlayerData ? FormatStat(data.height) : "N/A");
+        SetStatText(heightRatioText, "Height Ratio", hasPlayerData ? FormatStat(GetHeightRatio(data.height)) : "N/A");
+        SetStatText(armLengthText, "Arm Length", hasPlayerData ? FormatStat(data.armLength) : "N/A");
+        SetStatText(armRatioText, "Arm Ratio", hasPlayerData ? FormatStat(data.armRatio) : "N/A");
+        SetStatText(torsoRatioText, "Torso Ratio", hasPlayerData ? FormatStat(data.torsoRatio) : "N/A");
+        SetStatText(legLengthText, "Leg Length", hasPlayerData ? FormatStat(data.legLength) : "N/A");
+        SetStatText(legRatioText, "Leg Ratio", hasPlayerData ? FormatStat(data.legRatio) : "N/A");
+    }
+
+    private static void SetStatText(Text target, string label, string value)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        target.text = label + " : " + value;
+    }
+
+    private static string FormatStat(float value)
+    {
+        return value.ToString("F3");
+    }
+
+    private static float GetHeightRatio(float currentHeight)
+    {
+        if (currentHeight <= Mathf.Epsilon)
+        {
+            return 0f;
+        }
+
+        return 1.65f / currentHeight;
+    }
+
+    private void UpdateCalibrationDropdownState()
+    {
+        if (calibrationDropdown == null)
+        {
+            return;
+        }
+
+        calibrationDropdown.interactable =
+            Bodylink.Instance.selectedCalibrationMode == BodylinkCalibrationMode.Target_Points_Match ||
+            Bodylink.Instance.selectedCalibrationMode == BodylinkCalibrationMode.Free_Points_Position;
     }
 
     private void InitializeSource()

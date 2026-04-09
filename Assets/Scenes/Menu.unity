@@ -4214,11 +4214,61 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1198318938590721408, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: EnableHandEvents
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198318938590721408, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: EnableHeadEvents
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198318938590721408, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: handGestureDetector
+      value: 
+      objectReference: {fileID: 1845875997}
+    - target: {fileID: 1198318938590721408, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: headGestureDetector
+      value: 
+      objectReference: {fileID: 1214966657}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
         type: 3}
       propertyPath: _cam
       value: 
       objectReference: {fileID: 963194227}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: showSkeleton
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: _showCameraFeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: _autoRecalibrate
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: calibrateOnStart
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: initializeOnStart
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: _visibilityThreshold
+      value: 0.3
+      objectReference: {fileID: 0}
     - target: {fileID: 2560922637232112111, guid: df5d14784d9c0452ab930359717e531c,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -4276,8 +4326,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 2560922637232112111, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1845875998}
+    - targetCorrespondingSourceObject: {fileID: 2560922637232112111, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1214966658}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2659618610554355361, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1431655370}
   m_SourcePrefab: {fileID: 100100000, guid: df5d14784d9c0452ab930359717e531c, type: 3}
 --- !u!1 &741296576
 GameObject:
@@ -8667,17 +8729,19 @@ MonoBehaviour:
   cursorVisual: {fileID: 924561817}
   eventSystem: {fileID: 1195082628}
   activeHand: 1
+  autoSelectHand: 1
   useSmoothedPoints: 1
   mirrorX: 0
   sensitivity: 1.8
   yOffset: 0.15
   xOffset: 0
-  smoothSpeed: 0.15
+  smoothFactor: 0.15
   useHoverClick: 1
   hoverDuration: 1
   hoverMoveThreshold: 50
   usePinchScroll: 1
   pinchThreshold: 0.05
+  releaseThreshold: 0.09
   scrollSensitivity: 1.5
 --- !u!4 &1140742077
 Transform:
@@ -9812,6 +9876,64 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1210831252 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2659618610554355361, guid: df5d14784d9c0452ab930359717e531c,
+    type: 3}
+  m_PrefabInstance: {fileID: 739408062}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1214966656
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1214966658}
+  - component: {fileID: 1214966657}
+  m_Layer: 0
+  m_Name: HeadGestureDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1214966657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1214966656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0153838f602453448cd5f1f88a0a74b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkSDK.HeadGestureDetector
+  movementThreshold: 0.2
+  lookHoldTime: 0.5
+  nodCompletionThreshold: 0.08
+  shakeCompletionThreshold: 0.06
+  EnableHeadNod: 0
+  EnableHeadShake: 0
+  EnableLookLeft: 1
+  EnableLookRight: 1
+--- !u!4 &1214966658
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1214966656}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1431655367}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1232425359 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3771495456474346993, guid: 4cc030da317d7d44d9ac03984bc5e09d,
@@ -11395,6 +11517,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &1431655367 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2560922637232112111, guid: df5d14784d9c0452ab930359717e531c,
+    type: 3}
+  m_PrefabInstance: {fileID: 739408062}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1431655370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210831252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5caaa248cd88f7446817ab2cadfa95f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkCameraUpdater
 --- !u!1 &1435984030
 GameObject:
   m_ObjectHideFlags: 0
@@ -15281,6 +15421,58 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &1845875996
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1845875998}
+  - component: {fileID: 1845875997}
+  m_Layer: 0
+  m_Name: HandGestureDetector
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1845875997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845875996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15a72aa013e2cff4dbe72dc8dee4de93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodylinkSDK.HandGestureDetector
+  bufferSize: 8
+  swipeThreshold: 0.15
+  maxSwipeTime: 0.5
+  EnableSwipeLeft: 0
+  EnableSwipeRight: 0
+  EnableSwipeUp: 0
+  EnableSwipeDown: 0
+  EnablePoseDetect: 1
+--- !u!4 &1845875998
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1845875996}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1431655367}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1849466131
 GameObject:
   m_ObjectHideFlags: 0

@@ -91,12 +91,12 @@ namespace BodylinkSDK
                 mediapipeIndex = Bodylink.Instance.bodylinkAvatar.stablePlayerIndex[1];
 
 
-            var landmarks = poseLandmarkerResult.poseWorldLandmarks[mediapipeIndex].landmarks;
-            int count = Mathf.Min(landmarks.Count, _pointTransforms.Length);
 
-            for (int i = 0; i < count; i++)
+            try
             {
-                try
+                var landmarks = poseLandmarkerResult.poseWorldLandmarks[mediapipeIndex].landmarks;
+                int count = Mathf.Min(landmarks.Count, _pointTransforms.Length);
+                for (int i = 0; i < count; i++)
                 {
                     if (i >= landmarks.Count) continue;
                     Vector3 rawPos = new Vector3(
@@ -108,8 +108,14 @@ namespace BodylinkSDK
                     Vector3 smoothed = SmoothPoint(rawPos, smoothingBuffers[i]);
                     _pointTransforms[i].localPosition = smoothed * scale + offset;
                 }
-                catch (Exception e) { }
+
             }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error accessing pose landmarks: {e.Message}");
+                return;
+            }
+
 
             connectionListAnnotation.Redraw();
         }

@@ -14,6 +14,8 @@ public class CamSwerve : MonoBehaviour
     public int camPosIndex;
 
     private BodylinkEvents bodylinkEvents;
+    private bool wasPinchingLastFrame = false;
+    private bool isDraggingWithBodylink = false;
 
     void Start()
     {
@@ -42,20 +44,32 @@ public class CamSwerve : MonoBehaviour
 
     public void System()
     {
-        if (Input.GetMouseButtonDown(0))
+        bool isPinching = (BodylinkGameInteractor.Instance != null && BodylinkGameInteractor.Instance.isPinching);
+        // Eğer bodylink interactor varsa onun imlecini, yoksa normal fareyi kullan
+        Vector2 currentInputPos = (BodylinkGameInteractor.Instance != null) ? BodylinkGameInteractor.Instance.currentScreenPos : (Vector2)Input.mousePosition;
+
+        // DRAG BAŞLANGICI (Fare Tıklama veya Bodylink Pinch Başlangıcı)
+        if (Input.GetMouseButtonDown(0) || (isPinching && !wasPinchingLastFrame))
         {
-            lastFrameFingerPositionX = Input.mousePosition.x;
+            lastFrameFingerPositionX = (Input.GetMouseButtonDown(0)) ? Input.mousePosition.x : currentInputPos.x;
+            // Eğer bodylink ile başladıysak bu sürükleme oturumunu işaretle
+            if (isPinching && !Input.GetMouseButton(0)) isDraggingWithBodylink = true;
         }
-        else if (Input.GetMouseButton(0))
+        // DRAG DEVAM (Fare Basılı veya Bodylink Pinch Devam)
+        else if (Input.GetMouseButton(0) || (isPinching && isDraggingWithBodylink))
         {
-            moveFactorX = Input.mousePosition.x - lastFrameFingerPositionX;
-            //lastFrameFingerPositionX = Input.mousePosition.x;
+            float currentX = (Input.GetMouseButton(0)) ? Input.mousePosition.x : currentInputPos.x;
+            moveFactorX = currentX - lastFrameFingerPositionX;
         }
-        else if (Input.GetMouseButtonUp(0))
+        // DRAG BİTİŞ (Fare Bırakma veya Bodylink Pinch Bırakma)
+        else if (Input.GetMouseButtonUp(0) || (!isPinching && wasPinchingLastFrame && isDraggingWithBodylink))
         {
             Move();
             moveFactorX = 0f;
+            isDraggingWithBodylink = false;
         }
+        
+        wasPinchingLastFrame = isPinching;
     }
 
     // Fare/Ekran kaydırma kontrolü
@@ -106,18 +120,24 @@ public class CamSwerve : MonoBehaviour
     // Bodylink Swipe Algılayıcısı
     private void OnGestureDetected(int playerIndex, string gestureName, object[] values)
     {
-        // Eğer son kaydırmanın üzerinden yeterli süre geçmediyse bu hareketi görmezden gel
         if (Time.time < lastSwipeTime + swipeCooldown) return;
-
-        if (gestureName == "SwipeLeft")
+        
+        // Kafa hareketi (Look) için ekstra stabilizasyon: Jest ismine göre küçük bir filtre
+        if (gestureName.Contains("Look"))
         {
-            Debug.Log("[Bodylink] SwipeLeft algılandı - Kamera sola dönüyor");
+            // Hafif yatmaları engellemek için Debug log ile takip edebiliriz
+            Debug.Log($"[Bodylink] Kafa Jesti: {gestureName}");
+        }
+
+        if (gestureName == "SwipeLeft" || gestureName == "LookLeft")
+        {
+            Debug.Log("[Bodylink] Sola Bakış/Kaydırma algılandı - Kamera sola dönüyor");
             MoveLeft();
             lastSwipeTime = Time.time;
         }
-        else if (gestureName == "SwipeRight")
+        else if (gestureName == "SwipeRight" || gestureName == "LookRight")
         {
-            Debug.Log("[Bodylink] SwipeRight algılandı - Kamera sağa dönüyor");
+            Debug.Log("[Bodylink] Sağa Bakış/Kaydırma algılandı - Kamera sağa dönüyor");
             MoveRight();
             lastSwipeTime = Time.time;
         }

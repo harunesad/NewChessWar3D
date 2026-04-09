@@ -197,24 +197,46 @@ namespace BodylinkSDK
             try
             {
                 var handPoints = players[playerIndex].handPoints;
-                int handSide = handPoints[0].handLandmark == null ? (handPoints[1].handLandmark == null ? -1 : 1) : 0;
-                if (handSide < 0) return;
+                if (handPoints == null || handPoints.Length == 0) return;
 
-                var landmark = handPoints[handSide].handLandmark[0];
-                if (landmark == null) return;
+                for (int handIndex = 0; handIndex < handPoints.Length; handIndex++)
+                {
+                    if (!HasValidPoseHand(handPoints, handIndex))
+                    {
+                        continue;
+                    }
 
-                var gestures = handPoints[handSide].gestures;
-                if (gestures.categories == null || gestures.categories.Count == 0) return;
+                    var gestures = handPoints[handIndex].gestures;
+                    Side hand = handPoints[handIndex].handSide;
+                    HandPose handPose = (HandPose)Enum.Parse(typeof(HandPose), gestures.categories[0].categoryName, true);
 
-                Side hand = handPoints[handSide].handSide;
-                HandPose handPose = (HandPose)Enum.Parse(typeof(HandPose), gestures.categories[0].categoryName, true);
-
-                OnPoseDetected(playerIndex, "HandPoseDetect", hand, handPose);
+                    OnPoseDetected(playerIndex, "HandPoseDetect", hand, handPose);
+                }
             }
             catch (Exception e)
             {
                 Debug.LogWarning($"[Bodylink] Failed to detect hand pose for player {playerIndex}: {e}");
             }
+        }
+
+        private bool HasValidPoseHand(BodylinkHandPoints[] handPoints, int handIndex)
+        {
+            if (handPoints == null ||
+                handIndex < 0 ||
+                handIndex >= handPoints.Length ||
+                handPoints[handIndex] == null)
+            {
+                return false;
+            }
+
+            var landmarks = handPoints[handIndex].handLandmark;
+            if (landmarks == null || landmarks.Count == 0)
+            {
+                return false;
+            }
+
+            var gestures = handPoints[handIndex].gestures;
+            return gestures.categories != null && gestures.categories.Count > 0;
         }
 
         private void TrimOldSamples(Queue<(float x, float y, float time)> buffer, float now)

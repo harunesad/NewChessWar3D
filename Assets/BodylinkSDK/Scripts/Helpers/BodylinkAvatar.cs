@@ -28,7 +28,7 @@ namespace BodylinkSDK
         private bool isMultiplayerEnabled = false;
         private int calibrationCount = 0;
         private bool isCalibratedCalled;
-        private float setLeftRightPlayerTimeoutSeconds = 30f;
+        private float setLeftRightPlayerTimeoutSeconds = 45f;
         private Coroutine setLeftRightPlayerRoutine;
 
         List<List<NormalizedLandmark>> mpPlayers = new();
@@ -183,28 +183,33 @@ namespace BodylinkSDK
 
                 if (isMultiplayerEnabled == false && handLandmarkerResult.handLandmarks.Count <= 2)
                 {
-                    if (handLandmarkerResult.handLandmarks.Count == 1)
+                    int leftIndex = -1;
+                    int rightIndex = -1;
+
+                    for (int i = 0; i < handLandmarkerResult.handLandmarks.Count; i++)
                     {
-                        if (handLandmarkerResult.handedness[0].categories[0].categoryName == "Right")
+                        if (handLandmarkerResult.handedness == null ||
+                            handLandmarkerResult.handedness.Count <= i ||
+                            handLandmarkerResult.handedness[i].categories == null ||
+                            handLandmarkerResult.handedness[i].categories.Count == 0)
                         {
-                            players[0].SetHandPoints(handLandmarkerResult, 0, -1);
+                            continue;
                         }
-                        else if (handLandmarkerResult.handedness[0].categories[0].categoryName == "Left")
+
+                        string handedness = handLandmarkerResult.handedness[i].categories[0].categoryName;
+
+                        // The hand recognizer output is mirrored relative to the on-screen hand side.
+                        if (string.Equals(handedness, "Right", StringComparison.OrdinalIgnoreCase))
                         {
-                            players[0].SetHandPoints(handLandmarkerResult, -1, 0);
+                            leftIndex = i;
+                        }
+                        else if (string.Equals(handedness, "Left", StringComparison.OrdinalIgnoreCase))
+                        {
+                            rightIndex = i;
                         }
                     }
-                    else
-                    {
-                        if (handLandmarkerResult.handedness[0].categories[0].categoryName == "Right")
-                        {
-                            players[0].SetHandPoints(handLandmarkerResult, 1, 0);
-                        }
-                        else if (handLandmarkerResult.handedness[0].categories[0].categoryName == "Left")
-                        {
-                            players[0].SetHandPoints(handLandmarkerResult, 0, 1);
-                        }
-                    }
+
+                    players[0].SetHandPoints(handLandmarkerResult, leftIndex, rightIndex);
                 }
                 else if (isMultiplayerEnabled)
                 {
@@ -304,16 +309,16 @@ namespace BodylinkSDK
             Bodylink.Instance.OnPlayerOutOfScreen?.Invoke();
         }
 
-        private void ShowImages(bool state)
+        private void ShowImages(bool state, bool showAvatarOverlay = true)
         {
 
             background.gameObject.SetActive(state);
             ShowCamerainFullScreen(state);
 
-            players[0].ShowImages(state);
+            players[0].ShowImages(state, showAvatarOverlay);
             if (isMultiplayerEnabled)
             {
-                players[1].ShowImages(state);
+                players[1].ShowImages(state, showAvatarOverlay);
             }
 
         }
@@ -395,16 +400,18 @@ namespace BodylinkSDK
             }
         }
 
-        public void Calibrate(BodylinkCalibrationType calibrationType, Action onCalibration, float waitTime = 0)
+        public void Calibrate(BodylinkCalibrationMode calibrationMode, BodylinkCalibrationType calibrationType, Action onCalibration, float waitTime = 0)
         {
             isCalibratedCalled = true;
-            ShowImages(true);
+            bool showAvatarOverlay = calibrationMode == BodylinkCalibrationMode.Target_Points_Match;
+            LogCalibrationModePrompt(calibrationMode);
+            ShowImages(true, showAvatarOverlay);
             ResetPlayerIndex();
             Bodylink.Instance.isCalibrating = true;
             // Reset UI properly before calibration
             players[0].ShowMiniCamera(false);
 
-            players[0].Calibrate(calibrationType, () =>
+            players[0].Calibrate(calibrationMode, calibrationType, () =>
             {
                 CalibrationCompleted(onCalibration);
 
@@ -413,7 +420,7 @@ namespace BodylinkSDK
             if (isMultiplayerEnabled)
             {
                 //playerAvatars[1].ShowImages(true);
-                players[1].Calibrate(calibrationType, () =>
+                players[1].Calibrate(calibrationMode, calibrationType, () =>
                 {
                     CalibrationCompleted(onCalibration);
 
@@ -429,11 +436,12 @@ namespace BodylinkSDK
 
                 ShowImages(false);
                 players[0].ShowImages(false);
-                
                 if (Bodylink.Instance.showCameraFeed)
                 {
-                    Bodylink.Instance.DisplayCameraFeed(true);
+                    players[0].ShowMiniCamera(true);
                 }
+
+                players[0].SetMiniCameraScreen();
                 if (isMultiplayerEnabled)
                 {
                     players[1].ShowImages(false);
@@ -471,6 +479,26 @@ namespace BodylinkSDK
             var temp = players[0];
             players[0] = players[1];
             players[1] = temp;
+        }
+
+        private static void LogCalibrationModePrompt(BodylinkCalibrationMode calibrationMode)
+        {
+            switch (calibrationMode)
+            {
+                case BodylinkCalibrationMode.Free_Points_Position:
+                    Debug.Log("[Bodylink] AutoPoseCalibration: stay visible while head, hands, and feet are detected automatically.");
+                    break;
+                case BodylinkCalibrationMode.T_or_Idle_Pose_Detection:
+                    Debug.Log("[Bodylink] TPoseCalibration: stand in a T-pose or relaxed default pose until calibration completes.");
+                    break;
+                case BodylinkCalibrationMode.Continuous_Auto:
+                    Debug.Log("[Bodylink] ContinuousCalibration: stay visible and move naturally for the first few seconds.");
+                    break;
+                case BodylinkCalibrationMode.Target_Points_Match:
+                default:
+                    Debug.Log("[Bodylink] MultiPoseCalibration: align with the on-screen markers to calibrate.");
+                    break;
+            }
         }
     }
 }
