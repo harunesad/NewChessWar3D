@@ -510,7 +510,6 @@ namespace BodylinkSDK
                 Destroy(handGestureRunnerInstance.gameObject);
             }
 
-
             OnDisposed?.Invoke();
         }
 
@@ -519,107 +518,65 @@ namespace BodylinkSDK
             const float timeoutSeconds = 10f;
             float timeoutAt = Time.realtimeSinceStartup + timeoutSeconds;
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // --- HARUN ANDROID FRONT CAMERA FIX: PERMISSION WAIT ---
+            yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
+            while (!Application.HasUserAuthorization(UserAuthorization.WebCam) && Time.realtimeSinceStartup < timeoutAt)
+            {
+                yield return null;
+            }
+#endif
+
             while (ImageSourceProvider.ImageSource == null && Time.realtimeSinceStartup < timeoutAt)
             {
                 yield return null;
             }
 
+            // Boot ayarlarını yükle ama izleme motorlarını HENTÜZ ÇALIŞTIRMA
+            ApplyInputStreamSettings(false);
+            
+            // --- HARUN ANDROID FRONT CAMERA FIX: SELECTION ---
 #if UNITY_ANDROID && !UNITY_EDITOR
-            // Android'de kamera izni verilene kadar bekle (WebCamTexture.devices boş döner)
-            float deviceWaitStart = Time.realtimeSinceStartup;
-            while (WebCamTexture.devices.Length == 0 && Time.realtimeSinceStartup < deviceWaitStart + 10f)
+            int frontCamIndex = 0;
+            for (int i = 0; i < WebCamTexture.devices.Length; i++)
             {
-                yield return null;
+                if (WebCamTexture.devices[i].isFrontFacing)
+                {
+                    frontCamIndex = i;
+                    break;
+                }
             }
-
-            // Ön kamerayı pipeline başlamadan önce seç
-            if (_inputStream != BodylinkInputStreamType.Video && ImageSourceProvider.ImageSource != null)
+            if (WebCamTexture.devices.Length > 0 && imageSource != null)
             {
-                PreSelectFrontCamera(ImageSourceProvider.ImageSource);
+                imageSource.SelectSource(frontCamIndex); // Sadece kaynağı değiştir
             }
 #endif
 
-            ApplyInputStreamSettings(true);
+            // Kamera kaynağı düzgünce seçildikten sonra HER ŞEYİ BAŞLAT
+            RestartRunnersForImageSource();
+
             inputStreamApplyRoutine = null;
         }
 
         public void SelectSource(int index)
         {
             imageSource.SelectSource(index);
-            if (PoseLandmarkerRunnerInstance != null && PoseLandmarkerRunnerInstance.isActiveAndEnabled)
+            if (PoseLandmarkerRunnerInstance.isActiveAndEnabled)
             {
                 PoseLandmarkerRunnerInstance.Resume();
             }
-            else if (PoseLandmarkerRunnerInstance != null)
+            else
             {
                 PoseLandmarkerRunnerInstance.Play();
             }
-
-            // handGestureRunnerInstance da yeniden başlatılmalı
-            if (handGestureRunnerInstance != null && handGestureRunnerInstance.isActiveAndEnabled)
+            
+            // --- HARUN HAND GESTURE FREEZE FIX ---
+            if (handGestureRunnerInstance != null)
             {
-                handGestureRunnerInstance.Resume();
-            }
-            else if (handGestureRunnerInstance != null)
-            {
-                handGestureRunnerInstance.Play();
-            }
-        }
-
-        /// <summary>
-        /// Pipeline başlamadan önce activeSource üzerinde ön kamerayı seçer (Android only).
-        /// </summary>
-        private void PreSelectFrontCamera(ImageSource activeSource)
-        {
-            WebCamDevice[] devices = WebCamTexture.devices;
-            string[] sources = imageSourcesNames;
-
-            if (devices == null || devices.Length == 0)
-            {
-                Debug.LogWarning("[Bodylink] Hiç kamera bulunamadı.");
-                return;
-            }
-
-            // Tüm cihazları logla (debugging için)
-            for (int i = 0; i < devices.Length; i++)
-                Debug.Log($"[Bodylink] WebCam {i}: {devices[i].name}, isFrontFacing: {devices[i].isFrontFacing}");
-
-            // isFrontFacing == true olan kamerayı bul
-            string frontCameraName = null;
-            foreach (var device in devices)
-            {
-                if (device.isFrontFacing)
-                {
-                    frontCameraName = device.name;
-                    break;
-                }
-            }
-
-            if (frontCameraName == null)
-            {
-                Debug.LogWarning("[Bodylink] Ön kamera (isFrontFacing) bulunamadı.");
-                return;
-            }
-
-            // imageSourcesNames içinde bu isme göre index bul
-            if (sources != null)
-            {
-                for (int i = 0; i < sources.Length; i++)
-                {
-                    if (sources[i] == frontCameraName)
-                    {
-                        Debug.Log($"[Bodylink] Ön kamera seçildi: index {i} - {frontCameraName}");
-                        SelectSource(i);
-                        return;
-                    }
-                }
-            }
-
-            // İsim eşleşmezse index 1'i dene
-            if (sources != null && sources.Length > 1)
-            {
-                Debug.LogWarning($"[Bodylink] '{frontCameraName}' SDK listesinde bulunamadı, index 1 deneniyor.");
-                SelectSource(1);
+                if (handGestureRunnerInstance.isActiveAndEnabled)
+                    handGestureRunnerInstance.Resume();
+                else
+                    handGestureRunnerInstance.Play();
             }
         }
 
@@ -660,11 +617,6 @@ namespace BodylinkSDK
             {
                 return false;
             }
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-            // Not: Ön kamera seçimi ApplyInputStreamWhenReady coroutine'inde yapılıyor
-            // (çünkü izin verilmeden önce WebCamTexture.devices boş döner)
-#endif
 
             // Video inputs are mirrored before MediaPipe processing so prerecorded clips
             // behave like front-facing camera feeds.
@@ -806,6 +758,18 @@ namespace BodylinkSDK
 
         public bool TryGetPlayerCurrentData(int playerIndex, out BodyCalibrationData2D data)
         {
+            if (!TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D sourceData))
+            {
+                data = null;
+                return false;
+            }
+
+            data = BodyLimbCalibration2D.Clone(sourceData);
+            return data != null;
+        }
+
+        private bool TryGetPlayerMeasurementData(int playerIndex, out BodyCalibrationData2D data)
+        {
             data = null;
             if (!IsInitialized || bodylinkAvatar == null || bodylinkAvatar.players == null)
             {
@@ -823,58 +787,56 @@ namespace BodylinkSDK
                 return false;
             }
 
-            BodyCalibrationData2D sourceData = calibration.currentFrameData ?? calibration.calibrationData;
-            if (sourceData == null)
-            {
-                return false;
-            }
-
-            data = BodyLimbCalibration2D.Clone(sourceData);
+            data = calibration.currentFrameData ?? calibration.calibrationData;
             return data != null;
         }
 
         public float GetPlayerCurrentHeight(int playerIndex = 0)
         {
-            if (!IsInitialized) return 0;
-            if (bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData == null) return 0;
-            float height = bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.height;
-            return height;
+            return TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D data)
+                ? data.height
+                : 0f;
         }
 
         public float GetPlayerHeightRatio(int playerIndex = 0)
         {
             float currentHeight = GetPlayerCurrentHeight(playerIndex);
-            return referenceHeight / currentHeight;
+            return currentHeight > Mathf.Epsilon ? referenceHeight / currentHeight : 0f;
         }
 
         public float GetPlayerArmRatio(int playerIndex = 0)
         {
-            if (bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData == null) return 0;
-            return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.armRatio;
+            return TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D data)
+                ? data.armRatio
+                : 0f;
         }
 
         public float GetPlayerLegRatio(int playerIndex = 0)
         {
-            if (bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData == null) return 0;
-            return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.legRatio;
+            return TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D data)
+                ? data.legRatio
+                : 0f;
         }
 
         public float GetPlayerTorsoRatio(int playerIndex = 0)
         {
-            if (bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData == null) return 0;
-            return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.torsoRatio;
+            return TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D data)
+                ? data.torsoRatio
+                : 0f;
         }
 
         public float GetPlayerArmLength(int playerIndex = 0)
         {
-            if (bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData == null) return 0;
-            return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.armLength;
+            return TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D data)
+                ? data.armLength
+                : 0f;
         }
 
         public float GetPlayerLegLength(int playerIndex = 0)
         {
-            if (bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData == null) return 0;
-            return bodylinkAvatar.players[playerIndex].bodyLimbCalibration2D.calibrationData.legLength;
+            return TryGetPlayerMeasurementData(playerIndex, out BodyCalibrationData2D data)
+                ? data.legLength
+                : 0f;
         }
 
         public void Show3DSkeleton(bool show, int playerIndex = 0, float size = .1f)
@@ -887,6 +849,28 @@ namespace BodylinkSDK
             showCameraFeed = show;
             players[0].SetMiniCameraScreen();
             players[0].ShowMiniCamera(show);
+            
+            // --- HARUN UI LAYOUT FIX ---
+            if (show && cameraScreen != null)
+            {
+                var screenRect = cameraScreen.GetComponent<RectTransform>();
+                if (screenRect != null)
+                {
+                    // Bottom-Right mini camera override
+                    screenRect.anchorMin = new Vector2(1, 0);
+                    screenRect.anchorMax = new Vector2(1, 0);
+                    screenRect.pivot = new Vector2(1, 0);
+                    screenRect.sizeDelta = new Vector2(400, 225);
+                    screenRect.anchoredPosition = new Vector2(-20, 20);
+                }
+                
+                Canvas parentCanvas = cameraScreen.GetComponentInParent<Canvas>();
+                if (parentCanvas != null)
+                {
+                    parentCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    parentCanvas.sortingOrder = 99;
+                }
+            }
         }
 
         public void SetCameraFeedSize(float size)
@@ -896,7 +880,6 @@ namespace BodylinkSDK
 
         void OnDisable()
         {
-
         }
 
         private void OnDestroy()

@@ -1,61 +1,81 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using Mediapipe.Tasks.Vision.PoseLandmarker;
 using Mediapipe.Tasks.Components.Containers;
+using UnityEngine;
 
 namespace BodylinkSDK
 {
     public class HeadGestureDetector : BodylinkBaseGestureDetector
     {
+        private const int MaxPlayers = 2;
+        private const int MaxSamplesPerPlayer = 20;
+        private const float MinHeadScale = 0.02f;
+        private const float GestureTimeout = 1f;
+
         [Header("Gesture Settings")]
         public float movementThreshold = 0.08f;
         public float lookHoldTime = 0.5f;
-        public float nodCompletionThreshold = 0.08f; // Added for better nod detection
-        public float shakeCompletionThreshold = 0.06f; // Lowered for easier shake detection
+        public float nodCompletionThreshold = 0.08f;
+        public float shakeCompletionThreshold = 0.06f;
 
         public bool EnableHeadNod = true;
         public bool EnableHeadShake = true;
         public bool EnableLookLeft = true;
         public bool EnableLookRight = true;
 
-        private float playerOneLookTimer = 0f;
-        private string playerOneCurrentLook = "";
-        private float playerTwoLookTimer = 0f;
-        private string playerTwoCurrentLook = "";
-
         private enum NodState { None, Down, Up, Complete }
         private enum ShakeState { None, Left, Right, Complete }
 
-        private List<(Vector2 pos, float time)> playerOneHeadPositions = new List<(Vector2, float)>(20);
-        private List<(Vector2 pos, float time)> playerTwoHeadPositions = new List<(Vector2, float)>(20);
+        private readonly float[] lookTimers = new float[MaxPlayers];
+        private readonly string[] currentLookDirections = new string[MaxPlayers];
+        private readonly List<(Vector2 pos, float time)>[] headPositions =
+        {
+            new List<(Vector2 pos, float time)>(MaxSamplesPerPlayer),
+            new List<(Vector2 pos, float time)>(MaxSamplesPerPlayer)
+        };
 
-        private NodState playerOneNodState = NodState.None;
-        private ShakeState playerOneShakeState = ShakeState.None;
-        private NodState playerTwoNodState = NodState.None;
-        private ShakeState playerTwoShakeState = ShakeState.None;
-
-        private float playerOneLastY, playerOneLastX;
-        private float playerTwoLastY, playerTwoLastX;
-
-        // Added for better gesture tracking
-        private float playerOneNodStartY, playerTwoNodStartY;
-        private float playerOneShakeStartX, playerTwoShakeStartX;
-        private float playerOneShakeStartTime, playerTwoShakeStartTime;
+        private readonly NodState[] nodStates = new NodState[MaxPlayers];
+        private readonly ShakeState[] shakeStates = new ShakeState[MaxPlayers];
+        private readonly float[] nodOriginY = new float[MaxPlayers];
+        private readonly float[] nodLowestY = new float[MaxPlayers];
+        private readonly float[] nodStartTimes = new float[MaxPlayers];
+        private readonly float[] shakeOriginX = new float[MaxPlayers];
+        private readonly float[] shakeExtremeX = new float[MaxPlayers];
+        private readonly float[] shakeStartTimes = new float[MaxPlayers];
 
         private bool IsInitialized;
 
         void Start()
         {
-            Bodylink.Instance.OnInitialized += () =>
+            SyncInitializationState();
+
+            if (Bodylink.Instance == null)
             {
-                IsInitialized = true;
-            };
-            Bodylink.Instance.OnPlayerOutOfScreen += () =>
+                return;
+            }
+
+            Bodylink.Instance.OnInitialized += HandleBodylinkReady;
+            Bodylink.Instance.OnCalibrated += HandleBodylinkReady;
+            Bodylink.Instance.OnPlayerOutOfScreen += HandlePlayerOutOfScreen;
+            Bodylink.Instance.OnDisposed += HandleBodylinkDisposed;
+
+            if (IsInitialized)
             {
-                if (Bodylink.Instance.autoRecalibrate == false) return;
-                IsInitialized = false;
-            };
+                ResetAllPlayerStates();
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (Bodylink.Instance == null)
+            {
+                return;
+            }
+
+            Bodylink.Instance.OnInitialized -= HandleBodylinkReady;
+            Bodylink.Instance.OnCalibrated -= HandleBodylinkReady;
+            Bodylink.Instance.OnPlayerOutOfScreen -= HandlePlayerOutOfScreen;
+            Bodylink.Instance.OnDisposed -= HandleBodylinkDisposed;
         }
 
         void Update()
@@ -65,369 +85,361 @@ namespace BodylinkSDK
 
         public override void ProcessGesture()
         {
-            if (IsInitialized == false || poseLandMarkerResult.poseLandmarks == null || poseLandMarkerResult.poseLandmarks.Count == 0)
+            if (!IsInitialized || poseLandMarkerResult.poseLandmarks == null || poseLandMarkerResult.poseLandmarks.Count == 0)
+            {
                 return;
+            }
+
+            ProcessPlayer(0);
 
             if (isMultiplayerEnabled && poseLandMarkerResult.poseLandmarks.Count >= 2)
             {
-                TriggerGesture(0);
-
-                TriggerGesture(1);
-            }
-            else
-            {
-                TriggerGesture(0);
+                ProcessPlayer(1);
             }
         }
 
-        private void TriggerGesture(int playerIndex)
+        private void ProcessPlayer(int playerIndex)
         {
-            var lm = poseLandMarkerResult.poseLandmarks[playerIndex].landmarks;
-
-            float heightRatio = Bodylink.Instance.GetPlayerHeightRatio(playerIndex);
-            float adjustedThreshold = movementThreshold * heightRatio;
-
-            if (lm.Count > 7)
+            if (!TryGetHeadLandmarks(playerIndex, out NormalizedLandmark nose, out NormalizedLandmark leftEar, out NormalizedLandmark rightEar))
             {
-                try
-                {
-                    var nose = players[playerIndex].body2D.nose;
-                    var leftEar = players[playerIndex].body2D.leftEar;
-                    var rightEar = players[playerIndex].body2D.rightEar;
-
-                    Vector2 currentPos = new Vector2(nose.x, nose.y);
-                    float currentTime = Time.time;
-
-                    if (playerIndex == 1)
-                    {
-                        playerTwoHeadPositions.Add((currentPos, currentTime));
-                        if (playerTwoHeadPositions.Count > 20)
-                            playerTwoHeadPositions.RemoveAt(0);
-
-                        DetectGestures(playerIndex, adjustedThreshold, leftEar, rightEar, currentPos);
-                        // Update last positions AFTER detection
-                        playerTwoLastY = currentPos.y;
-                        playerTwoLastX = currentPos.x;
-                    }
-                    else
-                    {
-                        playerOneHeadPositions.Add((currentPos, currentTime));
-                        if (playerOneHeadPositions.Count > 20)
-                            playerOneHeadPositions.RemoveAt(0);
-
-                        DetectGestures(playerIndex, adjustedThreshold, leftEar, rightEar, currentPos);
-                        // Update last positions AFTER detection
-                        playerOneLastY = currentPos.y;
-                        playerOneLastX = currentPos.x;
-                    }
-                }
-                catch (Exception) { return; }
+                ResetPlayerState(playerIndex);
+                return;
             }
-        }
 
-        private void DetectGestures(int playerIndex, float adjustedThreshold, NormalizedLandmark leftEar, NormalizedLandmark rightEar, Vector2 currentPos)
-        {
-            if (playerIndex == 0 && playerOneHeadPositions.Count < 2) return;
-            else if (playerIndex == 1 && playerTwoHeadPositions.Count < 2) return;
+            Vector2 currentPos = new Vector2(nose.x, nose.y);
+            float currentTime = Time.time;
 
-            float currentY = currentPos.y;
-            float currentX = currentPos.x;
+            List<(Vector2 pos, float time)> positions = headPositions[playerIndex];
+            positions.Add((currentPos, currentTime));
+            TrimOldSamples(positions, currentTime);
 
-            float playerHeightRatio = Bodylink.Instance.GetPlayerHeightRatio(playerIndex);
+            if (positions.Count < 2)
+            {
+                return;
+            }
 
-            // Get previous position for delta calculation
-            var positions = playerIndex == 0 ? playerOneHeadPositions : playerTwoHeadPositions;
-            if (positions.Count < 2) return;
+            Vector2 previousPos = positions[positions.Count - 2].pos;
+            float deltaX = currentPos.x - previousPos.x;
+            float deltaY = currentPos.y - previousPos.y;
 
-            var previous = positions[positions.Count - 2];
-            float deltaY = currentY - previous.pos.y;
-            float deltaX = currentX - previous.pos.x;
+            float headScale = Mathf.Max(Mathf.Abs(rightEar.x - leftEar.x), MinHeadScale);
+            float motionThreshold = GetMotionThreshold(headScale);
+            float nodReturnThreshold = GetNodReturnThreshold(headScale);
+            float shakeReturnThreshold = GetShakeReturnThreshold(headScale);
 
-            // -----------------------------
-            // 🤨 HEAD NOD DETECTION (Improved)
-            // -----------------------------
             if (EnableHeadNod)
             {
-                if (playerIndex == 0)
-                {
-                    switch (playerOneNodState)
-                    {
-                        case NodState.None:
-                            if (deltaY < -adjustedThreshold) // Significant downward movement
-                            {
-                                playerOneNodState = NodState.Down;
-                                playerOneNodStartY = currentY;
-                            }
-                            break;
-
-                        case NodState.Down:
-                            if (deltaY > adjustedThreshold) // Start moving up
-                            {
-                                playerOneNodState = NodState.Up;
-                            }
-                            else if (currentY > playerOneNodStartY + nodCompletionThreshold) // Returned to neutral
-                            {
-                                playerOneNodState = NodState.None; // Reset if didn't complete
-                            }
-                            break;
-
-                        case NodState.Up:
-                            if (Mathf.Abs(currentY - playerOneNodStartY) < nodCompletionThreshold) // Returned to start position
-                            {
-                                float nodIntensity = Mathf.Abs(playerOneNodStartY - currentY) * playerHeightRatio;
-                                //OnHeadNod?.Invoke(playerIndex, nodIntensity);
-                                OnGestureDetect(playerIndex, "HeadNod", nodIntensity);
-                                //Debug.Log("Node delta " + currentY);
-                                playerOneNodState = NodState.Complete;
-                            }
-                            break;
-
-                        case NodState.Complete:
-                            // Small delay before allowing next nod
-                            if (Mathf.Abs(deltaY) < adjustedThreshold * 0.1f)
-                            {
-                                playerOneNodState = NodState.None;
-                            }
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (playerTwoNodState)
-                    {
-                        case NodState.None:
-                            if (deltaY < -adjustedThreshold)
-                            {
-                                playerTwoNodState = NodState.Down;
-                                playerTwoNodStartY = currentY;
-                            }
-                            break;
-
-                        case NodState.Down:
-                            if (deltaY > adjustedThreshold)
-                            {
-                                playerTwoNodState = NodState.Up;
-                            }
-                            else if (currentY > playerTwoNodStartY + nodCompletionThreshold)
-                            {
-                                playerTwoNodState = NodState.None;
-                            }
-                            break;
-
-                        case NodState.Up:
-                            if (Mathf.Abs(currentY - playerTwoNodStartY) < nodCompletionThreshold)
-                            {
-                                float nodIntensity = Mathf.Abs(playerTwoNodStartY - currentY) * playerHeightRatio;
-                                //OnHeadNod?.Invoke(playerIndex, nodIntensity);
-                                OnGestureDetect(playerIndex, "HeadNod", nodIntensity);
-                                //Debug.Log("Node delta "+currentY);
-                                playerTwoNodState = NodState.Complete;
-                            }
-                            break;
-
-                        case NodState.Complete:
-                            if (Mathf.Abs(deltaY) < adjustedThreshold * 0.1f)
-                            {
-                                playerTwoNodState = NodState.None;
-                            }
-                            break;
-                    }
-                }
+                DetectHeadNod(playerIndex, currentPos.y, deltaY, currentTime, motionThreshold, nodReturnThreshold);
             }
 
-            // -----------------------------
-            // 🙅 HEAD SHAKE DETECTION (Improved)
-            // -----------------------------
             if (EnableHeadShake)
             {
-                if (playerIndex == 0)
-                {
-                    switch (playerOneShakeState)
-                    {
-                        case ShakeState.None:
-                            if (Mathf.Abs(deltaX) > adjustedThreshold)
-                            {
-                                playerOneShakeState = deltaX > 0 ? ShakeState.Right : ShakeState.Left;
-                                playerOneShakeStartX = currentX;
-                                playerOneShakeStartTime = Time.time;
-                            }
-                            break;
-
-                        case ShakeState.Left:
-                            // Detect rightward travel from initial left movement
-                            if ((currentX - playerOneShakeStartX) > shakeCompletionThreshold * playerHeightRatio)
-                            {
-                                float shakeIntensity = Mathf.Abs(playerOneShakeStartX - currentX) * playerHeightRatio;
-                                OnGestureDetect(playerIndex, "HeadShake", shakeIntensity);
-                                playerOneShakeState = ShakeState.Complete;
-                            }
-                            else if (Time.time - playerOneShakeStartTime > 1f)
-                            {
-                                playerOneShakeState = ShakeState.None; // Timeout
-                            }
-                            break;
-
-                        case ShakeState.Right:
-                            // Detect leftward travel from initial right movement
-                            if ((playerOneShakeStartX - currentX) > shakeCompletionThreshold * playerHeightRatio)
-                            {
-                                float shakeIntensity = Mathf.Abs(playerOneShakeStartX - currentX) * playerHeightRatio;
-                                OnGestureDetect(playerIndex, "HeadShake", shakeIntensity);
-                                playerOneShakeState = ShakeState.Complete;
-                            }
-                            else if (Time.time - playerOneShakeStartTime > 1f)
-                            {
-                                playerOneShakeState = ShakeState.None;
-                            }
-                            break;
-
-                        case ShakeState.Complete:
-                            if (Mathf.Abs(deltaX) < adjustedThreshold * 0.1f)
-                            {
-                                playerOneShakeState = ShakeState.None;
-                            }
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (playerTwoShakeState)
-                    {
-                        case ShakeState.None:
-                            if (Mathf.Abs(deltaX) > adjustedThreshold)
-                            {
-                                playerTwoShakeState = deltaX > 0 ? ShakeState.Right : ShakeState.Left;
-                                playerTwoShakeStartX = currentX;
-                                playerTwoShakeStartTime = Time.time;
-                            }
-                            break;
-
-                        case ShakeState.Left:
-                            if ((currentX - playerTwoShakeStartX) > shakeCompletionThreshold * playerHeightRatio)
-                            {
-                                float shakeIntensity = Mathf.Abs(playerTwoShakeStartX - currentX) * playerHeightRatio;
-                                OnGestureDetect(playerIndex, "HeadShake", shakeIntensity);
-                                playerTwoShakeState = ShakeState.Complete;
-                            }
-                            else if (Time.time - playerTwoShakeStartTime > 1f)
-                            {
-                                playerTwoShakeState = ShakeState.None;
-                            }
-                            break;
-
-                        case ShakeState.Right:
-                            if ((playerTwoShakeStartX - currentX) > shakeCompletionThreshold * playerHeightRatio)
-                            {
-                                float shakeIntensity = Mathf.Abs(playerTwoShakeStartX - currentX) * playerHeightRatio;
-                                OnGestureDetect(playerIndex, "HeadShake", shakeIntensity);
-                                playerTwoShakeState = ShakeState.Complete;
-                            }
-                            else if (Time.time - playerTwoShakeStartTime > 1f)
-                            {
-                                playerTwoShakeState = ShakeState.None;
-                            }
-                            break;
-
-                        case ShakeState.Complete:
-                            if (Mathf.Abs(deltaX) < adjustedThreshold * 0.1f)
-                            {
-                                playerTwoShakeState = ShakeState.None;
-                            }
-                            break;
-                    }
-                }
+                DetectHeadShake(playerIndex, currentPos.x, deltaX, currentTime, motionThreshold, shakeReturnThreshold);
             }
 
-            // -----------------------------
-            // 👀 LOOK LEFT / RIGHT DETECTION (Improved - Less sensitive)
-            // -----------------------------
             if (EnableLookLeft || EnableLookRight)
             {
-                float headWidth = Mathf.Abs(rightEar.x - leftEar.x);
-                float headCenter = (rightEar.x + leftEar.x) / 2f;
-                float noseOffset = currentPos.x - headCenter;
-                float normalizedOffset = noseOffset / (headWidth * 0.5f); // Normalize by head width
-
-                // Only detect look when head is relatively stable (not shaking)
-                bool isHeadStable = Mathf.Abs(deltaX) < adjustedThreshold * 0.3f;
-
-                if (isHeadStable && Mathf.Abs(normalizedOffset) > 0.3f) // 30% offset from center
-                {
-                    if (playerIndex == 0)
-                    {
-                        playerOneLookTimer += Time.deltaTime;
-
-                        if (playerOneLookTimer >= lookHoldTime)
-                        {
-                            if (EnableLookRight && normalizedOffset > 0 && playerOneCurrentLook != "right")
-                            {
-                                //OnLookRight?.Invoke(playerIndex, Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                OnGestureDetect(playerIndex, "LookRight", Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                playerOneCurrentLook = "right";
-                            }
-                            else if (EnableLookLeft && normalizedOffset < 0 && playerOneCurrentLook != "left")
-                            {
-                                //OnLookLeft?.Invoke(playerIndex, Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                OnGestureDetect(playerIndex, "LookLeft", Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                playerOneCurrentLook = "left";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        playerTwoLookTimer += Time.deltaTime;
-
-                        if (playerTwoLookTimer >= lookHoldTime)
-                        {
-                            if (EnableLookRight && normalizedOffset > 0 && playerTwoCurrentLook != "right")
-                            {
-                                //OnLookRight?.Invoke(playerIndex, Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                OnGestureDetect(playerIndex, "LookRight", Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                playerTwoCurrentLook = "right";
-                            }
-                            else if (EnableLookLeft && normalizedOffset < 0 && playerTwoCurrentLook != "left")
-                            {
-                                //OnLookLeft?.Invoke(playerIndex, Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                OnGestureDetect(playerIndex, "LookLeft", Mathf.Abs(normalizedOffset) * playerHeightRatio);
-                                playerTwoCurrentLook = "left";
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // Reset look timer when not looking significantly or head is moving
-                    if (playerIndex == 0)
-                    {
-                        playerOneLookTimer = 0f;
-                        playerOneCurrentLook = "";
-                    }
-                    else
-                    {
-                        playerTwoLookTimer = 0f;
-                        playerTwoCurrentLook = "";
-                    }
-                }
+                DetectLookDirection(playerIndex, currentPos, deltaX, leftEar, rightEar, motionThreshold);
             }
         }
 
-        // Public method to manually reset states if needed
+        private bool TryGetHeadLandmarks(int playerIndex, out NormalizedLandmark nose, out NormalizedLandmark leftEar, out NormalizedLandmark rightEar)
+        {
+            nose = new NormalizedLandmark();
+            leftEar = new NormalizedLandmark();
+            rightEar = new NormalizedLandmark();
+
+            if (players == null || playerIndex < 0 || playerIndex >= players.Length || players[playerIndex] == null)
+            {
+                return false;
+            }
+
+            if (poseLandMarkerResult.poseLandmarks == null || poseLandMarkerResult.poseLandmarks.Count <= playerIndex)
+            {
+                return false;
+            }
+
+            BodyPoints2D body = players[playerIndex].body2D;
+            if (body == null)
+            {
+                return false;
+            }
+
+            nose = body.nose;
+            leftEar = body.leftEar;
+            rightEar = body.rightEar;
+
+            return nose != null && leftEar != null && rightEar != null;
+        }
+
+        private void DetectHeadNod(int playerIndex, float currentY, float deltaY, float currentTime, float motionThreshold, float returnThreshold)
+        {
+            switch (nodStates[playerIndex])
+            {
+                case NodState.None:
+                    if (deltaY < -motionThreshold)
+                    {
+                        nodStates[playerIndex] = NodState.Down;
+                        nodOriginY[playerIndex] = headPositions[playerIndex][headPositions[playerIndex].Count - 2].pos.y;
+                        nodLowestY[playerIndex] = currentY;
+                        nodStartTimes[playerIndex] = currentTime;
+                    }
+                    break;
+
+                case NodState.Down:
+                    if (currentY < nodLowestY[playerIndex])
+                    {
+                        nodLowestY[playerIndex] = currentY;
+                    }
+
+                    if (currentY > nodLowestY[playerIndex] + returnThreshold)
+                    {
+                        nodStates[playerIndex] = NodState.Up;
+                    }
+                    else if (currentTime - nodStartTimes[playerIndex] > GestureTimeout)
+                    {
+                        nodStates[playerIndex] = NodState.None;
+                    }
+                    break;
+
+                case NodState.Up:
+                    {
+                        float nodTravel = nodOriginY[playerIndex] - nodLowestY[playerIndex];
+                        if (nodTravel < motionThreshold)
+                        {
+                            if (currentTime - nodStartTimes[playerIndex] > GestureTimeout)
+                            {
+                                nodStates[playerIndex] = NodState.None;
+                            }
+                            break;
+                        }
+
+                        if (currentY >= nodOriginY[playerIndex] - returnThreshold)
+                        {
+                            OnGestureDetect(playerIndex, "HeadNod", Mathf.Clamp01(nodTravel / motionThreshold));
+                            nodStates[playerIndex] = NodState.Complete;
+                        }
+                        else if (currentY < nodLowestY[playerIndex])
+                        {
+                            nodStates[playerIndex] = NodState.Down;
+                            nodLowestY[playerIndex] = currentY;
+                        }
+                        else if (currentTime - nodStartTimes[playerIndex] > GestureTimeout)
+                        {
+                            nodStates[playerIndex] = NodState.None;
+                        }
+                        break;
+                    }
+
+                case NodState.Complete:
+                    if (Mathf.Abs(deltaY) < motionThreshold * 0.25f)
+                    {
+                        nodStates[playerIndex] = NodState.None;
+                    }
+                    break;
+            }
+        }
+
+        private void DetectHeadShake(int playerIndex, float currentX, float deltaX, float currentTime, float motionThreshold, float returnThreshold)
+        {
+            switch (shakeStates[playerIndex])
+            {
+                case ShakeState.None:
+                    if (deltaX > motionThreshold)
+                    {
+                        shakeStates[playerIndex] = ShakeState.Right;
+                        shakeOriginX[playerIndex] = headPositions[playerIndex][headPositions[playerIndex].Count - 2].pos.x;
+                        shakeExtremeX[playerIndex] = currentX;
+                        shakeStartTimes[playerIndex] = currentTime;
+                    }
+                    else if (deltaX < -motionThreshold)
+                    {
+                        shakeStates[playerIndex] = ShakeState.Left;
+                        shakeOriginX[playerIndex] = headPositions[playerIndex][headPositions[playerIndex].Count - 2].pos.x;
+                        shakeExtremeX[playerIndex] = currentX;
+                        shakeStartTimes[playerIndex] = currentTime;
+                    }
+                    break;
+
+                case ShakeState.Right:
+                    {
+                        if (currentX > shakeExtremeX[playerIndex])
+                        {
+                            shakeExtremeX[playerIndex] = currentX;
+                        }
+
+                        float rightTravel = shakeExtremeX[playerIndex] - shakeOriginX[playerIndex];
+                        if (rightTravel >= motionThreshold && currentX < shakeExtremeX[playerIndex] - returnThreshold)
+                        {
+                            OnGestureDetect(playerIndex, "HeadShake", Mathf.Clamp01(rightTravel / motionThreshold));
+                            shakeStates[playerIndex] = ShakeState.Complete;
+                        }
+                        else if (currentTime - shakeStartTimes[playerIndex] > GestureTimeout)
+                        {
+                            shakeStates[playerIndex] = ShakeState.None;
+                        }
+                        break;
+                    }
+
+                case ShakeState.Left:
+                    {
+                        if (currentX < shakeExtremeX[playerIndex])
+                        {
+                            shakeExtremeX[playerIndex] = currentX;
+                        }
+
+                        float leftTravel = shakeOriginX[playerIndex] - shakeExtremeX[playerIndex];
+                        if (leftTravel >= motionThreshold && currentX > shakeExtremeX[playerIndex] + returnThreshold)
+                        {
+                            OnGestureDetect(playerIndex, "HeadShake", Mathf.Clamp01(leftTravel / motionThreshold));
+                            shakeStates[playerIndex] = ShakeState.Complete;
+                        }
+                        else if (currentTime - shakeStartTimes[playerIndex] > GestureTimeout)
+                        {
+                            shakeStates[playerIndex] = ShakeState.None;
+                        }
+                        break;
+                    }
+
+                case ShakeState.Complete:
+                    if (Mathf.Abs(deltaX) < motionThreshold * 0.25f)
+                    {
+                        shakeStates[playerIndex] = ShakeState.None;
+                    }
+                    break;
+            }
+        }
+
+        private void DetectLookDirection(int playerIndex, Vector2 currentPos, float deltaX, NormalizedLandmark leftEar, NormalizedLandmark rightEar, float motionThreshold)
+        {
+            float headWidth = Mathf.Abs(rightEar.x - leftEar.x);
+            if (headWidth < Mathf.Epsilon)
+            {
+                ResetLookState(playerIndex);
+                return;
+            }
+
+            float headCenter = (rightEar.x + leftEar.x) * 0.5f;
+            float normalizedOffset = (currentPos.x - headCenter) / (headWidth * 0.5f);
+            bool isHeadStable = Mathf.Abs(deltaX) < motionThreshold * 0.35f;
+
+            if (isHeadStable && Mathf.Abs(normalizedOffset) > 0.3f)
+            {
+                lookTimers[playerIndex] += Time.deltaTime;
+
+                if (lookTimers[playerIndex] >= lookHoldTime)
+                {
+                    if (EnableLookRight && normalizedOffset > 0f && currentLookDirections[playerIndex] != "right")
+                    {
+                        OnGestureDetect(playerIndex, "LookRight", Mathf.Abs(normalizedOffset));
+                        currentLookDirections[playerIndex] = "right";
+                    }
+                    else if (EnableLookLeft && normalizedOffset < 0f && currentLookDirections[playerIndex] != "left")
+                    {
+                        OnGestureDetect(playerIndex, "LookLeft", Mathf.Abs(normalizedOffset));
+                        currentLookDirections[playerIndex] = "left";
+                    }
+                }
+
+                return;
+            }
+
+            ResetLookState(playerIndex);
+        }
+
+        private float GetMotionThreshold(float headScale)
+        {
+            return Mathf.Max(0.005f, headScale * movementThreshold);
+        }
+
+        private float GetNodReturnThreshold(float headScale)
+        {
+            return Mathf.Max(0.003f, nodCompletionThreshold * headScale);
+        }
+
+        private float GetShakeReturnThreshold(float headScale)
+        {
+            return Mathf.Max(0.003f, shakeCompletionThreshold * headScale);
+        }
+
+        private static void TrimOldSamples(List<(Vector2 pos, float time)> positions, float currentTime)
+        {
+            while (positions.Count > MaxSamplesPerPlayer)
+            {
+                positions.RemoveAt(0);
+            }
+
+            while (positions.Count > 0 && currentTime - positions[0].time > GestureTimeout)
+            {
+                positions.RemoveAt(0);
+            }
+        }
+
+        private void HandleBodylinkReady()
+        {
+            SyncInitializationState();
+            ResetAllPlayerStates();
+        }
+
+        private void HandlePlayerOutOfScreen()
+        {
+            ResetAllPlayerStates();
+
+            if (Bodylink.Instance.autoRecalibrate == false)
+            {
+                return;
+            }
+
+            IsInitialized = false;
+        }
+
+        private void HandleBodylinkDisposed()
+        {
+            IsInitialized = false;
+            ResetAllPlayerStates();
+        }
+
+        private void SyncInitializationState()
+        {
+            IsInitialized = Bodylink.Instance != null && Bodylink.Instance.IsInitialized;
+        }
+
+        private void ResetAllPlayerStates()
+        {
+            for (int playerIndex = 0; playerIndex < MaxPlayers; playerIndex++)
+            {
+                ResetPlayerState(playerIndex);
+            }
+        }
+
+        private void ResetPlayerState(int playerIndex)
+        {
+            if (playerIndex < 0 || playerIndex >= MaxPlayers)
+            {
+                return;
+            }
+
+            headPositions[playerIndex].Clear();
+            nodStates[playerIndex] = NodState.None;
+            shakeStates[playerIndex] = ShakeState.None;
+            nodOriginY[playerIndex] = 0f;
+            nodLowestY[playerIndex] = 0f;
+            nodStartTimes[playerIndex] = 0f;
+            shakeOriginX[playerIndex] = 0f;
+            shakeExtremeX[playerIndex] = 0f;
+            shakeStartTimes[playerIndex] = 0f;
+            ResetLookState(playerIndex);
+        }
+
+        private void ResetLookState(int playerIndex)
+        {
+            lookTimers[playerIndex] = 0f;
+            currentLookDirections[playerIndex] = string.Empty;
+        }
+
         public void ResetPlayerStates(int playerIndex)
         {
-            if (playerIndex == 0)
-            {
-                playerOneNodState = NodState.None;
-                playerOneShakeState = ShakeState.None;
-                playerOneLookTimer = 0f;
-                playerOneCurrentLook = "";
-            }
-            else
-            {
-                playerTwoNodState = NodState.None;
-                playerTwoShakeState = ShakeState.None;
-                playerTwoLookTimer = 0f;
-                playerTwoCurrentLook = "";
-            }
+            ResetPlayerState(playerIndex);
         }
     }
 }

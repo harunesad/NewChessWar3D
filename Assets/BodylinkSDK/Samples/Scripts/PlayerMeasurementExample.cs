@@ -4,13 +4,14 @@ using UnityEngine.UI;
 
 public class PlayerMeasurementExample : MonoBehaviour
 {
+    [Header("Player One UI Elements")]
     public Text playerOneNameText;
     public Text playerOneHeightText;
     public Text playerOneArmRatioText;
     public Text playerOneLegRatioText;
     public Text playerOneTorsoRatioText;
 
-
+    [Header("Player Two UI Elements")]
     public Text playerTwoNameText;
     public Text playerTwoHeightText;
     public Text playerTwoArmRatioText;
@@ -54,16 +55,53 @@ public class PlayerMeasurementExample : MonoBehaviour
     void Update()
     {
         if (!isInitialized) return;
-        playerOneHeightText.text = "Height : " + Bodylink.Instance.GetPlayerCurrentHeight(0).ToString("0.00");
-        playerOneArmRatioText.text = "Arm Ratio : " + Bodylink.Instance.GetPlayerArmRatio(0).ToString("0.00");
-        playerOneLegRatioText.text = "Leg Ratio : " + Bodylink.Instance.GetPlayerLegRatio(0).ToString("0.00");
-        playerOneTorsoRatioText.text = "Torso Ratio : " + Bodylink.Instance.GetPlayerTorsoRatio(0).ToString("0.00");
+
+        UpdatePlayerMeasurement(
+            0,
+            playerOneHeightText,
+            playerOneArmRatioText,
+            playerOneLegRatioText,
+            playerOneTorsoRatioText);
+
         if (Bodylink.Instance.isMultiplayerEnabled)
         {
-            playerTwoHeightText.text = "Height : " + Bodylink.Instance.GetPlayerCurrentHeight(1).ToString("0.00");
-            playerTwoArmRatioText.text = "Arm Ratio : " + Bodylink.Instance.GetPlayerArmRatio(1).ToString("0.00");
-            playerTwoLegRatioText.text = "Leg Ratio : " + Bodylink.Instance.GetPlayerLegRatio(1).ToString("0.00");
-            playerTwoTorsoRatioText.text = "Torso Ratio : " + Bodylink.Instance.GetPlayerTorsoRatio(1).ToString("0.00");
+            UpdatePlayerMeasurement(
+                1,
+                playerTwoHeightText,
+                playerTwoArmRatioText,
+                playerTwoLegRatioText,
+                playerTwoTorsoRatioText);
+        }
+    }
+
+    private void UpdatePlayerMeasurement(
+        int playerIndex,
+        Text heightText,
+        Text armRatioText,
+        Text legRatioText,
+        Text torsoRatioText)
+    {
+        if (Bodylink.Instance != null &&
+            Bodylink.Instance.TryGetPlayerCurrentData(playerIndex, out BodyCalibrationData2D data))
+        {
+            SetText(heightText, "Height : " + data.height.ToString("0.00"));
+            SetText(armRatioText, "Arm Ratio : " + data.armRatio.ToString("0.00"));
+            SetText(legRatioText, "Leg Ratio : " + data.legRatio.ToString("0.00"));
+            SetText(torsoRatioText, "Torso Ratio : " + data.torsoRatio.ToString("0.00"));
+            return;
+        }
+
+        SetText(heightText, "Height : N/A");
+        SetText(armRatioText, "Arm Ratio : N/A");
+        SetText(legRatioText, "Leg Ratio : N/A");
+        SetText(torsoRatioText, "Torso Ratio : N/A");
+    }
+
+    private static void SetText(Text target, string value)
+    {
+        if (target != null)
+        {
+            target.text = value;
         }
     }
 

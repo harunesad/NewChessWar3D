@@ -6,6 +6,8 @@ namespace BodylinkSDK
 {
     public class BodyMovementDetector : BodylinkBaseGestureDetector
     {
+        private const float DefaultPlayerRatio = 1f;
+
         [Header("Base Thresholds (adjusted by height)")]
         public float jumpThreshold = 0.03f;
         public float armRaiseThreshold = 0.2f;
@@ -36,37 +38,35 @@ namespace BodylinkSDK
 
         void Start()
         {
-            Bodylink.Instance.OnInitialized += () =>
+            SyncInitializationState();
+
+            if (Bodylink.Instance == null)
             {
-                IsInitialized = true;
+                return;
+            }
 
-                // initialize hip baseline for all active players
-                int players = Bodylink.Instance.numberOfPlayers;
-                for (int p = 0; p < hipBaseline.Length; p++)
-                {
-                    if (p < players)
-                    {
-                        hipBaseline[p] = (base.players[p].body2D.leftHip.y + base.players[p].body2D.rightHip.y) * 0.5f;
-                        hipBaselineSet[p] = true;
-                    }
-                    else
-                    {
-                        hipBaselineSet[p] = false;
-                    }
-                }
+            Bodylink.Instance.OnInitialized += HandleBodylinkReady;
+            Bodylink.Instance.OnCalibrated += HandleBodylinkReady;
+            Bodylink.Instance.OnPlayerOutOfScreen += HandlePlayerOutOfScreen;
+            Bodylink.Instance.OnDisposed += HandleBodylinkDisposed;
 
-            };
-
-            Bodylink.Instance.OnPlayerOutOfScreen += () =>
+            if (IsInitialized)
             {
-                if (Bodylink.Instance.autoRecalibrate == false) return;
-                IsInitialized = false;
-                playerOneFeetPositions.Clear();
-                if (isMultiplayerEnabled)
-                    playerTwoFeetPositions.Clear();
-                ResetGestureCooldowns(0);
-                ResetGestureCooldowns(1);
-            };
+                InitializeHipBaselines();
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (Bodylink.Instance == null)
+            {
+                return;
+            }
+
+            Bodylink.Instance.OnInitialized -= HandleBodylinkReady;
+            Bodylink.Instance.OnCalibrated -= HandleBodylinkReady;
+            Bodylink.Instance.OnPlayerOutOfScreen -= HandlePlayerOutOfScreen;
+            Bodylink.Instance.OnDisposed -= HandleBodylinkDisposed;
         }
 
         void Update()
@@ -78,7 +78,7 @@ namespace BodylinkSDK
         {
             if (!IsInitialized)
                 return;
-            if (poseLandMarkerResult.poseLandmarks == null) return;
+            if (poseLandMarkerResult.poseLandmarks == null || poseLandMarkerResult.poseLandmarks.Count == 0) return;
 
             if (isMultiplayerEnabled && poseLandMarkerResult.poseLandmarks.Count > 1)
             {
@@ -95,6 +95,10 @@ namespace BodylinkSDK
         {
             try
             {
+                if (players == null || playerIndex < 0 || playerIndex >= players.Length || players[playerIndex] == null)
+                {
+                    return;
+                }
 
                 // ============== ARM RAISE (FULL STRETCH ABOVE HEAD) ==============
                 // Body2D shoulder position
@@ -121,6 +125,10 @@ namespace BodylinkSDK
 
                 // Actual arm length
                 float armLength = Bodylink.Instance.GetPlayerArmLength(playerIndex);
+                if (float.IsNaN(armLength) || float.IsInfinity(armLength) || armLength <= 0f)
+                {
+                    armLength = DefaultPlayerRatio;
+                }
 
                 // Vertical raise potential
                 float maxRaise = armLength * 0.60f;
@@ -130,7 +138,7 @@ namespace BodylinkSDK
                 float rightArmDelta = Mathf.Clamp01((wristRightY_screen - shoulderY) / maxRaise);
 
                 // Raise threshold
-                float raiseThreshold = armRaiseThreshold * Bodylink.Instance.GetPlayerArmRatio(playerIndex);
+                float raiseThreshold = armRaiseThreshold * GetSafeArmRatio(playerIndex);
 
                 // LEFT ARM
                 if (EnableArmRaise && (wristLeftY_screen - shoulderY) > raiseThreshold)
@@ -174,9 +182,8 @@ namespace BodylinkSDK
                 }
 
                 // player ratios and thresholds
-                float heightRatio = Bodylink.Instance.GetPlayerHeightRatio(playerIndex);
-                float legLength = Bodylink.Instance.GetPlayerLegLength(playerIndex);
-                if (legLength <= 0f) legLength = Mathf.Max(0.5f, Bodylink.Instance.GetPlayerCurrentHeight(playerIndex)); // fallback
+                float heightRatio = GetSafeHeightRatio(playerIndex);
+                float legLength = GetSafeLegLength(playerIndex);
 
                 float adjustedMoveSensitivity = moveSensitivity * heightRatio;
                 float adjustedJumpThreshold = jumpThreshold * heightRatio; // remains scaled by height
@@ -193,7 +200,7 @@ namespace BodylinkSDK
                 if (EnableJump)
                 {
                     // Trigger jump when hip rises sufficiently above baseline
-                    if (hipDelta > adjustedJumpThreshold && Time.time - playerOneLastMoveTime > 0.18f) // small cooldown so jump and move don't collide
+                    if (hipDelta > adjustedJumpThreshold && Time.time - GetLastMoveTime(playerIndex) > 0.18f) // small cooldown so jump and move don't collide
                     {
                         float jumpStrength = Mathf.Clamp01(hipDelta / legLength);
                         //OnJump?.Invoke(playerIndex, jumpStrength);
@@ -228,7 +235,7 @@ namespace BodylinkSDK
             feetPositions.Enqueue((sampleX, now));
 
             // keep samples only in sampleDuration window
-            while (feetPositions.Count > 2 && now - feetPositions.Peek().time > sampleDuration)
+            while (feetPositions.Count > 0 && now - feetPositions.Peek().time > sampleDuration)
                 feetPositions.Dequeue();
 
             if (feetPositions.Count < 2) return;
@@ -264,6 +271,119 @@ namespace BodylinkSDK
 
                 lastMoveTime = Time.time;
             }
+        }
+
+        private void HandleBodylinkReady()
+        {
+            SyncInitializationState();
+            ResetMovementTracking();
+            InitializeHipBaselines();
+        }
+
+        private void HandlePlayerOutOfScreen()
+        {
+            ResetMovementTracking();
+
+            if (Bodylink.Instance.autoRecalibrate == false)
+            {
+                return;
+            }
+
+            IsInitialized = false;
+        }
+
+        private void HandleBodylinkDisposed()
+        {
+            IsInitialized = false;
+            ResetMovementTracking();
+        }
+
+        private void SyncInitializationState()
+        {
+            IsInitialized = Bodylink.Instance != null && Bodylink.Instance.IsInitialized;
+        }
+
+        private void InitializeHipBaselines()
+        {
+            if (!IsInitialized || players == null)
+            {
+                return;
+            }
+
+            int activePlayers = Mathf.Min(Bodylink.Instance.numberOfPlayers, hipBaseline.Length, players.Length);
+            for (int p = 0; p < hipBaseline.Length; p++)
+            {
+                if (p < activePlayers && players[p] != null)
+                {
+                    hipBaseline[p] = (players[p].body2D.leftHip.y + players[p].body2D.rightHip.y) * 0.5f;
+                    hipBaselineSet[p] = true;
+                }
+                else
+                {
+                    hipBaseline[p] = 0f;
+                    hipBaselineSet[p] = false;
+                }
+            }
+        }
+
+        private void ResetMovementTracking()
+        {
+            playerOneFeetPositions.Clear();
+            playerTwoFeetPositions.Clear();
+            playerOneLastMoveTime = 0f;
+            playerTwoLastMoveTime = 0f;
+            ResetGestureCooldowns(0);
+            ResetGestureCooldowns(1);
+
+            for (int i = 0; i < hipBaselineSet.Length; i++)
+            {
+                hipBaseline[i] = 0f;
+                hipBaselineSet[i] = false;
+            }
+        }
+
+        private float GetLastMoveTime(int playerIndex)
+        {
+            return playerIndex == 0 ? playerOneLastMoveTime : playerTwoLastMoveTime;
+        }
+
+        private float GetSafeHeightRatio(int playerIndex)
+        {
+            float heightRatio = Bodylink.Instance.GetPlayerHeightRatio(playerIndex);
+            if (float.IsNaN(heightRatio) || float.IsInfinity(heightRatio) || heightRatio <= 0f)
+            {
+                return DefaultPlayerRatio;
+            }
+
+            return heightRatio;
+        }
+
+        private float GetSafeArmRatio(int playerIndex)
+        {
+            float armRatio = Bodylink.Instance.GetPlayerArmRatio(playerIndex);
+            if (float.IsNaN(armRatio) || float.IsInfinity(armRatio) || armRatio <= 0f)
+            {
+                return DefaultPlayerRatio;
+            }
+
+            return armRatio;
+        }
+
+        private float GetSafeLegLength(int playerIndex)
+        {
+            float legLength = Bodylink.Instance.GetPlayerLegLength(playerIndex);
+            if (!float.IsNaN(legLength) && !float.IsInfinity(legLength) && legLength > 0f)
+            {
+                return legLength;
+            }
+
+            float currentHeight = Bodylink.Instance.GetPlayerCurrentHeight(playerIndex);
+            if (float.IsNaN(currentHeight) || float.IsInfinity(currentHeight) || currentHeight <= 0f)
+            {
+                return DefaultPlayerRatio;
+            }
+
+            return Mathf.Max(0.5f, currentHeight);
         }
 
         private bool TryInvokeGesture(int playerIndex, string gestureName, float strength)

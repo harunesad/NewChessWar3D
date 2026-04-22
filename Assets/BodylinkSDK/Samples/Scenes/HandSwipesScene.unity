@@ -350,7 +350,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 9.640289, y: 126}
+  m_AnchoredPosition: {x: 9.640259, y: 126}
   m_SizeDelta: {x: 269.3209, y: 182.6654}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &258731246
@@ -517,8 +517,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BodylinkSDK.HandGestureDetector
   bufferSize: 8
-  swipeThreshold: 0.13
-  maxSwipeTime: 0.5
+  swipeThreshold: 0.1
+  maxSwipeTime: 0.35
   EnableSwipeLeft: 1
   EnableSwipeRight: 1
   EnableSwipeUp: 1
@@ -569,14 +569,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 943283898}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
@@ -675,7 +675,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -9.640289, y: 126}
+  m_AnchoredPosition: {x: -9.640259, y: 126}
   m_SizeDelta: {x: 234.4541, y: 182.67}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &1230599971
@@ -1016,7 +1016,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 9.640289, y: 8.200012}
+  m_AnchoredPosition: {x: 9.640259, y: 8.200012}
   m_SizeDelta: {x: 113.6155, y: 36.5778}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &3896170542375878827

@@ -16,6 +16,8 @@ public class CamSwerve : MonoBehaviour
     private BodylinkEvents bodylinkEvents;
     private bool wasPinchingLastFrame = false;
     private bool isDraggingWithBodylink = false;
+    private bool isLeftFistClosed = false;
+    private bool isRightFistClosed = false;
 
     void Start()
     {
@@ -24,6 +26,8 @@ public class CamSwerve : MonoBehaviour
         if (bodylinkEvents != null)
         {
             bodylinkEvents.OnGestureDetection += OnGestureDetected;
+            // -- HARUN HAND FIST FIX --
+            bodylinkEvents.OnPoseDetection += OnPoseDetected;
         }
     }
 
@@ -33,6 +37,7 @@ public class CamSwerve : MonoBehaviour
         if (bodylinkEvents != null)
         {
             bodylinkEvents.OnGestureDetection -= OnGestureDetected;
+            bodylinkEvents.OnPoseDetection -= OnPoseDetected;
         }
     }
 
@@ -40,6 +45,7 @@ public class CamSwerve : MonoBehaviour
     {
         System();
         transform.LookAt(lookPos);
+        HandleFistCameraRotation();
     }
 
     public void System()
@@ -117,28 +123,52 @@ public class CamSwerve : MonoBehaviour
     private float lastSwipeTime = 0f;
     private float swipeCooldown = 0.6f; // Kameranın dönmesi bitene kadar bekle (0.4f + biraz pay)
 
-    // Bodylink Swipe Algılayıcısı
+    // Bodylink Swipe Algılayıcısı (SADECE DEBUG AMAÇLI, KAFA HAREKETİ İPTAL)
     private void OnGestureDetected(int playerIndex, string gestureName, object[] values)
     {
-        if (Time.time < lastSwipeTime + swipeCooldown) return;
-        
-        // Kafa hareketi (Look) için ekstra stabilizasyon: Jest ismine göre küçük bir filtre
-        if (gestureName.Contains("Look"))
-        {
-            // Hafif yatmaları engellemek için Debug log ile takip edebiliriz
-            Debug.Log($"[Bodylink] Kafa Jesti: {gestureName}");
-        }
+        // Kafa döndürmesi HandFist sistemine geçirildiği için bu fonksiyon artık Swap fonksiyonunu tetiklemiyor
+    }
 
-        if (gestureName == "SwipeLeft" || gestureName == "LookLeft")
+    private float lastLeftFistTime = -1f;
+    private float lastRightFistTime = -1f;
+    private float fistTimeout = 0.3f; // Yumruk algılanmazsa ne kadar sürede iptal edilecek
+
+    // --- HARUN YENI EL SISTEMI (KAPALI YUMRUK) ---
+    private void OnPoseDetected(int playerIndex, string poseName, Side side, HandPose pose)
+    {
+        if (playerIndex != 0) return;
+
+        if (side == Side.Left)
         {
-            Debug.Log("[Bodylink] Sola Bakış/Kaydırma algılandı - Kamera sola dönüyor");
-            MoveLeft();
+            if (pose == HandPose.Closed_Fist) { isLeftFistClosed = true; lastLeftFistTime = Time.time; }
+            else if (pose == HandPose.Open_Palm || pose == HandPose.None) isLeftFistClosed = false;
+        }
+        else if (side == Side.Right)
+        {
+            if (pose == HandPose.Closed_Fist) { isRightFistClosed = true; lastRightFistTime = Time.time; }
+            else if (pose == HandPose.Open_Palm || pose == HandPose.None) isRightFistClosed = false;
+        }
+    }
+
+    private void HandleFistCameraRotation()
+    {
+        if (Time.time < lastSwipeTime + swipeCooldown) return;
+
+        // Timeout kontrolü (Eğer el kameradan çıktıysa veya sistem takıldıysa yumruğu iptal et)
+        if (Time.time > lastLeftFistTime + fistTimeout) isLeftFistClosed = false;
+        if (Time.time > lastRightFistTime + fistTimeout) isRightFistClosed = false;
+
+        // Sağ yumruk sağa, Sol yumruk sola
+        if (isRightFistClosed)
+        {
+            Debug.Log("[Bodylink] Sağ Yumruk Kapalı - Kamera sağa dönüyor");
+            MoveRight();
             lastSwipeTime = Time.time;
         }
-        else if (gestureName == "SwipeRight" || gestureName == "LookRight")
+        else if (isLeftFistClosed)
         {
-            Debug.Log("[Bodylink] Sağa Bakış/Kaydırma algılandı - Kamera sağa dönüyor");
-            MoveRight();
+            Debug.Log("[Bodylink] Sol Yumruk Kapalı - Kamera sola dönüyor");
+            MoveLeft();
             lastSwipeTime = Time.time;
         }
     }
