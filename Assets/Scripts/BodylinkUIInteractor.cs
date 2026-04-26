@@ -144,31 +144,9 @@ public class BodylinkUIInteractor : MonoBehaviour
         float x = 0, y = 0;
         bool found = false;
 
-        // DUAL-HAND LOGIC: Hangi el o an daha aktifse onu kullan
-        BodylinkHandPoints hand = null;
-        
-        if (autoSelectHand)
-        {
-            var leftHand = player.handPoints[0];
-            var rightHand = player.handPoints[1];
-            
-            // Hangi elin Landmark sayısı daha fazlaysa veya hangisi daha "vurguluysa" onu seç
-            bool leftValid = leftHand != null && leftHand.handLandmark != null && leftHand.handLandmark.Count > 8;
-            bool rightValid = rightHand != null && rightHand.handLandmark != null && rightHand.handLandmark.Count > 8;
-            
-            if (leftValid && rightValid)
-            {
-                // İki el de varsa, daha önceden hangi el aktifse ona bir miktar öncelik ver (Zıplamayı önlemek için)
-                if (activeHand == Side.Left) hand = leftHand;
-                else hand = rightHand;
-            }
-            else if (leftValid) { hand = leftHand; activeHand = Side.Left; }
-            else if (rightValid) { hand = rightHand; activeHand = Side.Right; }
-        }
-        else
-        {
-            hand = (activeHand == Side.Left) ? player.handPoints[0] : player.handPoints[1];
-        }
+        // FORCE RIGHT HAND: Sadece sağ el imleci kontrol eder
+        activeHand = Side.Right;
+        BodylinkHandPoints hand = player.handPoints[1];
 
         if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
         {
@@ -181,9 +159,8 @@ public class BodylinkUIInteractor : MonoBehaviour
         }
         else
         {
-            NormalizedLandmark wrist = (activeHand == Side.Left) 
-                ? (useSmoothedPoints ? player.body2DSmoothed.leftWrist : player.body2D.leftWrist)
-                : (useSmoothedPoints ? player.body2D.rightWrist : player.body2DSmoothed.rightWrist); 
+            // Bilek takibi (Yedek sistem)
+            NormalizedLandmark wrist = useSmoothedPoints ? player.body2DSmoothed.rightWrist : player.body2D.rightWrist;
 
             if (wrist.visibility >= MIN_VISIBILITY)
             {
@@ -241,16 +218,28 @@ public class BodylinkUIInteractor : MonoBehaviour
 
         var thumbTip = hand.handLandmark[4];
         var indexTip = hand.handLandmark[8];
+        var wrist = hand.handLandmark[0];
+        var middleKnuckle = hand.handLandmark[9];
 
-        // 3D Mesafe (Normalleştirilmiş Z dahil)
-        float distance = Vector3.Distance(
+        // Elin o anki görsel boyutu (Normalizasyon için)
+        float handSize = Vector3.Distance(
+            new Vector3(wrist.x, wrist.y, wrist.z),
+            new Vector3(middleKnuckle.x, middleKnuckle.y, middleKnuckle.z)
+        );
+        if (handSize < 0.001f) handSize = 0.1f; // Güvenlik
+
+        // Parmak mesafesi (Elin kendi boyutuna oranla)
+        // Artık kameraya uzaklıktan bağımsızdır!
+        float rawDist = Vector3.Distance(
             new Vector3(thumbTip.x, thumbTip.y, thumbTip.z), 
             new Vector3(indexTip.x, indexTip.y, indexTip.z)
         );
+        float distance = rawDist / handSize;
 
         if (!isPinching)
         {
-            if (distance < pinchThreshold)
+            // Eşikler artık el boyutuna oranlıdır (Örn: 0.3 = El boyunun %30'u kadar yakın)
+            if (distance < pinchThreshold * 6f) 
             {
                 // PINCH BAŞLADI
                 activeScrollRect = FindScrollRectUnderPointer();
@@ -267,7 +256,7 @@ public class BodylinkUIInteractor : MonoBehaviour
         else
         {
             // PINCH DEVAM EDİYOR
-            if (distance > releaseThreshold)
+            if (distance > releaseThreshold * 6f)
             {
                 ReleaseScroll();
             }

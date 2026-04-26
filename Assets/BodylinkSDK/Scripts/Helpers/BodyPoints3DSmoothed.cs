@@ -182,6 +182,13 @@ namespace BodylinkSDK
             return smoothedPoints[index];
         }
 
+        public Landmark this[int index] => GetNormalizedPoint(index);
+
+        public Landmark GetPoint(int index)
+        {
+            return GetNormalizedPoint(index);
+        }
+
         // Convenience accessors (optional, mirrors BodyPoints2D style)
         public Landmark head { get { return GetNormalizedPoint(0); } }
         public Landmark nose { get { return GetNormalizedPoint(0); } }

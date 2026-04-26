@@ -41,8 +41,11 @@ public class FitnessExample : MonoBehaviour
     private ExerciseTracker.ExerciseType[] exerciseSequence =
     {
         ExerciseTracker.ExerciseType.Squat,
+        ExerciseTracker.ExerciseType.Lunges,
         ExerciseTracker.ExerciseType.PushUp,
-        ExerciseTracker.ExerciseType.JumpingJack
+        ExerciseTracker.ExerciseType.Plank,
+        ExerciseTracker.ExerciseType.JumpingJack,
+        ExerciseTracker.ExerciseType.HighKnees
     };
     [SerializeField, Min(0f)] private float readyCountdownSeconds = 3f;
     [SerializeField] private bool startSequenceOnEnable = true;

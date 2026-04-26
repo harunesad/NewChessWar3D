@@ -105,8 +105,12 @@ namespace BodylinkSDK
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         using (AndroidJavaClass unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+        using (AndroidJavaObject currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
         {
-            androidRecorder = unityClass.GetStatic<AndroidJavaObject>("currentActivity");
+            androidRecorder = new AndroidJavaObject(
+                "com.bodylink.sdk.BodylinkScreenRecorder",
+                currentActivity,
+                ANDROID_CALLBACK_GAME_OBJECT);
             androidRecorder.Call("setUpSaveFolder", ANDROID_SAVE_FOLDER_NAME);
 
             int width = (int)(Screen.width > SCREEN_WIDTH ? SCREEN_WIDTH : Screen.width);
@@ -470,10 +474,12 @@ namespace BodylinkSDK
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
         using (AndroidJavaClass packageManagerClass = new AndroidJavaClass("android.content.pm.PackageManager"))
+        using (AndroidJavaClass unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+        using (AndroidJavaObject currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
         {
             string featureLeanback = packageManagerClass.GetStatic<string>("FEATURE_LEANBACK");
-            return androidRecorder != null &&
-                   androidRecorder.Call<AndroidJavaObject>("getPackageManager").Call<bool>("hasSystemFeature", featureLeanback);
+            return currentActivity != null &&
+                   currentActivity.Call<AndroidJavaObject>("getPackageManager").Call<bool>("hasSystemFeature", featureLeanback);
         }
 #else
             return false;
@@ -511,9 +517,11 @@ namespace BodylinkSDK
         public static bool IsPermitted(AndroidPermission permission)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        using (var androidUtils = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+        using (AndroidJavaClass unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+        using (AndroidJavaObject currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
+        using (AndroidJavaClass recorderClass = new AndroidJavaClass("com.bodylink.sdk.BodylinkScreenRecorder"))
         {
-            return androidUtils.GetStatic<AndroidJavaObject>("currentActivity").Call<bool>("hasPermission", GetPermissionStrr(permission));
+            return recorderClass.CallStatic<bool>("hasPermission", currentActivity, GetPermissionStrr(permission));
         }
 #endif
             return true;
@@ -525,9 +533,11 @@ namespace BodylinkSDK
         onAllowCallback = onAllow;
         onDenyCallback = onDeny;
         onDenyAndNeverAskAgainCallback = onDenyAndNeverAskAgain;
-        using (var androidUtils = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+        using (AndroidJavaClass unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+        using (AndroidJavaObject currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
+        using (AndroidJavaClass recorderClass = new AndroidJavaClass("com.bodylink.sdk.BodylinkScreenRecorder"))
         {
-            androidUtils.GetStatic<AndroidJavaObject>("currentActivity").Call("requestPermission", GetPermissionStrr(permission));
+            recorderClass.CallStatic("requestPermission", currentActivity, GetPermissionStrr(permission), ANDROID_CALLBACK_GAME_OBJECT);
         }
 #endif
         }

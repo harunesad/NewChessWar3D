@@ -19,6 +19,7 @@ namespace BodylinkSDK
         // 🧩 List of any custom detectors (plug-ins)
         private List<BodylinkBaseGestureDetector> customDetectors = new();
 
+        public event Action<int, string, object[]> OnGesture;
         public event Action<int, string, object[]> OnGestureDetection;
         public event Action<int, string, Side, HandPose> OnPoseDetection;
 
@@ -50,6 +51,10 @@ namespace BodylinkSDK
                 detector.OnPose += HandlePose;
 
             }
+
+            handGestureDetector = customDetectors.Find(d => d is HandGestureDetector) as HandGestureDetector;
+            bodyMovementDetector = customDetectors.Find(d => d is BodyMovementDetector) as BodyMovementDetector;
+            headGestureDetector = customDetectors.Find(d => d is HeadGestureDetector) as HeadGestureDetector;
         }
 
         private void UnregisterDetectors()
@@ -66,6 +71,7 @@ namespace BodylinkSDK
 
         private void HandleGesture(int playerIndex, string gestureName, object[] value)
         {
+            OnGesture?.Invoke(playerIndex, gestureName, value);
             OnGestureDetection?.Invoke(playerIndex, gestureName, value);
         }
 

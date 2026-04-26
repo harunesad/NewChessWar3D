@@ -1,0 +1,17 @@
+{
+    "name": "Bodylink",
+    "rootNamespace": "",
+    "references": [
+        "GUID:04c4d86a70aa56c55a78c61f1ab1a56d",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

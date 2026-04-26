@@ -4256,12 +4256,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
         type: 3}
+      propertyPath: _calibrationType
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: _numberOfPlayers
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
       propertyPath: calibrateOnStart
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
         type: 3}
       propertyPath: initializeOnStart
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,
+        type: 3}
+      propertyPath: resumeOnSceneChange
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c,

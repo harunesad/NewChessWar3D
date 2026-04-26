@@ -510,6 +510,7 @@ namespace BodylinkSDK
                 Destroy(handGestureRunnerInstance.gameObject);
             }
 
+
             OnDisposed?.Invoke();
         }
 
@@ -849,27 +850,24 @@ namespace BodylinkSDK
             showCameraFeed = show;
             players[0].SetMiniCameraScreen();
             players[0].ShowMiniCamera(show);
-            
-            // --- HARUN UI LAYOUT FIX ---
-            if (show && cameraScreen != null)
+
+            // --- HARUN UI OVERLAY & BOTTOM-RIGHT FIX ---
+            var miniCam = players[0].miniCameraView;
+            if (miniCam != null)
             {
-                var screenRect = cameraScreen.GetComponent<RectTransform>();
-                if (screenRect != null)
+                Canvas canvas = miniCam.GetComponentInParent<Canvas>();
+                if (canvas != null)
                 {
-                    // Bottom-Right mini camera override
-                    screenRect.anchorMin = new Vector2(1, 0);
-                    screenRect.anchorMax = new Vector2(1, 0);
-                    screenRect.pivot = new Vector2(1, 0);
-                    screenRect.sizeDelta = new Vector2(400, 225);
-                    screenRect.anchoredPosition = new Vector2(-20, 20);
+                    canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    canvas.sortingOrder = 999;
                 }
-                
-                Canvas parentCanvas = cameraScreen.GetComponentInParent<Canvas>();
-                if (parentCanvas != null)
-                {
-                    parentCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                    parentCanvas.sortingOrder = 99;
-                }
+
+                RectTransform rect = miniCam.rectTransform;
+                rect.anchorMin = new Vector2(1, 0);
+                rect.anchorMax = new Vector2(1, 0);
+                rect.pivot = new Vector2(1, 0);
+                rect.anchoredPosition = new Vector2(-20, 20);
+                rect.sizeDelta = new Vector2(400, 225);
             }
         }
 
@@ -880,6 +878,7 @@ namespace BodylinkSDK
 
         void OnDisable()
         {
+
         }
 
         private void OnDestroy()

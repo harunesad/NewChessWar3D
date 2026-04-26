@@ -1211,7 +1211,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c, type: 3}
       propertyPath: _numberOfPlayers
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c, type: 3}
       propertyPath: initializeOnStart
@@ -1219,12 +1219,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c, type: 3}
       propertyPath: _selectedVideoFile
-      value: Assets/BodylinkSDK/Samples/Videos/Exercise/Squat.mov
+      value: Assets/Videos/HighKnees 1.mp4
       objectReference: {fileID: 0}
     - target: {fileID: 1988483636619927473, guid: df5d14784d9c0452ab930359717e531c, type: 3}
       propertyPath: _selectedVideoAsset
       value: 
-      objectReference: {fileID: 32900000, guid: 385cbfa090ce48b4f88d441ab90a1c85, type: 3}
+      objectReference: {fileID: 32900000, guid: 5e6df8a6973b13b4ca0696c0ba3f95a9, type: 3}
     - target: {fileID: 2560922637232112111, guid: df5d14784d9c0452ab930359717e531c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 353
@@ -1943,7 +1943,7 @@ MonoBehaviour:
   highProgressColor: {r: 0.2, g: 0.85, b: 0.35, a: 1}
   popUpPanel: {fileID: 1250075958}
   popUpText: {fileID: 1629922277}
-  exerciseSequence: 000000000000000000000000
+  exerciseSequence: 050000000500000005000000
   readyCountdownSeconds: 5
   startSequenceOnEnable: 1
   allowKeyboardRestart: 1
@@ -3034,6 +3034,42 @@ PrefabInstance:
     - target: {fileID: 1710843957763805078, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
       propertyPath: m_Name
       value: ExerciseTracker
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: exercise
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: debugLogs
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: highThreshold
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: mediumThreshold
+      value: 0.45
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: useSmoothedPoints
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: highKneesRuntimeSettings.RepsPerSet
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: highKneesRuntimeSettings.HighThreshold
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: highKneesRuntimeSettings.MediumThreshold
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 6002384111566994252, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
+      propertyPath: highKneesRuntimeSettings.TargetRepetitions
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 9028475832125382549, guid: f7ad2a07275b9fb49aecd9cda32931d6, type: 3}
       propertyPath: m_LocalPosition.x

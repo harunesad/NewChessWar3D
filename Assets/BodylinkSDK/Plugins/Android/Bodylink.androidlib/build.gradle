@@ -1,0 +1,28 @@
+apply plugin: 'com.android.library'
+
+def unityCompileSdk = providers.gradleProperty('unity.compileSdkVersion').getOrElse('36').toInteger()
+def unityMinSdk = providers.gradleProperty('unity.minSdkVersion').getOrElse('25').toInteger()
+def unityTargetSdk = providers.gradleProperty('unity.targetSdkVersion').getOrElse('36').toInteger()
+def unityBuildToolsVersion = providers.gradleProperty('unity.buildToolsVersion').getOrElse('36.0.0')
+
+android {
+    namespace 'com.bodylink.sdk'
+    compileSdk unityCompileSdk
+    buildToolsVersion unityBuildToolsVersion
+
+    defaultConfig {
+        minSdk unityMinSdk
+        targetSdk unityTargetSdk
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+        }
+    }
+}
+
+dependencies {
+    compileOnly files('../libs/unity-classes.jar')
+    compileOnly files('../libs/screenrecording.aar')
+}
