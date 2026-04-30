@@ -113,11 +113,11 @@ public class BodylinkUIInteractor : MonoBehaviour
     {
         if (playerIndex != 0) return;
         
-        // Eğer otomatik moddaysak hem sağ hem sol ele bak, değilse sadece seçili ele
-        if (!autoSelectHand && side != activeHand) return;
+        // Sadece sağ ele (imleci kontrol eden ele) bak
+        if (side != Side.Right) return;
 
-        // "Victory" (Zafer İşareti - İki parmak) jestini tıklama olarak kabul et
-        if (pose == HandPose.Victory)
+        // "Fist" (Yumruk) veya "Victory" (İki parmak) jestini tıklama olarak kabul et
+        if (pose == HandPose.Closed_Fist || pose == HandPose.Victory)
         {
             if (!isGestureActive)
             {
@@ -144,30 +144,14 @@ public class BodylinkUIInteractor : MonoBehaviour
         float x = 0, y = 0;
         bool found = false;
 
-        // FORCE RIGHT HAND: Sadece sağ el imleci kontrol eder
-        activeHand = Side.Right;
-        BodylinkHandPoints hand = player.handPoints[1];
+        // WRIST TRACKING: Bilek takibi çok daha stabildir (Özellikle TV mesafesinde)
+        NormalizedLandmark wrist = useSmoothedPoints ? player.body2DSmoothed.rightWrist : player.body2D.rightWrist;
 
-        if (hand != null && hand.handLandmark != null && hand.handLandmark.Count > 8)
+        if (wrist.visibility >= MIN_VISIBILITY)
         {
-            var thumbTip = hand.handLandmark[4];
-            var indexTip = hand.handLandmark[8];
-            
-            x = (thumbTip.x + indexTip.x) / 2f;
-            y = 1f - ((thumbTip.y + indexTip.y) / 2f);
+            x = wrist.x;
+            y = wrist.y;
             found = true;
-        }
-        else
-        {
-            // Bilek takibi (Yedek sistem)
-            NormalizedLandmark wrist = useSmoothedPoints ? player.body2DSmoothed.rightWrist : player.body2D.rightWrist;
-
-            if (wrist.visibility >= MIN_VISIBILITY)
-            {
-                x = wrist.x;
-                y = wrist.y;
-                found = true;
-            }
         }
 
         if (!found) 
@@ -178,6 +162,7 @@ public class BodylinkUIInteractor : MonoBehaviour
 
         if (mirrorX) x = 1f - x;
 
+        // Hassasiyet ve Ofset Ayarları
         x = (x - 0.5f - xOffset) * sensitivity + 0.5f;
         y = (y - 0.5f - yOffset) * sensitivity + 0.5f;
 
@@ -186,7 +171,7 @@ public class BodylinkUIInteractor : MonoBehaviour
 
         Vector2 targetScreenPos = new Vector2(x * Screen.width, y * Screen.height);
         
-        // EMA (Exponential Moving Average) FILTERING: Daha kararlı imleç
+        // Pürüzsüzleştirme (Smoothing)
         currentScreenPos = Vector2.Lerp(currentScreenPos, targetScreenPos, smoothFactor);
 
         if (cursorVisual != null)
@@ -194,16 +179,42 @@ public class BodylinkUIInteractor : MonoBehaviour
             cursorVisual.transform.position = currentScreenPos;
         }
 
-        // HOVER CLICK LOGIC
-        if (useHoverClick && !isGestureActive && !isPinching)
+        // --- CLICK & SCROLL LOGIC ---
+        // isGestureActive (Fist veya Victory) durumuna göre tıkla ve sürükle
+        if (isGestureActive)
         {
-            HandleHoverLogic();
+            if (!isPinching) // İlk kez tetiklendi
+            {
+                isPinching = true;
+                // TryClickUI zaten HandlePoseDetection içinde bir kez çağrılıyor
+                
+                // Scroll desteği için
+                activeScrollRect = FindScrollRectUnderPointer();
+                lastPinchY = currentScreenPos.y;
+            }
+            else // Basılı tutuluyor (Drag/Scroll)
+            {
+                if (activeScrollRect != null)
+                {
+                    float deltaY = currentScreenPos.y - lastPinchY;
+                    activeScrollRect.verticalNormalizedPosition += deltaY / Screen.height * scrollSensitivity;
+                    lastPinchY = currentScreenPos.y;
+                }
+            }
+        }
+        else
+        {
+            if (isPinching)
+            {
+                isPinching = false;
+                activeScrollRect = null;
+            }
         }
 
-        // SCROLL (PINCH & DRAG) LOGIC
-        if (usePinchScroll)
+        // Eski Hover sistemini yardımcı olarak tutabiliriz
+        if (useHoverClick && !isGestureActive)
         {
-            HandleScrollLogic(player);
+            HandleHoverLogic();
         }
     }
 

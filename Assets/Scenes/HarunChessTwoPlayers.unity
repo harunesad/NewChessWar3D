@@ -703,9 +703,9 @@ MonoBehaviour:
   sensitivity: 1.8
   yOffset: 0.15
   xOffset: 0
-  smoothFactor: 0.15
+  smoothFactor: 0.05
   useHoverClick: 1
-  hoverDuration: 1
+  hoverDuration: 1.5
   hoverMoveThreshold: 50
   usePinchScroll: 1
   pinchThreshold: 0.05
