@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -150,6 +151,8 @@ public class GameUIManager : MonoBehaviour
 
     void HealthUpdate()
     {
+        if (gameFinish) return; // Prevent health reward during Game Over
+
         if (RewardedAdsManager.Instance != null && RewardedAdsManager.Instance.IsRewardedAdReady())
         {
             // Subscribe to events
@@ -216,6 +219,8 @@ public class GameUIManager : MonoBehaviour
     }        
     void ResumePanelOnOff()
     {
+        if (gameFinish) return; // Prevent pause during Game Over
+
         if (PlayerPrefs.GetInt("Audio") == 1)
         {
             click.Play();
@@ -392,19 +397,27 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
+    [SerializeField] GameObject wheelObj, arrowObj, claimObj;
     public void GameoverMenuOpen(string result)
     {
         if (SceneManager.GetActiveScene().buildIndex != 3)
         {
             gameSave.ChessSave();
 
-            // Automatc In-App Review Trigger
+            // DEFAULT: Hide the wheel components first
+            if (wheelObj != null) wheelObj.SetActive(false);
+            if (arrowObj != null) arrowObj.SetActive(false);
+            if (claimObj != null) claimObj.SetActive(false);
+
+            // Automatic In-App Review Trigger
             if (result == "You Win!")
             {
                 GameAnalytics.NewDesignEvent("GameOutcome:Win:" + SceneManager.GetActiveScene().name);
                 int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
                 PlayerPrefs.SetInt("TotalWins", wins);
                                 
+                // Only request review on real devices, not in the Editor
+                #if !UNITY_EDITOR
                 if (wins == 3)
                 {
                     GooglePlayReview review = FindObjectOfType<GooglePlayReview>();
@@ -413,18 +426,29 @@ public class GameUIManager : MonoBehaviour
                         review.RequestReview();
                     }
                 }
+                #endif
+
+                // SHOW WHEEL ONLY ON WIN:
+                if (RewardedInterstitialManager.Instance != null && RewardedInterstitialManager.Instance.IsAdReady())
+                {
+                    if (wheelObj != null) wheelObj.SetActive(true);
+                    if (arrowObj != null) arrowObj.SetActive(true);
+                    if (claimObj != null) claimObj.SetActive(true);
+                }
             }
             else if (result == "You Lose!")
             {
                 GameAnalytics.NewDesignEvent("GameOutcome:Loss:" + SceneManager.GetActiveScene().name);
             }
         }
-        pauseBtn.gameObject.SetActive(false);
+        if (pauseBtn != null) pauseBtn.interactable = false;
+        if (healthBtn != null) healthBtn.interactable = false;
         gameoverPanel.GetComponentInChildren<TextMeshProUGUI>().text = result;
         gameoverPanel.SetActive(true);
         game.SetActive(false);
         Time.timeScale = 0;
     }
+
     public void MessageShow(string message)
     {
         if (PlayerPrefs.GetInt("Audio") == 1)

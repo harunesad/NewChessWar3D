@@ -29,10 +29,12 @@ public class GameSave : MonoBehaviour
             HealthUpdate();
         }
     }
+    public int lastEarnedReward;
     public void ChessSave()
     {
         if (SceneManager.GetActiveScene().buildIndex == 3) return;
 
+        lastEarnedReward = 0;
         if (PlayerPrefs.GetString("WinType") == PlayerPrefs.GetString("Type"))
         {
             if (difficulty.difficult / 2 < 10)
@@ -45,11 +47,11 @@ public class GameSave : MonoBehaviour
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 1)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 1;
-                    sv.coin += fullReward;
+                    lastEarnedReward = fullReward;
                 }
                 else
                 {
-                    sv.coin += fullReward / 10;
+                    lastEarnedReward = fullReward / 10;
                 }
                 starCount = 1;
             }
@@ -59,11 +61,11 @@ public class GameSave : MonoBehaviour
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 2)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 2;
-                    sv.coin += fullReward;
+                    lastEarnedReward = fullReward;
                 }
                 else
                 {
-                    sv.coin += fullReward / 10;
+                    lastEarnedReward = fullReward / 10;
                 }
                 starCount = 2;
             }
@@ -73,15 +75,16 @@ public class GameSave : MonoBehaviour
                 if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
                 {
                     sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
-                    sv.coin += fullReward;
+                    lastEarnedReward = fullReward;
                 }
                 else
                 {
-                    sv.coin += fullReward / 10;
+                    lastEarnedReward = fullReward / 10;
                 }
                 starCount = 3;
             }
 
+            sv.coin += lastEarnedReward;
             SaveManager.Save(sv);
             for (int i = 0; i < starCount; i++)
             {
@@ -90,7 +93,7 @@ public class GameSave : MonoBehaviour
         }
         CoinUpdate();
     }
-    void CoinUpdate()
+    public void CoinUpdate()
     {
         CultureInfo turkceKultur = new CultureInfo("tr-TR");
         string formatToCoin = sv.coin.ToString("N0", turkceKultur);
