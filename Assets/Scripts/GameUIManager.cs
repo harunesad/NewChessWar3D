@@ -34,10 +34,25 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("GameUIManager Start Triggered!");
         chessUndoManager = FindAnyObjectByType<ChessUndoManager>();
         difficulty = FindAnyObjectByType<Difficulty>();
         chessGameManager = FindAnyObjectByType<ChessGameManager>();
         
+        // Setup Tutorial
+        int tutorialVal = PlayerPrefs.GetInt("TutorialCompleted", 0);
+        Debug.Log("Tutorial Status in Prefs: " + tutorialVal);
+
+        if (tutorialVal == 0)
+        {
+            Debug.Log("Attempting to add TutorialManager...");
+            TutorialManager tutorial = gameObject.AddComponent<TutorialManager>();
+            tutorial.interactor = FindAnyObjectByType<TPSChessInteractor>();
+            tutorial.uiManager = this;
+            tutorial.gameManager = chessGameManager;
+            Debug.Log("TutorialManager component added!");
+        }
+
         // Oyuncunun rengini PlayerPrefs'ten al
         turn = PlayerPrefs.GetString("Type", "White");
 
@@ -80,7 +95,7 @@ public class GameUIManager : MonoBehaviour
             if (!undoBtn.gameObject.activeSelf)
             {
                 undoBtn.gameObject.SetActive(true);
-                StartPulse(undoBtn.transform); // Start pulse when it becomes active
+                //StartPulse(undoBtn.transform); // Start pulse when it becomes active
             }
         }
         else
@@ -456,12 +471,35 @@ public class GameUIManager : MonoBehaviour
             click.Play();
         }
         warning.GetComponent<TextMeshProUGUI>().text = message;
+        warning.GetComponent<CanvasGroup>().DOKill();
+        warning.GetComponent<CanvasGroup>().alpha = 0;
         warning.GetComponent<CanvasGroup>().DOFade(1, .75f).SetEase(Ease.Linear).OnComplete(() =>
         {
-            warning.GetComponent<CanvasGroup>().DOFade(1, .5f).SetEase(Ease.Linear).OnComplete(() =>
+            warning.GetComponent<CanvasGroup>().DOFade(1, 1.5f).SetEase(Ease.Linear).OnComplete(() =>
             {
                 warning.GetComponent<CanvasGroup>().DOFade(0, .75f).SetEase(Ease.Linear);
             });
         });
+    }
+
+    public void ShowTutorialMessage(string message)
+    {
+        warning.GetComponent<TextMeshProUGUI>().text = message;
+        warning.GetComponent<CanvasGroup>().DOKill();
+        warning.GetComponent<CanvasGroup>().DOFade(1, 0.5f);
+    }
+
+    public void HideTutorialMessage()
+    {
+        warning.GetComponent<CanvasGroup>().DOKill();
+        warning.GetComponent<CanvasGroup>().DOFade(0, 0.5f);
+    }
+
+    [ContextMenu("Reset Tutorial Progress")]
+    public void ResetTutorialProgress()
+    {
+        PlayerPrefs.SetInt("TutorialCompleted", 0);
+        PlayerPrefs.Save();
+        Debug.Log("Tutorial Progress Reset! Restart the game to see the tutorial.");
     }
 }

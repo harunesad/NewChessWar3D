@@ -18,6 +18,11 @@ public class TPSChessInteractor : MonoBehaviour
     public Button selectButton;
     public ChessGameManager gameManager;
 
+    [Header("Events")]
+    public System.Action OnPiecePickedUp;
+    public System.Action OnPieceDropped;
+    public System.Action OnInteractionZoneEntered;
+
     private Animator animator;
     private State currentState = State.IDLE;
     private VisualChessPiece carriedPiece;
@@ -108,6 +113,7 @@ public class TPSChessInteractor : MonoBehaviour
                 if (tile.GetVisualPiece() == piece)
                 {
                     currentTriggerTile = tile;
+                    OnInteractionZoneEntered?.Invoke();
                     return;
                 }
             }
@@ -158,6 +164,7 @@ public class TPSChessInteractor : MonoBehaviour
         gameManager.SelectTile(currentTriggerTile);
         carriedPieceOriginalPosition = carriedPiece.transform.position;
         currentState = State.CARRYING;
+        OnPiecePickedUp?.Invoke();
     }
 
     private void StopCarrying()
@@ -211,6 +218,7 @@ public class TPSChessInteractor : MonoBehaviour
         if (animator != null) animator.SetBool("Push", false);
 
         ClearCarryingState();
+        OnPieceDropped?.Invoke();
     }
 
     private IEnumerator PerformInvalidMove()

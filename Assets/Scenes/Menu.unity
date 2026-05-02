@@ -898,7 +898,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b679a3cc35e09c449b29e824a292757, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RewardedInterstitialManager
-  adUnitId: ca-app-pub-4860105960035905/9445143158
+  adUnitId: ca-app-pub-3940256099942544/5354046379
 --- !u!4 &134468124
 Transform:
   m_ObjectHideFlags: 0
@@ -17994,7 +17994,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21324a70ec761a54080d2e4cd5cd5ed2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rewardedAdUnitId: ca-app-pub-4860105960035905/8122020873
+  rewardedAdUnitId: ca-app-pub-3940256099942544/5224354917
 --- !u!4 &2092071914
 Transform:
   m_ObjectHideFlags: 0

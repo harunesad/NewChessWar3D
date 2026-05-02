@@ -5123,6 +5123,53 @@ MonoBehaviour:
   rotationSpeed: 5
   allowOrbit: 1
   orbitSpeed: 2
+--- !u!1 &1699659267
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1699659269}
+  - component: {fileID: 1699659268}
+  m_Layer: 0
+  m_Name: TutorialManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1699659268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1699659267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3ac9a4e147ae2f47a281b33222fe895, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialManager
+  interactor: {fileID: 1970088192}
+  uiManager: {fileID: 2121386935}
+  gameManager: {fileID: 659272204}
+--- !u!4 &1699659269
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1699659267}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -26.2, y: -11.67593, z: 31.08292}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1706682413
 GameObject:
   m_ObjectHideFlags: 0
@@ -7969,6 +8016,7 @@ SceneRoots:
   - {fileID: 843671222}
   - {fileID: 1820189764}
   - {fileID: 212312308}
+  - {fileID: 1699659269}
   - {fileID: 2001605873}
   - {fileID: 1247311191}
   - {fileID: 997046104}
