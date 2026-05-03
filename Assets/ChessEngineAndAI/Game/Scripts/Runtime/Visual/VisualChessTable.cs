@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ChessEngine.Delegates;
@@ -70,6 +70,27 @@ namespace ChessEngine.Game
         /// <param name="pChessTable"></param>
         public void Initialize(ChessTable pTable)
         {
+            // Unsubscribe from previous events if any
+            UnsubscribeFromChessInstanceEvents();
+
+            // --- EKLEME: Eskiden kalan kareler varsa temizle ---
+            if (VisualTiles != null)
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    if (VisualTiles[x] != null)
+                    {
+                        for (int y = 0; y < 8; y++)
+                        {
+                            if (VisualTiles[x][y] != null)
+                            {
+                                Destroy(VisualTiles[x][y].gameObject);
+                            }
+                        }
+                    }
+                }
+            }
+
             // Set 'Table' reference.
             Table = pTable;
 
@@ -119,7 +140,7 @@ namespace ChessEngine.Game
             foreach (VisualChessPiece visualPiece in m_VisualChessPieces)
             {
                 if (visualPiece != null)
-                    Destroy(visualPiece);
+                    Destroy(visualPiece.gameObject);
             }
             m_VisualChessPieces.Clear();
 

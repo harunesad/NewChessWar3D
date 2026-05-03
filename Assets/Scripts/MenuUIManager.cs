@@ -10,7 +10,7 @@ public class MenuUIManager : MonoBehaviour
 {
     [SerializeField] Button playBtn, towerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
         exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn, dailyRewardBtn, tutorialBtn;
-    [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu;
+    [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu, towerMenu;
     [SerializeField] GameObject tutorialOverlay, loading; // İlk başta görünmesi gereken siyah ekran
     [SerializeField] Sprite whiteSelected, whiteUnselected, blackSelected, blackUnselected;
     [SerializeField] List<Button> difficultsBtn;
@@ -45,7 +45,7 @@ public class MenuUIManager : MonoBehaviour
         });
         
         towerBtn.onClick.AddListener(delegate { 
-            if (IsTutorialDone()) MessageShow("Coming Soon"); 
+            if (IsTutorialDone()) TowerMenuOpen(); 
             else MessageShow("Please complete the tutorial first!"); 
         });
         
@@ -94,6 +94,7 @@ public class MenuUIManager : MonoBehaviour
         if (coinAdsMenu != null) coinAdsMenu.gameObject.SetActive(false);
         if (infoMenu != null) infoMenu.gameObject.SetActive(false);
         if (dailyRewardMenu != null) dailyRewardMenu.gameObject.SetActive(false);
+        if (towerMenu != null) towerMenu.gameObject.SetActive(false);
     }
     IEnumerator LoadingDelay()
     {
@@ -289,6 +290,16 @@ public class MenuUIManager : MonoBehaviour
             }
         }
     }
+    public void TowerMenuOpen()
+    {
+        if (towerMenu.alpha == 1) return;
+        
+        TowerMenuUI tmUI = FindAnyObjectByType<TowerMenuUI>();
+        if (tmUI != null) tmUI.UpdateUI();
+        
+        MenuOpen(towerMenu);
+    }
+
     public void DailyRewardMenuOpen()
     {
         if (dailyRewardMenu.alpha == 1) return; // Zaten açıksa tekrar açma
@@ -345,6 +356,7 @@ public class MenuUIManager : MonoBehaviour
     }
     void EnterTwoPlayers()
     {
+        PlayerPrefs.SetInt("IsTowerMode", 0);
         SceneManager.LoadScene(3);
     }
     public void EnterTutorial()
@@ -372,6 +384,7 @@ public class MenuUIManager : MonoBehaviour
     void DifficultSelect(int difficult)
     {
         MusicState(click);
+        PlayerPrefs.SetInt("IsTowerMode", 0);
         difficulty = FindAnyObjectByType<Difficulty>();
         if (JsonSave.jsonSave.sv.unlock[difficult])
         {

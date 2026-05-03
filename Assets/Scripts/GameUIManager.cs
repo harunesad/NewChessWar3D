@@ -15,7 +15,7 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI warning, loadingText;
     [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn, soundOnOffBtn,
     undoBtn, healthBtn;
-    [SerializeField] GameObject resumePanel, gameoverPanel, game, loading;
+    [SerializeField] GameObject resumePanel, gameoverPanel, game, loading, joystick;
     
     [Header("Bodylink Settings UI")]
     [SerializeField] Button recalibrateBtn;
@@ -42,6 +42,26 @@ public class GameUIManager : MonoBehaviour
         difficulty = FindAnyObjectByType<Difficulty>();
         chessGameManager = FindAnyObjectByType<ChessGameManager>();
         
+        // Setup Tutorial
+        int tutorialVal = PlayerPrefs.GetInt("TutorialCompleted", 0);
+        Debug.Log("Tutorial Status in Prefs: " + tutorialVal);
+
+        if (tutorialVal == 0 && PlayerPrefs.GetInt("IsTowerMode", 0) == 0)
+        {
+            Debug.Log("Attempting to add TutorialManager...");
+            TutorialManager tutorial = gameObject.AddComponent<TutorialManager>();
+            tutorial.interactor = FindAnyObjectByType<TPSChessInteractor>();
+            tutorial.uiManager = this;
+            tutorial.gameManager = chessGameManager;
+            Debug.Log("TutorialManager component added!");
+        }
+
+        // Setup Tower Level
+        if (PlayerPrefs.GetInt("IsTowerMode", 0) == 1)
+        {
+            SetupTowerLevel();
+        }
+
         // Oyuncunun rengini PlayerPrefs'ten al
         turn = PlayerPrefs.GetString("Type", "White");
 
@@ -193,6 +213,7 @@ public class GameUIManager : MonoBehaviour
         }
         resumePanel.SetActive(!resumePanel.gameObject.activeSelf);
         game.SetActive(!game.activeSelf);
+        if (joystick != null) joystick.SetActive(!joystick.activeSelf);
         if (Time.timeScale == 1)
         {
             Time.timeScale = 0;
@@ -261,6 +282,7 @@ public class GameUIManager : MonoBehaviour
         }
         resumePanel.SetActive(false);
         game.SetActive(true);
+        if (joystick != null) joystick.SetActive(true);
         Time.timeScale = 1;
         //pauseBtn.GetComponent<Image>().sprite = pause;
         if (UnityEngine.EventSystems.EventSystem.current != null)
@@ -386,13 +408,20 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
+    [SerializeField] GameObject wheelObj, arrowObj, claimObj, multiplierTextObj;
     public void GameoverMenuOpen(string result)
     {
         if (SceneManager.GetActiveScene().buildIndex != 3)
         {
             gameSave.ChessSave();
 
-            // Automatc In-App Review Trigger
+            // DEFAULT: Hide the wheel components first
+            if (wheelObj != null) wheelObj.SetActive(false);
+            if (arrowObj != null) arrowObj.SetActive(false);
+            if (claimObj != null) claimObj.SetActive(false);
+            if (multiplierTextObj != null) multiplierTextObj.SetActive(false);
+
+            // Automatic In-App Review Trigger
             if (result == "You Win!")
             {
                 int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
@@ -406,6 +435,32 @@ public class GameUIManager : MonoBehaviour
                         review.RequestReview();
                     }
                 }
+
+                // SHOW WHEEL ONLY ON WIN:
+                if (RewardedInterstitialManager.Instance != null && RewardedInterstitialManager.Instance.IsAdReady())
+                {
+                    if (wheelObj != null) wheelObj.SetActive(true);
+                    if (arrowObj != null) arrowObj.SetActive(true);
+                    if (claimObj != null) claimObj.SetActive(true);
+                    if (multiplierTextObj != null) multiplierTextObj.SetActive(true);
+                }
+
+                // Handle Tower Progression
+                if (PlayerPrefs.GetInt("IsTowerMode", 0) == 1)
+                {
+                    int currentIdx = PlayerPrefs.GetInt("SelectedTowerLevel", 0);
+                    TowerManager tm = FindAnyObjectByType<TowerManager>();
+                    if (tm != null)
+                    {
+                        tm.MarkLevelCompleted(currentIdx + 1);
+                        TowerLevelData data = tm.GetLevelData(currentIdx);
+                        if (data != null)
+                        {
+                            JsonSave.jsonSave.sv.coin += data.coinReward;
+                            SaveManager.Save(JsonSave.jsonSave.sv);
+                        }
+                    }
+                }
             }
             else if (result == "You Lose!")
             {
@@ -415,6 +470,7 @@ public class GameUIManager : MonoBehaviour
         gameoverPanel.GetComponentInChildren<TextMeshProUGUI>().text = result;
         gameoverPanel.SetActive(true);
         game.SetActive(false);
+        if (joystick != null) joystick.SetActive(false);
         Time.timeScale = 0;
     }
     public void MessageShow(string message)
@@ -476,5 +532,34 @@ public class GameUIManager : MonoBehaviour
                 }
             });
         }
+    }
+
+    private void SetupTowerLevel()
+    {
+        TowerManager tm = FindAnyObjectByType<TowerManager>();
+        if (tm == null) return;
+
+        int index = PlayerPrefs.GetInt("SelectedTowerLevel", 0);
+        TowerLevelData data = tm.GetLevelData(index);
+
+        if (data != null && chessGameManager != null)
+        {
+            // Delay slightly to ensure board is ready
+            StartCoroutine(LoadTowerFEN(data.fenString));
+        }
+    }
+
+    private IEnumerator LoadTowerFEN(string fen)
+    {
+        yield return new WaitForSeconds(0.5f);
+        chessGameManager.LoadGameFromFEN(fen);
+    }
+
+    [ContextMenu("Reset Tutorial Progress")]
+    public void ResetTutorialProgress()
+    {
+        PlayerPrefs.SetInt("TutorialCompleted", 0);
+        PlayerPrefs.Save();
+        Debug.Log("Tutorial Progress Reset! Restart the game to see the tutorial.");
     }
 }
