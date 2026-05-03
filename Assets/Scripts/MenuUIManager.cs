@@ -11,7 +11,7 @@ public class MenuUIManager : MonoBehaviour
 {
     [SerializeField] Button playBtn, towerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
         exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn, dailyRewardBtn;
-    [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu;
+    [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu, towerMenu;
     [SerializeField] Sprite whiteSelected, whiteUnselected, blackSelected, blackUnselected;
     [SerializeField] List<Button> difficultsBtn;
     [SerializeField] TextMeshProUGUI warning;
@@ -35,7 +35,7 @@ public class MenuUIManager : MonoBehaviour
         healthBtn.onClick.AddListener(HealthUpdate);
         playBtn.onClick.AddListener(delegate { MenuOpen(difficultMenu); });
         shopBtn.onClick.AddListener(delegate { MenuOpen(shopMenu); });
-        towerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
+        towerBtn.onClick.AddListener(TowerMenuOpen);
         multiplayerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
         twoPlayersBtn.onClick.AddListener(EnterTwoPlayers);
 
@@ -238,6 +238,16 @@ public class MenuUIManager : MonoBehaviour
         coinAdsMenu.blocksRaycasts = false;
         coinAdsMenu.interactable = false;
     }
+    public void TowerMenuOpen()
+    {
+        if (towerMenu.alpha == 1) return;
+        
+        TowerMenuUI tmUI = FindAnyObjectByType<TowerMenuUI>();
+        if (tmUI != null) tmUI.UpdateUI();
+        
+        MenuOpen(towerMenu);
+    }
+
     public void DailyRewardMenuOpen()
     {
         if (dailyRewardMenu.alpha == 1) return; // Zaten açıksa tekrar açma
@@ -279,6 +289,7 @@ public class MenuUIManager : MonoBehaviour
     }
     void EnterTwoPlayers()
     {
+        PlayerPrefs.SetInt("IsTowerMode", 0);
         SceneManager.LoadScene(3);
     }
     void WhiteSelect()
@@ -300,6 +311,7 @@ public class MenuUIManager : MonoBehaviour
     void DifficultSelect(int difficult)
     {
         MusicState(click);
+        PlayerPrefs.SetInt("IsTowerMode", 0);
         difficulty = FindAnyObjectByType<Difficulty>();
         if (JsonSave.jsonSave.sv.unlock[difficult])
         {

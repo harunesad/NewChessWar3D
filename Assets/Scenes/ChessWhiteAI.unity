@@ -411,12 +411,18 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 165188615}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 165188618}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba0d0e7a039f526499c356a3c5cd6d3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &165188618 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8135886326569738825, guid: 56fae09712773584fb63896d473a98ee,
+    type: 3}
+  m_PrefabInstance: {fileID: 165188615}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &177214776
 GameObject:
   m_ObjectHideFlags: 0
@@ -4526,6 +4532,7 @@ MonoBehaviour:
   resumePanel: {fileID: 1256523214}
   gameoverPanel: {fileID: 1519112032}
   game: {fileID: 1084211741}
+  joystick: {fileID: 165188618}
   chessPoints: {fileID: 1758858992}
   soundOn: {fileID: 1217702344, guid: 68e998c2a2934304b9c93d937691edfb, type: 3}
   soundOff: {fileID: -2045332130, guid: a4ecf8e05adb6494ebe0f4a864437b76, type: 3}
@@ -4541,6 +4548,7 @@ MonoBehaviour:
   wheelObj: {fileID: 1216633643}
   arrowObj: {fileID: 2095810120}
   claimObj: {fileID: 1974158592}
+  multiplierTextObj: {fileID: 409476317}
 --- !u!4 &1434832528
 Transform:
   m_ObjectHideFlags: 0
@@ -5754,7 +5762,7 @@ PrefabInstance:
     - target: {fileID: 888439998111794424, guid: 13db751466228584bafabbf17b9378eb,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 888439998111794424, guid: 13db751466228584bafabbf17b9378eb,
         type: 3}
@@ -5764,7 +5772,7 @@ PrefabInstance:
     - target: {fileID: 888439998111794424, guid: 13db751466228584bafabbf17b9378eb,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 888439998111794424, guid: 13db751466228584bafabbf17b9378eb,
         type: 3}
