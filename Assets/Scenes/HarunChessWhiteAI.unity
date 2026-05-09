@@ -2550,6 +2550,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1896695339618563442, guid: b931bfcc7600dd44cab08ecdad9a1d1b,
         type: 3}
+      propertyPath: globalMovementScale
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1896695339618563442, guid: b931bfcc7600dd44cab08ecdad9a1d1b,
+        type: 3}
       propertyPath: legSettings.mirrorX
       value: 0
       objectReference: {fileID: 0}

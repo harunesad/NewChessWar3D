@@ -9,9 +9,10 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
     public Animator animator;
     
     [Header("Movement Settings")]
-    public float moveSensitivityX = 15f;
-    public float moveSensitivityZ = 30f;
+    public float moveSensitivityX = 25f;
+    public float moveSensitivityZ = 55f;
     public float positionSmoothTime = 0.15f;
+    public float globalMovementScale = 1.5f; // Yeni: Tüm hareketleri oranlamak için
     public Vector3 offset = Vector3.zero;
     public bool mirrorPositionX = false;
     public bool mirrorPositionZ = false;
@@ -216,8 +217,8 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
                 isCalibrated = true;
             }
 
-            float deltaX = (userX - initialUserPos.x) * moveSensitivityX;
-            float deltaZ = (torsoHeight - initialUserPos.z) * moveSensitivityZ;
+            float deltaX = (userX - initialUserPos.x) * moveSensitivityX * globalMovementScale;
+            float deltaZ = (torsoHeight - initialUserPos.z) * moveSensitivityZ * globalMovementScale;
             
             if (mirrorPositionX) deltaX *= -1;
             if (mirrorPositionZ) deltaZ *= -1;
