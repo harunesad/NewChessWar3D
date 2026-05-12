@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f4b8baefcd1afde4b8ae35b2f1106c95
+guid: 2864a0b5d15195a4ea37ca48b5ccb1bb
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -136,23 +136,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Knight_upscayl_4x_0
+      name: New Render Texture_0
       rect:
         serializedVersion: 2
-        x: 320
-        y: 44
-        width: 384
-        height: 892
+        x: 316
+        y: 174
+        width: 366
+        height: 647
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d7ed2d17d8b31de4882e5376742cee5d
-      internalID: 618428955
+      spriteID: e716fe0618ebb9c4c906fb47d9c3972a
+      internalID: 1522659942
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 6e791321fd9cf574aa55fdc918e7e792
+    spriteID: 4a7539d78a981974ba16ebbbf5ef3725
     internalID: 0
     vertices: []
     indices: 
@@ -169,9 +169,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Knight_upscayl_4x_0: 618428955
+      New Render Texture_0: 1522659942
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

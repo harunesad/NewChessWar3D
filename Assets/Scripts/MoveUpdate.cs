@@ -20,7 +20,7 @@ public class MoveUpdate : MonoBehaviour
         audioManager = FindAnyObjectByType<AudioManager>();
         gameSave = FindAnyObjectByType<GameSave>();
 
-        if (character.GetComponent<MeshRenderer>().materials[0].color == whiteMat.color)
+        if (character.GetComponent<MeshRenderer>().material.color == whiteMat.color)
         {
             white = true;
             chessPoints.whitePoints += piecePoint;
@@ -28,7 +28,7 @@ public class MoveUpdate : MonoBehaviour
             {
                 if (gameSave.sv.items[i].white && gameSave.sv.items[i].selected)
                 {
-                    character.GetComponent<MeshRenderer>().materials[0].color = chessPoints.piecesColors[i];
+                    character.GetComponent<MeshRenderer>().material.color = chessPoints.piecesColors[i];
                 }
             }
         }
@@ -40,7 +40,7 @@ public class MoveUpdate : MonoBehaviour
             {
                 if (!gameSave.sv.items[i].white && gameSave.sv.items[i].selected)
                 {
-                    character.GetComponent<MeshRenderer>().materials[0].color = chessPoints.piecesColors[i];
+                    character.GetComponent<MeshRenderer>().material.color = chessPoints.piecesColors[i];
                 }
             }
         }

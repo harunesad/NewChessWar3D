@@ -7,8 +7,7 @@ public class MaterialChange : MonoBehaviour
     [SerializeField] MeshRenderer newRend;
     public void Change()
     {
-        Material firstMaterial = newRend.materials[0];
-        GetComponent<MeshRenderer>().material = firstMaterial;
+        GetComponent<MeshRenderer>().material.color = newRend.material.color;
     }
 
     // Update is called once per frame
