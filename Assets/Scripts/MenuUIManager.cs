@@ -14,13 +14,14 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu, towerMenu;
     [SerializeField] Sprite whiteSelected, whiteUnselected, blackSelected, blackUnselected;
     [SerializeField] List<Button> difficultsBtn;
-    [SerializeField] TextMeshProUGUI warning;
+    [SerializeField] TextMeshProUGUI warning, loading;
     [SerializeField] AudioSource music, click;
     [SerializeField] Sprite soundOn, soundOff;
     Difficulty difficulty;
     CanvasGroup currentMenu;
     void Start()
     {
+        StartCoroutine(Loading());
         // Initialize GameAnalytics explicitly
         GameAnalytics.Initialize();
 
@@ -58,6 +59,17 @@ public class MenuUIManager : MonoBehaviour
         // Start Health Button and CoinAds Button Pulse
         StartPulse(healthBtn.transform.parent);
         StartPulse(coinAdsBtn.transform.parent);
+    }
+    IEnumerator Loading()
+    {
+        loading.text = "Loading .";
+        yield return new WaitForSeconds(.5f);
+        loading.text = "Loading ..";
+        yield return new WaitForSeconds(.5f);
+        loading.text = "Loading ...";
+        yield return new WaitForSeconds(.5f);
+        loading.text = "";
+        loading.transform.parent.gameObject.SetActive(false);
     }
     void StartPulse(Transform target)
     {

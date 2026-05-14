@@ -11,7 +11,7 @@ namespace ChessEngine.Game
     /// 
     /// NOTE: Chess tables are implemented with a bottom left origin meaning VisualTiles[0][0] is the bottom-left most corner when the white team is at the 'bottom' of the board.
     /// </summary>
-	/// Author: Intuitive Gaming Solutions
+    /// Author: Intuitive Gaming Solutions
     public class VisualChessTable : MonoBehaviour
     {
         #region Editor Serialized Settings

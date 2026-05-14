@@ -6,23 +6,42 @@ using UnityEngine.UI;
 
 public class ShopManager : MonoBehaviour
 {
+    [Header("Items & Skins")]
     public List<Items> items;
     [SerializeField] GameObject item;
+    
+    [Header("Panels")]
+    [SerializeField] GameObject colorPanel;
+    [SerializeField] GameObject skinPanel;
+    [SerializeField] GameObject characterPanel;
+
+    [Header("Tab Buttons")]
+    [SerializeField] Button colorBtn;
     [SerializeField] Button skinBtn;
+    [SerializeField] Button characterBtn;
+
     [SerializeField] List<GameObject> itemObjects;
     [SerializeField] List<Sprite> itemImage;
+    
     MenuUIManager menuUIManager;
     JsonSave jsonSave;
+
     void Start()
     {
-        jsonSave = FindAnyObjectByType<JsonSave>();
-        menuUIManager = FindAnyObjectByType<MenuUIManager>();
-        skinBtn.onClick.AddListener(delegate { menuUIManager.MessageShow("Coming Soon"); });
+        jsonSave = FindAnyObjectByType<JsonSave>();        menuUIManager = FindAnyObjectByType<MenuUIManager>();
+
+        // Tab Butonlarını Ayarla
+        colorBtn.onClick.AddListener(ShowColorTab);
+        skinBtn.onClick.AddListener(ShowSkinTab);
+        characterBtn.onClick.AddListener(ShowCharacterTab);
+
+        // Başlangıçta Renk Panelini Göster
+        ShowColorTab();
 
         for (int i = 0; i < items.Count; i++)
         {
             int j = i;
-            var item = Instantiate(this.item, transform);
+            var item = Instantiate(this.item, colorPanel.transform.GetChild(0));
             item.GetComponent<Image>().sprite = itemImage[i];
             itemObjects.Add(item);
             if (items[i].purchased)
@@ -42,6 +61,49 @@ public class ShopManager : MonoBehaviour
             }
         }
     }
+
+    public void ShowColorTab()
+    {
+        colorPanel.SetActive(true);
+        skinPanel.SetActive(false);
+        characterPanel.SetActive(false);
+        
+        SetButtonAlpha(colorBtn, 1.0f);
+        SetButtonAlpha(skinBtn, 0.5f);
+        SetButtonAlpha(characterBtn, 0.5f);
+    }
+
+    public void ShowSkinTab()
+    {
+        colorPanel.SetActive(false);
+        skinPanel.SetActive(true);
+        characterPanel.SetActive(false);
+
+        SetButtonAlpha(colorBtn, 0.5f);
+        SetButtonAlpha(skinBtn, 1.0f);
+        SetButtonAlpha(characterBtn, 0.5f);
+    }
+
+    public void ShowCharacterTab()
+    {
+        colorPanel.SetActive(false);
+        skinPanel.SetActive(false);
+        characterPanel.SetActive(true);
+
+        SetButtonAlpha(colorBtn, 0.5f);
+        SetButtonAlpha(skinBtn, 0.5f);
+        SetButtonAlpha(characterBtn, 1.0f);
+    }
+
+    private void SetButtonAlpha(Button btn, float alpha)
+    {
+        if (btn.GetComponent<Image>() != null)
+        {
+            Color c = btn.GetComponent<Image>().color;
+            btn.GetComponent<Image>().color = new Color(c.r, c.g, c.b, alpha);
+        }
+    }
+
     void BuyItem(GameObject item, int i)
     {
         if (jsonSave.sv.coin >= items[i].price)

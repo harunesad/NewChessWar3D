@@ -14,6 +14,7 @@ public class RewardMultiplierWheel : MonoBehaviour
     [SerializeField] private RectTransform needle;
     [SerializeField] private Button claimButton;
     [SerializeField] private TextMeshProUGUI multiplierText;
+    [SerializeField] private TextMeshProUGUI earnedCoinText;
     
     [Header("Settings")]
     [SerializeField] private float rotationSpeed = 4.5f;
@@ -131,6 +132,13 @@ public class RewardMultiplierWheel : MonoBehaviour
                 GameSave.gameSave.sv.coin += extraToAdd;
                 SaveManager.Save(GameSave.gameSave.sv);
                 GameSave.gameSave.CoinUpdate();
+
+                // Update the earned coin text on UI directly via reference
+                if (earnedCoinText != null)
+                {
+                    earnedCoinText.text = "+" + totalReward.ToString("N0", new System.Globalization.CultureInfo("tr-TR"));
+                }
+
                 Debug.Log($"✓✓✓ MULTIPLIER APPLIED - x{multiplier} gave extra {extraToAdd} coins!");
             }
         }

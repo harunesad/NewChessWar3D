@@ -38,9 +38,21 @@ public class TPSChessInteractor : MonoBehaviour
 
         if (selectButton != null)
         {
+            SetupButton(selectButton);
+        }
+    }
+
+    public void SetupButton(Button btn)
+    {
+        if (selectButton != null) selectButton.onClick.RemoveListener(OnSelectButtonClicked);
+        
+        selectButton = btn;
+        
+        if (selectButton != null)
+        {
             selectButton.onClick.AddListener(OnSelectButtonClicked);
             selectButton.gameObject.SetActive(true);
-            selectButton.interactable = false;
+            selectButton.interactable = true;
         }
     }
 

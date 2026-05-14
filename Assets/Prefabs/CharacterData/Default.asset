@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db7e55cf6bf18c44db3b1498cddcff3d, type: 3}
+  m_Name: Default
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterSkinData
+  skinName: Default
+  price: 0
+  characterPrefab: {fileID: 513287023256378946, guid: 13db751466228584bafabbf17b9378eb,
+    type: 3}
+  icon: {fileID: -1808131681, guid: 1fcd6c04dc7504d4890374aefef9cb3f, type: 3}

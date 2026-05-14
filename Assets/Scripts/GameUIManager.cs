@@ -14,10 +14,10 @@ using GameAnalyticsSDK;
 public class GameUIManager : MonoBehaviour
 {
     [SerializeField] Text timeText;
-    [SerializeField] TextMeshProUGUI warning;
+    [SerializeField] TextMeshProUGUI warning, loading;
     [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn, soundOnOffBtn,
     undoBtn, healthBtn;
-    [SerializeField] GameObject resumePanel, gameoverPanel, game, joystick;
+    [SerializeField] GameObject resumePanel, gameoverPanel, losePanel, game, joystick;
     [SerializeField] ChessPoints chessPoints;
     [SerializeField] Sprite soundOn, soundOff, resume, pause;
     [SerializeField] AudioSource click;
@@ -34,6 +34,7 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
+        StartCoroutine(Loading());
         Debug.Log("GameUIManager Start Triggered!");
         chessUndoManager = FindAnyObjectByType<ChessUndoManager>();
         difficulty = FindAnyObjectByType<Difficulty>();
@@ -88,6 +89,13 @@ public class GameUIManager : MonoBehaviour
 
         gameoverPanel.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(MenuOpen);
         gameoverPanel.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RestartGame);
+
+        if (losePanel != null)
+        {
+            // Lose panel butonlarını bağla (Index'lerin galibiyet paneliyle aynı olduğu varsayılıyor)
+            losePanel.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(MenuOpen);
+            losePanel.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RestartGame);
+        }
 
         // Start Health Button Pulse
         StartPulse(healthBtn.transform.parent);
@@ -162,7 +170,22 @@ public class GameUIManager : MonoBehaviour
         string second = ((int)(time % 60)) < 10 ? "0" + ((int)(time % 60)) : ((int)(time % 60)).ToString();
         timeText.text = first + " : " + second;
     }
-
+    IEnumerator Loading()
+    {
+        loading.text = "Loading .";
+        yield return new WaitForSeconds(.5f);
+        loading.text = "Loading ..";
+        yield return new WaitForSeconds(.5f);
+        loading.text = "Loading ...";
+        yield return new WaitForSeconds(.5f);
+        loading.text = "";
+        loading.transform.parent.gameObject.SetActive(false);
+        //Win Test
+        //PlayerPrefs.SetString("WinType", "White");
+        //yield return new WaitForSeconds(1f);
+        //GameoverMenuOpen("You Win!");
+        //Win Test
+    }
     void StartPulse(Transform target)
     {
         target.DOKill();
@@ -423,46 +446,17 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] GameObject wheelObj, arrowObj, claimObj, multiplierTextObj;
     public void GameoverMenuOpen(string result)
     {
-        if (SceneManager.GetActiveScene().buildIndex != 3)
+        bool isTwoPlayers = (SceneManager.GetActiveScene().buildIndex == 3);
+
+        if (!isTwoPlayers)
         {
-            gameSave.ChessSave();
-
-            // DEFAULT: Hide the wheel components first
-            if (wheelObj != null) wheelObj.SetActive(false);
-            if (arrowObj != null) arrowObj.SetActive(false);
-            if (claimObj != null) claimObj.SetActive(false);
-            if (multiplierTextObj != null) multiplierTextObj.SetActive(false);
-
-            // Automatic In-App Review Trigger
+            // --- KAZANMA DURUMU (Normal veya Story) ---
             if (result == "You Win!")
             {
                 GameAnalytics.NewDesignEvent("GameOutcome:Win:" + SceneManager.GetActiveScene().name);
-                int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
-                PlayerPrefs.SetInt("TotalWins", wins);
-                                
-                // Only request review on real devices, not in the Editor
-                #if !UNITY_EDITOR
-                if (wins == 3)
-                {
-                    GooglePlayReview review = FindObjectOfType<GooglePlayReview>();
-                    if (review != null)
-                    {
-                        review.RequestReview();
-                    }
-                }
-                #endif
-
-                // SHOW WHEEL ONLY ON WIN:
-                if (RewardedInterstitialManager.Instance != null && RewardedInterstitialManager.Instance.IsAdReady())
-                {
-                    if (wheelObj != null) wheelObj.SetActive(true);
-                    if (arrowObj != null) arrowObj.SetActive(true);
-                    if (claimObj != null) claimObj.SetActive(true);
-                    if (multiplierTextObj != null) multiplierTextObj.SetActive(true);
-                }
-
-                // Handle Tower Progression
-                if (PlayerPrefs.GetInt("IsTowerMode", 0) == 1)
+                
+                if (PlayerPrefs.GetInt("IsTowerMode", 0) == 0) gameSave.ChessSave(); 
+                else
                 {
                     int currentIdx = PlayerPrefs.GetInt("SelectedTowerLevel", 0);
                     TowerManager tm = FindAnyObjectByType<TowerManager>();
@@ -472,21 +466,80 @@ public class GameUIManager : MonoBehaviour
                         TowerLevelData data = tm.GetLevelData(currentIdx);
                         if (data != null)
                         {
+                            gameSave.lastEarnedReward = data.coinReward;
                             JsonSave.jsonSave.sv.coin += data.coinReward;
                             SaveManager.Save(JsonSave.jsonSave.sv);
+                            gameSave.ChessSave();
                         }
                     }
                 }
+
+                gameoverPanel.SetActive(true);
+                if (losePanel != null) losePanel.SetActive(false);
+
+                if (RewardedInterstitialManager.Instance != null && RewardedInterstitialManager.Instance.IsAdReady())
+                {
+                    if (wheelObj != null) wheelObj.SetActive(true);
+                    if (arrowObj != null) arrowObj.SetActive(true);
+                    if (claimObj != null) claimObj.SetActive(true);
+                    if (multiplierTextObj != null) multiplierTextObj.SetActive(true);
+                }
+
+                int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
+                PlayerPrefs.SetInt("TotalWins", wins);
+                #if !UNITY_EDITOR
+                if (wins == 3) {
+                    GooglePlayReview review = FindObjectOfType<GooglePlayReview>();
+                    if (review != null) review.RequestReview();
+                }
+                #endif
             }
+            // --- KAYBETME DURUMU ---
             else if (result == "You Lose!")
             {
                 GameAnalytics.NewDesignEvent("GameOutcome:Loss:" + SceneManager.GetActiveScene().name);
+                
+                if (losePanel != null) 
+                {
+                    losePanel.SetActive(true);
+                    gameoverPanel.SetActive(false);
+                }
+                else 
+                {
+                    gameoverPanel.SetActive(true); 
+                }
+
+                if (wheelObj != null) wheelObj.SetActive(false);
+                if (arrowObj != null) arrowObj.SetActive(false);
+                if (claimObj != null) claimObj.SetActive(false);
+                if (multiplierTextObj != null) multiplierTextObj.SetActive(false);
+            }
+            // --- BERABERLİK VB. ---
+            else
+            {
+                gameoverPanel.SetActive(true);
             }
         }
+        else
+        {
+            // --- TWO PLAYERS MODU (Scene 3) ---
+            // Bu modda her zaman ana paneli (gameoverPanel) açıyoruz
+            gameoverPanel.SetActive(true);
+            if (losePanel != null) losePanel.SetActive(false);
+            if (wheelObj != null) wheelObj.SetActive(false);
+        }
+
         if (pauseBtn != null) pauseBtn.interactable = false;
         if (healthBtn != null) healthBtn.interactable = false;
-        gameoverPanel.GetComponentInChildren<TextMeshProUGUI>().text = result;
-        gameoverPanel.SetActive(true);
+        
+        // Aktif paneldeki metni güncelle
+        GameObject activePanel = (gameoverPanel.activeSelf) ? gameoverPanel : losePanel;
+        if (activePanel != null)
+        {
+            var titleText = activePanel.GetComponentInChildren<TextMeshProUGUI>();
+            if (titleText != null) titleText.text = result;
+        }
+
         game.SetActive(false);
         if (joystick != null) joystick.SetActive(false);
         Time.timeScale = 0;

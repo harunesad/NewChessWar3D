@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 805c10c93da6c4e47b9da76cdf8983a9, type: 3}
+  m_Name: Undead
+  m_EditorClassIdentifier: Assembly-CSharp::ChessSkinData
+  skinName: Undead
+  price: 25000
+  icon: {fileID: 21300000, guid: 4175208589fa3a748b7d2b5792d08f3b, type: 3}
+  kingPrefab: {fileID: 9066761018732546759, guid: 6ee68b8fded7fdd4f8d31728a887280a,
+    type: 3}
+  queenPrefab: {fileID: 929509087649919780, guid: 1e5f7fe88124afb46bb264d80282c46e,
+    type: 3}
+  bishopPrefab: {fileID: 8989671117212278334, guid: 1720d905cf142d34aa210d5efca1da6f,
+    type: 3}
+  knightPrefab: {fileID: 2970645614512678205, guid: 3a2965e2eec303944b20ec30ad06b575,
+    type: 3}
+  rookPrefab: {fileID: 2973018981400517757, guid: 412d851d81da22d49863b010bcfafd88,
+    type: 3}
+  pawnPrefab: {fileID: 4542439862869954918, guid: 6958299b09a720f4287ad5e9bbca8df7,
+    type: 3}

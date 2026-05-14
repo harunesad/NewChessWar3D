@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class GameSave : MonoBehaviour
 {
     [SerializeField] GameUIManager gameUIManager;
-    [SerializeField] TextMeshProUGUI coinText;
+    [SerializeField] TextMeshProUGUI coinText, earnedCoinText;
     [SerializeField] Text healthText;
     [SerializeField] List<Image> stars;
     public SaveVariables sv;
@@ -33,64 +33,76 @@ public class GameSave : MonoBehaviour
     public void ChessSave()
     {
         if (SceneManager.GetActiveScene().buildIndex == 3) return;
+        
+        bool isTower = (PlayerPrefs.GetInt("IsTowerMode", 0) == 1);
 
-        lastEarnedReward = 0;
-        if (PlayerPrefs.GetString("WinType") == PlayerPrefs.GetString("Type"))
+        if (!isTower)
         {
-            if (difficulty.difficult / 2 < 10)
+            lastEarnedReward = 0;
+            if (PlayerPrefs.GetString("WinType") == PlayerPrefs.GetString("Type"))
             {
-                sv.unlock[difficulty.difficult / 2] = true;
-            }
-            if (gameUIManager.time > 0 &&gameUIManager.time <= 300)
-            {
-                int fullReward = ((difficulty.difficult / 2) * 1 * 10);
-                if (sv.starCounts[(difficulty.difficult / 2) - 1] < 1)
+                if (difficulty.difficult / 2 < 10)
                 {
-                    sv.starCounts[(difficulty.difficult / 2) - 1] = 1;
-                    lastEarnedReward = fullReward;
+                    sv.unlock[difficulty.difficult / 2] = true;
                 }
-                else
+                if (gameUIManager.time > 0 && gameUIManager.time <= 300)
                 {
-                    lastEarnedReward = fullReward / 10;
+                    int fullReward = ((difficulty.difficult / 2) * 1 * 10);
+                    if (sv.starCounts[(difficulty.difficult / 2) - 1] < 1)
+                    {
+                        sv.starCounts[(difficulty.difficult / 2) - 1] = 1;
+                        lastEarnedReward = fullReward;
+                    }
+                    else
+                    {
+                        lastEarnedReward = fullReward / 10;
+                    }
+                    starCount = 1;
                 }
-                starCount = 1;
-            }
-            else if (gameUIManager.time > 300 && gameUIManager.time <= 600)
-            {
-                int fullReward = ((difficulty.difficult / 2) * 2 * 10);
-                if (sv.starCounts[(difficulty.difficult / 2) - 1] < 2)
+                else if (gameUIManager.time > 300 && gameUIManager.time <= 600)
                 {
-                    sv.starCounts[(difficulty.difficult / 2) - 1] = 2;
-                    lastEarnedReward = fullReward;
+                    int fullReward = ((difficulty.difficult / 2) * 2 * 10);
+                    if (sv.starCounts[(difficulty.difficult / 2) - 1] < 2)
+                    {
+                        sv.starCounts[(difficulty.difficult / 2) - 1] = 2;
+                        lastEarnedReward = fullReward;
+                    }
+                    else
+                    {
+                        lastEarnedReward = fullReward / 10;
+                    }
+                    starCount = 2;
                 }
-                else
+                else if (gameUIManager.time > 600 && gameUIManager.time <= 900)
                 {
-                    lastEarnedReward = fullReward / 10;
+                    int fullReward = ((difficulty.difficult / 2) * 3 * 10);
+                    if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
+                    {
+                        sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
+                        lastEarnedReward = fullReward;
+                    }
+                    else
+                    {
+                        lastEarnedReward = fullReward / 10;
+                    }
+                    starCount = 3;
                 }
-                starCount = 2;
-            }
-            else if (gameUIManager.time > 600 && gameUIManager.time <= 900)
-            {
-                int fullReward = ((difficulty.difficult / 2) * 3 * 10);
-                if (sv.starCounts[(difficulty.difficult / 2) - 1] < 3)
-                {
-                    sv.starCounts[(difficulty.difficult / 2) - 1] = 3;
-                    lastEarnedReward = fullReward;
-                }
-                else
-                {
-                    lastEarnedReward = fullReward / 10;
-                }
-                starCount = 3;
-            }
 
-            sv.coin += lastEarnedReward;
-            SaveManager.Save(sv);
-            for (int i = 0; i < starCount; i++)
-            {
-                stars[i].color = new Color(1, 1, 1, 1); ;
+                sv.coin += lastEarnedReward;
+                SaveManager.Save(sv);
+                for (int i = 0; i < starCount; i++)
+                {
+                    stars[i].color = new Color(1, 1, 1, 1);
+                }
             }
         }
+
+        // UI Her zaman güncellensin (Story modunda lastEarnedReward UIManager'dan setleniyor)
+        if (earnedCoinText != null)
+        {
+            earnedCoinText.text = "+" + lastEarnedReward.ToString("N0", new CultureInfo("tr-TR"));
+        }
+        
         CoinUpdate();
     }
     public void CoinUpdate()

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db7e55cf6bf18c44db3b1498cddcff3d, type: 3}
+  m_Name: Samurai
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterSkinData
+  skinName: Samurai
+  price: 30000
+  characterPrefab: {fileID: 3197970514907132463, guid: e32fe292bda3b2246b4905b0520bd796,
+    type: 3}
+  icon: {fileID: -216178643, guid: 4cb19958f2a84ad469b7516be777d84e, type: 3}

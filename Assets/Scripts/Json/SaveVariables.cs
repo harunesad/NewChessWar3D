@@ -14,4 +14,8 @@ public class SaveVariables
     public List<int> starCounts;
     public List<bool> unlock;
     public List<Items> items;
+    public List<string> purchasedSkins = new List<string>();
+    public string selectedSkin = "Default";
+    public List<string> purchasedCharacters = new List<string>();
+    public string selectedCharacter = "Default";
 }

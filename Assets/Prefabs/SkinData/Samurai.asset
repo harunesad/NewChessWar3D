@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 805c10c93da6c4e47b9da76cdf8983a9, type: 3}
+  m_Name: Samurai
+  m_EditorClassIdentifier: Assembly-CSharp::ChessSkinData
+  skinName: Samurai
+  price: 20000
+  icon: {fileID: 21300000, guid: c221c188bcc049d4a99b5559f06bd0cc, type: 3}
+  kingPrefab: {fileID: 8985791729895560504, guid: 05f36d41eae97744c9861afb0cc83b8f,
+    type: 3}
+  queenPrefab: {fileID: 4199944265250033911, guid: 3eae5d1b2b010f14b806f0d5bb89c134,
+    type: 3}
+  bishopPrefab: {fileID: 9222709642022277476, guid: e518be2ccee091348bc000ebc9c60515,
+    type: 3}
+  knightPrefab: {fileID: 7483697073905824083, guid: 3d5248e4983da4b4ebb18a55ef09f1f9,
+    type: 3}
+  rookPrefab: {fileID: 1905319057490323347, guid: 1c61fedba972ab846a9edb543093ad52,
+    type: 3}
+  pawnPrefab: {fileID: 3828806226126032856, guid: a210406d9826c994ca84424241801b45,
+    type: 3}
