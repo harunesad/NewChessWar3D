@@ -10,17 +10,19 @@ using UnityEngine.UI;
 public class MenuUIManager : MonoBehaviour
 {
     [SerializeField] Button playBtn, towerBtn, shopBtn, multiplayerBtn, twoPlayersBtn, whiteBtn, blackBtn, backBtn,
-        exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn, dailyRewardBtn;
+        exitBtn, soundOnOffBtn, coinAdsBtn, closeCoinAdsPanelBtn, infoBtn, closeInfoPanelBtn, healthBtn, dailyRewardBtn, tutorialBtn;
     [SerializeField] CanvasGroup difficultMenu, mainMenu, shopMenu, coinAdsMenu, infoMenu, dailyRewardMenu;
+    [SerializeField] GameObject tutorialOverlay, loading; // İlk başta görünmesi gereken siyah ekran
     [SerializeField] Sprite whiteSelected, whiteUnselected, blackSelected, blackUnselected;
     [SerializeField] List<Button> difficultsBtn;
-    [SerializeField] TextMeshProUGUI warning;
+    [SerializeField] TextMeshProUGUI warning, loadingText;
     [SerializeField] AudioSource music, click;
     [SerializeField] Sprite soundOn, soundOff;
     Difficulty difficulty;
     CanvasGroup currentMenu;
     void Start()
     {
+        StartCoroutine(LoadingDelay());
         // Initialize GameAnalytics explicitly
         GameAnalytics.Initialize();
 
@@ -31,13 +33,36 @@ public class MenuUIManager : MonoBehaviour
         MusicState(music);
 
         coinAdsBtn.onClick.AddListener(CoinAdsMenuOpen);
-        infoBtn.onClick.AddListener(InfoMenuOpen);
+        infoBtn.onClick.AddListener(delegate { 
+            if (IsTutorialDone()) InfoMenuOpen(); 
+            else MessageShow("Please complete the tutorial first!"); 
+        });
         healthBtn.onClick.AddListener(HealthUpdate);
-        playBtn.onClick.AddListener(delegate { MenuOpen(difficultMenu); });
-        shopBtn.onClick.AddListener(delegate { MenuOpen(shopMenu); });
-        towerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
-        multiplayerBtn.onClick.AddListener(delegate { MessageShow("Coming Soon"); });
-        twoPlayersBtn.onClick.AddListener(EnterTwoPlayers);
+        
+        playBtn.onClick.AddListener(delegate { 
+            if (IsTutorialDone()) MenuOpen(difficultMenu); 
+            else MessageShow("Please complete the tutorial first!"); 
+        });
+        
+        shopBtn.onClick.AddListener(delegate { 
+            if (IsTutorialDone()) MenuOpen(shopMenu); 
+            else MessageShow("Please complete the tutorial first!"); 
+        });
+        
+        towerBtn.onClick.AddListener(delegate { 
+            if (IsTutorialDone()) MessageShow("Coming Soon"); 
+            else MessageShow("Please complete the tutorial first!"); 
+        });
+        
+        multiplayerBtn.onClick.AddListener(delegate { 
+            if (IsTutorialDone()) MessageShow("Coming Soon"); 
+            else MessageShow("Please complete the tutorial first!"); 
+        });
+        
+        twoPlayersBtn.onClick.AddListener(delegate { 
+            if (IsTutorialDone()) EnterTwoPlayers(); 
+            else MessageShow("Please complete the tutorial first!"); 
+        });
 
         whiteBtn.onClick.AddListener(WhiteSelect);
         blackBtn.onClick.AddListener(BlackSelect);
@@ -54,10 +79,30 @@ public class MenuUIManager : MonoBehaviour
         closeCoinAdsPanelBtn.onClick.AddListener(CoinAdsMenuClose);
         closeInfoPanelBtn.onClick.AddListener(InfoMenuClose);
         dailyRewardBtn.onClick.AddListener(DailyRewardMenuOpen);
+        tutorialBtn.onClick.AddListener(EnterTutorial);
+
+        // İlk kez mi açılıyor kontrol et
+        bool isTutorialDone = PlayerPrefs.GetInt("TutorialDone", 0) == 1;
+        if (tutorialOverlay != null)
+        {
+            tutorialOverlay.SetActive(!isTutorialDone);
+        }
 
         // Start Health Button and CoinAds Button Pulse
         StartPulse(healthBtn.transform.parent);
         StartPulse(coinAdsBtn.transform.parent);
+    }
+    IEnumerator LoadingDelay()
+    {
+        loadingText.text = "Loading";
+        yield return new WaitForSeconds(.5f);
+        loadingText.text = "Loading .";
+        yield return new WaitForSeconds(.5f);
+        loadingText.text = "Loading ..";
+        yield return new WaitForSeconds(.5f);
+        loadingText.text = "Loading ...";
+        yield return new WaitForSeconds(.5f);
+        loading.SetActive(false);
     }
     void StartPulse(Transform target)
     {
@@ -281,6 +326,12 @@ public class MenuUIManager : MonoBehaviour
     {
         SceneManager.LoadScene(3);
     }
+    public void EnterTutorial()
+    {
+        BodylinkTutorialManager.IsTutorialActive = true;
+        // Beyaz oyuncu sahnesine yönlendir (Scene 2)
+        SceneManager.LoadScene(2);
+    }
     void WhiteSelect()
     {
         MusicState(click);
@@ -375,5 +426,10 @@ public class MenuUIManager : MonoBehaviour
     {
         // Critical: Clean up ad event subscriptions to prevent memory leaks
         OnAdClosedCleanup();
+    }
+
+    bool IsTutorialDone()
+    {
+        return PlayerPrefs.GetInt("TutorialDone", 0) == 1;
     }
 }

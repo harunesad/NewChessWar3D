@@ -13,12 +13,12 @@ using GameAnalyticsSDK;
 public class GameUIManager : MonoBehaviour
 {
     [SerializeField] Text timeText;
-    [SerializeField] TextMeshProUGUI warning;
+    [SerializeField] TextMeshProUGUI warning, loadingText;
     [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn, soundOnOffBtn,
     undoBtn, healthBtn;
-    [SerializeField] GameObject resumePanel, gameoverPanel, game;
+    [SerializeField] GameObject resumePanel, gameoverPanel, game, loading;
     [SerializeField] ChessPoints chessPoints;
-    [SerializeField] Sprite soundOn, soundOff, resume, pause;
+    [SerializeField] Sprite soundOn, soundOff;
     [SerializeField] AudioSource click;
     [SerializeField] GameSave gameSave;
     [SerializeField] TurnIndicatorUI turnIndicatorUI;
@@ -33,6 +33,7 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
+        StartCoroutine(LoadingDelay());
         chessUndoManager = FindAnyObjectByType<ChessUndoManager>();
         difficulty = FindAnyObjectByType<Difficulty>();
         chessGameManager = FindAnyObjectByType<ChessGameManager>();
@@ -140,7 +141,18 @@ public class GameUIManager : MonoBehaviour
         string second = ((int)(time % 60)) < 10 ? "0" + ((int)(time % 60)) : ((int)(time % 60)).ToString();
         timeText.text = first + " : " + second;
     }
-
+    IEnumerator LoadingDelay()
+    {
+        loadingText.text = "Loading";
+        yield return new WaitForSeconds(.5f);
+        loadingText.text = "Loading .";
+        yield return new WaitForSeconds(.5f);
+        loadingText.text = "Loading ..";
+        yield return new WaitForSeconds(.5f);
+        loadingText.text = "Loading ...";
+        yield return new WaitForSeconds(.5f);
+        loading.SetActive(false);
+    }
     void StartPulse(Transform target)
     {
         target.DOKill();
@@ -225,12 +237,12 @@ public class GameUIManager : MonoBehaviour
         if (Time.timeScale == 1)
         {
             Time.timeScale = 0;
-            pauseBtn.GetComponent<Image>().sprite = resume;
+            //pauseBtn.GetComponent<Image>().sprite = resume;
         }
         else
         {
             Time.timeScale = 1;
-            pauseBtn.GetComponent<Image>().sprite = pause;
+            //pauseBtn.GetComponent<Image>().sprite = pause;
         }
     }
     void MenuOpen()
@@ -283,7 +295,7 @@ public class GameUIManager : MonoBehaviour
         resumePanel.SetActive(false);
         game.SetActive(true);
         Time.timeScale = 1;
-        pauseBtn.GetComponent<Image>().sprite = pause;
+        //pauseBtn.GetComponent<Image>().sprite = pause;
     }
     public void GameFinish()
     {

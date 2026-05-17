@@ -22,6 +22,11 @@ public class BodylinkTwoHandInteractor : MonoBehaviour
     public int playerIndex = 0;
     public bool isTurnActive = true;
 
+    [Header("Ghost Preview")]
+    [SerializeField] private Material ghostMaterial;
+    private GameObject ghostInstance;
+    private VisualChessTableTile currentHoverTile;
+
     private Bodylink bodylink;
     private bool isHoldingGesture = false;
     private float lastActionTime = 0f;
@@ -45,6 +50,68 @@ public class BodylinkTwoHandInteractor : MonoBehaviour
         if (isTurnActive)
         {
             HandleGrabDetection();
+            UpdateGhostPreview();
+        }
+        else
+        {
+            ClearGhost();
+        }
+    }
+
+    private void UpdateGhostPreview()
+    {
+        // Eğer bir taş seçili değilse hayalet taş olamaz
+        if (chessGameManager.Selected.visualPiece == null)
+        {
+            ClearGhost();
+            return;
+        }
+
+        // Altımızdaki kareyi bul
+        Ray ray = new Ray(characterTransform.position + Vector3.up * 1f, Vector3.down);
+        if (Physics.Raycast(ray, out RaycastHit hit, 5f, tileLayer))
+        {
+            VisualChessTableTile tile = hit.collider.GetComponent<VisualChessTableTile>();
+            if (tile != null)
+            {
+                // Hayalet taşı oluştur veya güncelle
+                ShowGhostAt(tile);
+                return;
+            }
+        }
+        
+        ClearGhost();
+    }
+
+    private void ShowGhostAt(VisualChessTableTile tile)
+    {
+        if (ghostInstance == null)
+        {
+            // Seçili taşın bir kopyasını oluştur
+            GameObject original = chessGameManager.Selected.visualPiece.gameObject;
+            ghostInstance = Instantiate(original);
+            
+            // Kolaylık için tüm colliderları kapat
+            foreach (var col in ghostInstance.GetComponentsInChildren<Collider>()) col.enabled = false;
+            
+            // Materyalleri hayalet materyali ile değiştir
+            foreach (var renderer in ghostInstance.GetComponentsInChildren<Renderer>())
+            {
+                renderer.material = ghostMaterial;
+            }
+        }
+
+        // Pozisyonu güncelle (Kareye oturt)
+        ghostInstance.transform.position = tile.transform.position;
+        ghostInstance.SetActive(true);
+    }
+
+    private void ClearGhost()
+    {
+        if (ghostInstance != null)
+        {
+            Destroy(ghostInstance);
+            ghostInstance = null;
         }
     }
 
@@ -182,12 +249,13 @@ public class BodylinkTwoHandInteractor : MonoBehaviour
             if (!hipsOk) missing += "[HIPS] ";
             bodyStatus = "MISSING OR OUT OF FRAME: " + missing;
         }
-        GUI.Label(new Rect(20, Screen.height - 180, 1200, 100), bodyStatus, style);
+        GUI.Label(new Rect(20, Screen.height / 2 - 50, 1200, 100), bodyStatus, style);
 
         // 2. El Mesafesi ve Tutma Durumu
         style.normal.textColor = Color.yellow;
         string handStatus = isHoldingGesture ? "<color=cyan>HOLDING</color>" : "HANDS OPEN";
         string handText = $"Hand Distance: {debugHandDist:F2} | Status: {handStatus}";
-        GUI.Label(new Rect(20, Screen.height - 110, 1200, 100), handText, style);
+        GUI.Label(new Rect(20, Screen.height / 2 + 20, 1200, 100), handText, style);
     }
+    public float GetHandDistance() { return debugHandDist; }
 }
