@@ -56,6 +56,7 @@ public class BodylinkUIInteractor : MonoBehaviour
     private bool isPinching = false;
     private float lastPinchY = 0f;
     private ScrollRect activeScrollRect;
+    private Slider activeSlider;
 
     void Start()
     {
@@ -179,22 +180,34 @@ public class BodylinkUIInteractor : MonoBehaviour
             cursorVisual.transform.position = currentScreenPos;
         }
 
-        // --- CLICK & SCROLL LOGIC ---
+        // --- CLICK, SCROLL & SLIDER DRAG LOGIC ---
         // isGestureActive (Fist veya Victory) durumuna göre tıkla ve sürükle
         if (isGestureActive)
         {
             if (!isPinching) // İlk kez tetiklendi
             {
                 isPinching = true;
-                // TryClickUI zaten HandlePoseDetection içinde bir kez çağrılıyor
                 
-                // Scroll desteği için
-                activeScrollRect = FindScrollRectUnderPointer();
-                lastPinchY = currentScreenPos.y;
+                // Önce altındaki Slider'ı kontrol et
+                activeSlider = FindSliderUnderPointer();
+                if (activeSlider != null)
+                {
+                    UpdateSliderValue();
+                }
+                else
+                {
+                    // Scroll desteği için
+                    activeScrollRect = FindScrollRectUnderPointer();
+                    lastPinchY = currentScreenPos.y;
+                }
             }
-            else // Basılı tutuluyor (Drag/Scroll)
+            else // Basılı tutuluyor (Drag/Scroll/Slider)
             {
-                if (activeScrollRect != null)
+                if (activeSlider != null)
+                {
+                    UpdateSliderValue();
+                }
+                else if (activeScrollRect != null)
                 {
                     float deltaY = currentScreenPos.y - lastPinchY;
                     activeScrollRect.verticalNormalizedPosition += deltaY / Screen.height * scrollSensitivity;
@@ -208,6 +221,7 @@ public class BodylinkUIInteractor : MonoBehaviour
             {
                 isPinching = false;
                 activeScrollRect = null;
+                activeSlider = null;
             }
         }
 
@@ -377,7 +391,7 @@ public class BodylinkUIInteractor : MonoBehaviour
                 GameObject target = result.gameObject;
                 while (target != null)
                 {
-                    if (target.GetComponent<Button>() != null)
+                    if (target.GetComponent<Button>() != null || target.GetComponent<Slider>() != null)
                         return true;
 
                     if (target.transform.parent == null) break;
@@ -432,6 +446,51 @@ public class BodylinkUIInteractor : MonoBehaviour
 
                     if (target.transform.parent == null) break;
                     target = target.transform.parent.gameObject;
+                }
+            }
+        }
+    }
+
+    private Slider FindSliderUnderPointer()
+    {
+        if (eventSystem == null) return null;
+
+        pointerData.position = currentScreenPos;
+        raycastResults.Clear();
+        eventSystem.RaycastAll(pointerData, raycastResults);
+
+        foreach (var result in raycastResults)
+        {
+            GameObject target = result.gameObject;
+            while (target != null)
+            {
+                Slider slider = target.GetComponent<Slider>();
+                if (slider != null && slider.interactable) return slider;
+
+                if (target.transform.parent == null) break;
+                target = target.transform.parent.gameObject;
+            }
+        }
+        return null;
+    }
+
+    private void UpdateSliderValue()
+    {
+        if (activeSlider == null) return;
+
+        RectTransform rectTransform = activeSlider.transform as RectTransform;
+        if (rectTransform != null)
+        {
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, currentScreenPos, null, out Vector2 localPoint))
+            {
+                float width = rectTransform.rect.width;
+                if (width > 0f)
+                {
+                    float normalizedX = (localPoint.x - rectTransform.rect.xMin) / width;
+                    normalizedX = Mathf.Clamp01(normalizedX);
+
+                    float value = activeSlider.minValue + normalizedX * (activeSlider.maxValue - activeSlider.minValue);
+                    activeSlider.value = value;
                 }
             }
         }

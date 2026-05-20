@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using ChessEngine.Game;
+using DG.Tweening;
 
 public class BodylinkTutorialManager : MonoBehaviour
 {
@@ -17,6 +18,10 @@ public class BodylinkTutorialManager : MonoBehaviour
     [Header("UI References")]
     private GameObject tutorialCanvas;
     private TextMeshProUGUI tutorialText;
+
+    [Header("Visual References")]
+    [SerializeField] private GameObject openHandVisual;
+    [SerializeField] private GameObject closedHandVisual;
 
     private ChessGameManager gameManager;
     private BodylinkHumanoidAvatar avatar;
@@ -54,6 +59,7 @@ public class BodylinkTutorialManager : MonoBehaviour
 
         CreateTutorialUI();
         PrepareBoard();
+        UpdateHandVisuals(false, false);
         
         Debug.Log("Tutorial Started!");
     }
@@ -155,6 +161,9 @@ public class BodylinkTutorialManager : MonoBehaviour
     {
         if (!IsTutorialActive || avatar == null || interactor == null) return;
 
+        bool showOpen = false;
+        bool showClosed = false;
+
         switch (currentState)
         {
             case TutorialState.MoveAvatar:
@@ -168,14 +177,14 @@ public class BodylinkTutorialManager : MonoBehaviour
                 if (targetPawn == null) {
                     tutorialText.text = "WAITING FOR CHESS PIECES...";
                     PrepareBoard();
-                    return;
+                    break;
                 }
 
                 // Eğer piyonu çoktan tuttuysan direkt harekete geç
                 if (gameManager.Selected.visualPiece == targetPawn) {
                     startTileIndex = targetPawn.Piece.TileIndex;
                     currentState = TutorialState.MoveWhileHolding;
-                    return;
+                    break;
                 }
 
                 // 2D Mesafe kontrolü (Kuş bakışı mesafe - En güveniliri)
@@ -192,8 +201,10 @@ public class BodylinkTutorialManager : MonoBehaviour
                 } else {
                     if (!handsOpen) {
                         tutorialText.text = "OPEN YOUR HANDS WIDE";
+                        showOpen = true;
                     } else {
                         tutorialText.text = "CLOSE YOUR HANDS TO GRAB THE PIECE";
+                        showClosed = true;
                         // Eğer hem yakındaysa hem de ellerini açmışsa artık tutma aşamasına geçebiliriz
                         currentState = TutorialState.GrabPiece;
                     }
@@ -209,10 +220,11 @@ public class BodylinkTutorialManager : MonoBehaviour
 
                 if (distToPawnGrab >= targetDistanceThreshold && gameManager.Selected.visualPiece == null) {
                     currentState = TutorialState.GoToPawnAndOpenHands;
-                    return;
+                    break;
                 }
 
                 tutorialText.text = "CLOSE YOUR HANDS TO GRAB THE PIECE";
+                showClosed = true;
                 if (gameManager.Selected.visualPiece == targetPawn) {
                     startTileIndex = targetPawn.Piece.TileIndex;
                     currentState = TutorialState.MoveWhileHolding;
@@ -221,22 +233,86 @@ public class BodylinkTutorialManager : MonoBehaviour
 
             case TutorialState.MoveWhileHolding:
                 tutorialText.text = "MOVE TO A DIFFERENT HIGHLIGHTED SQUARE";
-                // Sadece elini açmasını bekle, gerisini DropPiece halledecek
-                if (interactor.GetHandDistance() > interactor.releaseThreshold * 0.8f || gameManager.Selected.visualPiece == null) {
+                showClosed = true;
+
+                // Check if avatar is hovering over a valid destination tile
+                bool isHoveringValidTile = false;
+                Ray ray = new Ray(avatar.transform.position + Vector3.up * 1f, Vector3.down);
+                if (Physics.Raycast(ray, out RaycastHit hit, 5f))
+                {
+                    VisualChessTableTile tile = hit.collider.GetComponent<VisualChessTableTile>();
+                    if (tile != null)
+                    {
+                        var sel = gameManager.Selected;
+                        if (sel.validMoves != null)
+                        {
+                            foreach (var m in sel.validMoves)
+                            {
+                                if (gameManager.visualTable.GetVisualTile(m) == tile) { isHoveringValidTile = true; break; }
+                            }
+                        }
+                        if (!isHoveringValidTile && sel.validAttacks != null)
+                        {
+                            foreach (var m in sel.validAttacks)
+                            {
+                                if (gameManager.visualTable.GetVisualTile(m.attackTile) == tile) { isHoveringValidTile = true; break; }
+                            }
+                        }
+                    }
+                }
+
+                if (isHoveringValidTile) {
                     currentState = TutorialState.DropPiece;
+                }
+
+                // If they drop the piece prematurely, send them back to GrabPiece
+                if (gameManager.Selected.visualPiece == null) {
+                    currentState = TutorialState.GrabPiece;
                 }
                 break;
 
             case TutorialState.DropPiece:
                 tutorialText.text = "DROP THE PIECE ON A NEW SQUARE";
-                
-                // Taş artık seçili değilse ve hareket bittiyse
+                showOpen = true;
+
+                // Verify they are still hovering over a valid tile
+                bool isStillHoveringValid = false;
+                Ray dropRay = new Ray(avatar.transform.position + Vector3.up * 1f, Vector3.down);
+                if (Physics.Raycast(dropRay, out RaycastHit dropHit, 5f))
+                {
+                    VisualChessTableTile tile = dropHit.collider.GetComponent<VisualChessTableTile>();
+                    if (tile != null)
+                    {
+                        var sel = gameManager.Selected;
+                        if (sel.validMoves != null)
+                        {
+                            foreach (var m in sel.validMoves)
+                            {
+                                if (gameManager.visualTable.GetVisualTile(m) == tile) { isStillHoveringValid = true; break; }
+                            }
+                        }
+                        if (!isStillHoveringValid && sel.validAttacks != null)
+                        {
+                            foreach (var m in sel.validAttacks)
+                            {
+                                if (gameManager.visualTable.GetVisualTile(m.attackTile) == tile) { isStillHoveringValid = true; break; }
+                            }
+                        }
+                    }
+                }
+
+                // If they hover away while still holding, prompt them to move again
+                if (!isStillHoveringValid && gameManager.Selected.visualPiece != null) {
+                    currentState = TutorialState.MoveWhileHolding;
+                }
+
+                // Once they drop the piece (selected visual piece becomes null)
                 if (gameManager.Selected.visualPiece == null) {
-                    // Piyonun yeni karesi, başladığı kareden farklı mı?
+                    // Check if it landed on a new tile
                     if (!targetPawn.Piece.TileIndex.Equals(startTileIndex)) {
                         currentState = TutorialState.Finish;
                     } else {
-                        // Eğer hala aynı karedeyse (hamle iptal olduysa) başa dön
+                        // Returned to original tile or cancelled, retry grab
                         currentState = TutorialState.GrabPiece;
                     }
                 }
@@ -259,9 +335,48 @@ public class BodylinkTutorialManager : MonoBehaviour
                 }
                 break;
         }
+
+        UpdateHandVisuals(showOpen, showClosed);
+    }
+
+    private void UpdateHandVisuals(bool showOpen, bool showClosed)
+    {
+        if (openHandVisual != null)
+        {
+            bool wasActive = openHandVisual.activeSelf;
+            openHandVisual.SetActive(showOpen);
+            if (showOpen && !wasActive)
+            {
+                openHandVisual.transform.localScale = Vector3.one;
+                openHandVisual.transform.DOKill();
+                openHandVisual.transform.DOScale(1.15f, 0.4f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+            }
+            else if (!showOpen && wasActive)
+            {
+                openHandVisual.transform.DOKill();
+            }
+        }
+
+        if (closedHandVisual != null)
+        {
+            bool wasActive = closedHandVisual.activeSelf;
+            closedHandVisual.SetActive(showClosed);
+            if (showClosed && !wasActive)
+            {
+                closedHandVisual.transform.localScale = Vector3.one;
+                closedHandVisual.transform.DOKill();
+                closedHandVisual.transform.DOScale(1.15f, 0.4f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+            }
+            else if (!showClosed && wasActive)
+            {
+                closedHandVisual.transform.DOKill();
+            }
+        }
     }
 
     private void OnDestroy()
     {
+        if (openHandVisual != null) openHandVisual.transform.DOKill();
+        if (closedHandVisual != null) closedHandVisual.transform.DOKill();
     }
 }

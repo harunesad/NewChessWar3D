@@ -67,6 +67,8 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
 
     void Start()
     {
+        globalMovementScale = PlayerPrefs.GetFloat("MovementScale", globalMovementScale);
+
         if (animator == null) animator = GetComponent<Animator>();
         
         if (resetUIButton != null) {
@@ -147,6 +149,8 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
 
     void HandleHandPose(int playerIndex, string gestureName, BodylinkSDK.Side side, BodylinkSDK.HandPose pose)
     {
+        if (Time.timeScale == 0f) return; // Pause menüsü açıkken el hareketlerine tepki verme
+
         // Sadece kendi playerIndex'ine ait ve sırası kendisindeyken tepki ver
         if (playerIndex != this.playerIndex || !isTurnActive) return;
 
@@ -194,6 +198,8 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
 
     void LateUpdate()
     {
+        if (Time.timeScale == 0f) return; // Pause menüsü açıkken hareketi dondur
+
         var bodylink = BodylinkSDK.Bodylink.Instance;
         if (bodylink == null || !bodylink.IsInitialized || bodylink.players == null || bodylink.players.Length == 0) return;
         if (playerIndex >= bodylink.players.Length) return;

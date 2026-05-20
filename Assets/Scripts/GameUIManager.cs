@@ -17,6 +17,11 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] Button pauseBtn, menuBtn, restartBtn, closeBtn, soundOnOffBtn,
     undoBtn, healthBtn;
     [SerializeField] GameObject resumePanel, gameoverPanel, game, loading;
+    
+    [Header("Bodylink Settings UI")]
+    [SerializeField] Button recalibrateBtn;
+    [SerializeField] Slider sensitivitySlider;
+    [SerializeField] Text sensitivityText;
     [SerializeField] ChessPoints chessPoints;
     [SerializeField] Sprite soundOn, soundOff;
     [SerializeField] AudioSource click;
@@ -70,6 +75,8 @@ public class GameUIManager : MonoBehaviour
 
         // Start Health Button Pulse
         StartPulse(healthBtn.transform.parent);
+
+        InitializeEditorBodylinkUI();
     }
     void Update()
     {
@@ -451,5 +458,50 @@ public class GameUIManager : MonoBehaviour
                 warning.GetComponent<CanvasGroup>().DOFade(0, .75f).SetEase(Ease.Linear);
             });
         });
+    }
+
+    private void InitializeEditorBodylinkUI()
+    {
+        if (recalibrateBtn != null)
+        {
+            recalibrateBtn.onClick.AddListener(() => {
+                if (PlayerPrefs.GetInt("Audio") == 1 && click != null) click.Play();
+                BodylinkHumanoidAvatar avatar = FindObjectOfType<BodylinkHumanoidAvatar>();
+                if (avatar != null) {
+                    avatar.DeepReset();
+                    MessageShow("Recalibrated Center Point!");
+                } else {
+                    MessageShow("Avatar not found in scene!");
+                }
+            });
+        }
+
+        if (sensitivitySlider != null)
+        {
+            float currentScale = PlayerPrefs.GetFloat("MovementScale", 1.5f);
+            sensitivitySlider.minValue = 0.5f;
+            sensitivitySlider.maxValue = 3.5f;
+            sensitivitySlider.value = currentScale;
+
+            if (sensitivityText != null)
+            {
+                sensitivityText.text = $"Movement Sensitivity: {currentScale:F1}x";
+            }
+
+            sensitivitySlider.onValueChanged.AddListener((val) => {
+                PlayerPrefs.SetFloat("MovementScale", val);
+                PlayerPrefs.Save();
+                if (sensitivityText != null)
+                {
+                    sensitivityText.text = $"Movement Sensitivity: {val:F1}x";
+                }
+                
+                // Update active avatar in scene
+                BodylinkHumanoidAvatar avatar = FindObjectOfType<BodylinkHumanoidAvatar>();
+                if (avatar != null) {
+                    avatar.globalMovementScale = val;
+                }
+            });
+        }
     }
 }
