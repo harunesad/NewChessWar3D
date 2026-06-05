@@ -106,18 +106,21 @@ namespace ChessEngine.Game
                 m_IsAnimating = false;
             }
 
-            // Find AudioManager and play hit sound.
-            AudioManager audioManager = FindAnyObjectByType<AudioManager>();
-            if (audioManager != null)
+            // Find AudioManager and play hit sound if this was an active, initialized piece.
+            if (m_IsInitialized)
             {
-                audioManager.Hit();
+                AudioManager audioManager = FindAnyObjectByType<AudioManager>();
+                if (audioManager != null)
+                {
+                    audioManager.Hit();
+                }
+                
+                // Unsubscribe from piece events.
+                UnsubscribeFromPieceEvents();
+
+                // Invoke the 'Destroyed' Unity event.
+                Destroyed?.Invoke();
             }
-
-            // Unsubscribe from piece events.
-            UnsubscribeFromPieceEvents();
-
-            // Invoke the 'Destroyed' Unity event.
-            Destroyed?.Invoke();
         }
         #endregion
 

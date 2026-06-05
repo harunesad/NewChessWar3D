@@ -6,7 +6,7 @@ using static Unity.VisualScripting.Member;
 public class AudioManager : MonoBehaviour
 {
     AudioSource chessPieceSound;
-    [SerializeField] AudioClip move, hit, transformation;
+    [SerializeField] AudioClip move, hit, transformation, pick;
     void Start()
     {
         chessPieceSound = GetComponent<AudioSource>();
@@ -32,6 +32,14 @@ public class AudioManager : MonoBehaviour
         if (PlayerPrefs.GetInt("Audio") == 1)
         {
             chessPieceSound.clip = transformation;
+            chessPieceSound.Play();
+        }
+    }
+    public void Pick()
+    {
+        if (PlayerPrefs.GetInt("Audio") == 1)
+        {
+            chessPieceSound.clip = pick != null ? pick : move;
             chessPieceSound.Play();
         }
     }

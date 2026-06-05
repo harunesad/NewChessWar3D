@@ -71,7 +71,6 @@ public class BodylinkTutorialManager : MonoBehaviour
         Canvas c = tutorialCanvas.AddComponent<Canvas>();
         c.renderMode = RenderMode.ScreenSpaceOverlay;
         tutorialCanvas.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        tutorialCanvas.AddComponent<GraphicRaycaster>();
 
         // Create Text
         GameObject textObj = new GameObject("TutorialText");
@@ -82,6 +81,7 @@ public class BodylinkTutorialManager : MonoBehaviour
         tutorialText.fontSize = 45;
         tutorialText.color = Color.yellow; // Dikkat çekmesi için sarı
         tutorialText.fontStyle = FontStyles.Bold;
+        tutorialText.raycastTarget = false;
         
         // Outline for readability
         tutorialText.outlineWidth = 0.25f;

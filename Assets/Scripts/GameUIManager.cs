@@ -245,11 +245,19 @@ public class GameUIManager : MonoBehaviour
         {
             Time.timeScale = 0;
             //pauseBtn.GetComponent<Image>().sprite = resume;
+            if (UnityEngine.EventSystems.EventSystem.current != null && closeBtn != null)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(closeBtn.gameObject);
+            }
         }
         else
         {
             Time.timeScale = 1;
             //pauseBtn.GetComponent<Image>().sprite = pause;
+            if (UnityEngine.EventSystems.EventSystem.current != null)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+            }
         }
     }
     void MenuOpen()
@@ -303,10 +311,29 @@ public class GameUIManager : MonoBehaviour
         game.SetActive(true);
         Time.timeScale = 1;
         //pauseBtn.GetComponent<Image>().sprite = pause;
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+        {
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+        }
     }
     public void GameFinish()
     {
         gameFinish = true;
+    }
+
+    /// <summary>Returns the default button to focus on when switching to controller mode in this scene.</summary>
+    public GameObject GetDefaultSelectedButton()
+    {
+        if (gameoverPanel != null && gameoverPanel.activeSelf)
+        {
+            var restart = gameoverPanel.transform.GetChild(2).GetComponent<Button>();
+            if (restart != null) return restart.gameObject;
+        }
+        if (resumePanel != null && resumePanel.activeSelf && closeBtn != null)
+            return closeBtn.gameObject;
+        if (pauseBtn != null && pauseBtn.gameObject.activeInHierarchy)
+            return pauseBtn.gameObject;
+        return null;
     }
 
     void OnEnable()

@@ -91,6 +91,13 @@ public class MenuUIManager : MonoBehaviour
         // Start Health Button and CoinAds Button Pulse
         StartPulse(healthBtn.transform.parent);
         StartPulse(coinAdsBtn.transform.parent);
+
+        // Deactivate all sub-panels so EventSystem ignores them at start
+        if (difficultMenu != null) difficultMenu.gameObject.SetActive(false);
+        if (shopMenu != null) shopMenu.gameObject.SetActive(false);
+        if (coinAdsMenu != null) coinAdsMenu.gameObject.SetActive(false);
+        if (infoMenu != null) infoMenu.gameObject.SetActive(false);
+        if (dailyRewardMenu != null) dailyRewardMenu.gameObject.SetActive(false);
     }
     IEnumerator LoadingDelay()
     {
@@ -103,6 +110,10 @@ public class MenuUIManager : MonoBehaviour
         loadingText.text = "Loading ...";
         yield return new WaitForSeconds(.5f);
         loading.SetActive(false);
+        if (UnityEngine.EventSystems.EventSystem.current != null && playBtn != null)
+        {
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(playBtn.gameObject);
+        }
     }
     void StartPulse(Transform target)
     {
@@ -188,6 +199,7 @@ public class MenuUIManager : MonoBehaviour
     void InfoMenuOpen()
     {
         MusicState(click);
+        infoMenu.gameObject.SetActive(true);
         warning.transform.parent = infoMenu.transform;
         infoMenu.alpha = 1;
         infoMenu.blocksRaycasts = true;
@@ -198,26 +210,35 @@ public class MenuUIManager : MonoBehaviour
             currentMenu.alpha = 0;
             currentMenu.blocksRaycasts = false;
             currentMenu.interactable = false;
+            currentMenu.gameObject.SetActive(false);
         }
         else
         {
             mainMenu.alpha = 0;
             mainMenu.blocksRaycasts = false;
             mainMenu.interactable = false;
+            mainMenu.gameObject.SetActive(false);
         }
         if (coinAdsMenu.alpha == 1)
         {
             coinAdsMenu.alpha = 0;
             coinAdsMenu.blocksRaycasts = false;
             coinAdsMenu.interactable = false;
+            coinAdsMenu.gameObject.SetActive(false);
+        }
+        if (UnityEngine.EventSystems.EventSystem.current != null && closeInfoPanelBtn != null)
+        {
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(closeInfoPanelBtn.gameObject);
         }
     }
     void InfoMenuClose()
     {
         MusicState(click);
+        infoMenu.gameObject.SetActive(false);
         if (currentMenu != null)
         {
             backBtn.gameObject.SetActive(true);
+            currentMenu.gameObject.SetActive(true);
             currentMenu.alpha = 1;
             currentMenu.blocksRaycasts = true;
             currentMenu.interactable = true;
@@ -225,6 +246,7 @@ public class MenuUIManager : MonoBehaviour
         }
         else
         {
+            mainMenu.gameObject.SetActive(true);
             mainMenu.alpha = 1;
             mainMenu.blocksRaycasts = true;
             mainMenu.interactable = true;
@@ -233,10 +255,22 @@ public class MenuUIManager : MonoBehaviour
         infoMenu.alpha = 0;
         infoMenu.blocksRaycasts = false;
         infoMenu.interactable = false;
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+        {
+            if (currentMenu != null)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(backBtn.gameObject);
+            }
+            else
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(playBtn.gameObject);
+            }
+        }
     }
     void CoinAdsMenuOpen()
     {
         MusicState(click);
+        coinAdsMenu.gameObject.SetActive(true);
         warning.transform.parent = coinAdsMenu.transform;
         coinAdsMenu.alpha = 1;
         coinAdsMenu.blocksRaycasts = true;
@@ -247,26 +281,35 @@ public class MenuUIManager : MonoBehaviour
             currentMenu.alpha = 0;
             currentMenu.blocksRaycasts = false;
             currentMenu.interactable = false;
+            currentMenu.gameObject.SetActive(false);
         }
         else
         {
             mainMenu.alpha = 0;
             mainMenu.blocksRaycasts = false;
             mainMenu.interactable = false;
+            mainMenu.gameObject.SetActive(false);
         }
         if (infoMenu.alpha == 1)
         {
             infoMenu.alpha = 0;
             infoMenu.blocksRaycasts = false;
             infoMenu.interactable = false;
+            infoMenu.gameObject.SetActive(false);
+        }
+        if (UnityEngine.EventSystems.EventSystem.current != null && closeCoinAdsPanelBtn != null)
+        {
+            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(closeCoinAdsPanelBtn.gameObject);
         }
     }
     void CoinAdsMenuClose()
     {
         MusicState(click);
+        coinAdsMenu.gameObject.SetActive(false);
         if (currentMenu != null)
         {
             backBtn.gameObject.SetActive(true);
+            currentMenu.gameObject.SetActive(true);
             currentMenu.alpha = 1;
             currentMenu.blocksRaycasts = true;
             currentMenu.interactable = true;
@@ -274,6 +317,7 @@ public class MenuUIManager : MonoBehaviour
         }
         else
         {
+            mainMenu.gameObject.SetActive(true);
             mainMenu.alpha = 1;
             mainMenu.blocksRaycasts = true;
             mainMenu.interactable = true;
@@ -282,6 +326,17 @@ public class MenuUIManager : MonoBehaviour
         coinAdsMenu.alpha = 0;
         coinAdsMenu.blocksRaycasts = false;
         coinAdsMenu.interactable = false;
+        if (UnityEngine.EventSystems.EventSystem.current != null)
+        {
+            if (currentMenu != null)
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(backBtn.gameObject);
+            }
+            else
+            {
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(playBtn.gameObject);
+            }
+        }
     }
     public void DailyRewardMenuOpen()
     {
@@ -300,25 +355,40 @@ public class MenuUIManager : MonoBehaviour
             infoMenu.alpha = 0;
             infoMenu.blocksRaycasts = false;
             infoMenu.interactable = false;
+            infoMenu.gameObject.SetActive(false);
         }
         if (coinAdsMenu.alpha == 1)
         {
             coinAdsMenu.alpha = 0;
             coinAdsMenu.blocksRaycasts = false;
             coinAdsMenu.interactable = false;
+            coinAdsMenu.gameObject.SetActive(false);
         }
         mainMenu.interactable = false;
         mainMenu.blocksRaycasts = false;
         mainMenu.DOFade(0, 1).SetEase(Ease.Linear).OnComplete(() =>
         {
+            mainMenu.gameObject.SetActive(false);
             backBtn.transform.parent = openToMenu.transform;
             warning.transform.parent = openToMenu.transform;
             backBtn.gameObject.SetActive(true);
+            openToMenu.gameObject.SetActive(true);
             openToMenu.DOFade(1, 1).SetEase(Ease.Linear).OnComplete(() =>
             {
                 currentMenu = openToMenu;
                 openToMenu.interactable = true;
                 openToMenu.blocksRaycasts = true;
+                if (UnityEngine.EventSystems.EventSystem.current != null)
+                {
+                    if (openToMenu == difficultMenu && difficultsBtn != null && difficultsBtn.Count > 0)
+                    {
+                        UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(difficultsBtn[0].gameObject);
+                    }
+                    else
+                    {
+                        UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(backBtn.gameObject);
+                    }
+                }
             });
         });
     }
@@ -377,13 +447,19 @@ public class MenuUIManager : MonoBehaviour
         closeToMenu.blocksRaycasts = false;
         closeToMenu.DOFade(0, 1).SetEase(Ease.Linear).OnComplete(() =>
         {
+            closeToMenu.gameObject.SetActive(false);
             backBtn.transform.parent = mainMenu.transform;
             warning.transform.parent = mainMenu.transform;
             backBtn.gameObject.SetActive(false);
+            mainMenu.gameObject.SetActive(true);
             mainMenu.DOFade(1, 1).SetEase(Ease.Linear).OnComplete(() =>
             {
                 mainMenu.interactable = true;
                 mainMenu.blocksRaycasts = true;
+                if (UnityEngine.EventSystems.EventSystem.current != null && playBtn != null)
+                {
+                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(playBtn.gameObject);
+                }
             });
         });
     }
@@ -431,5 +507,38 @@ public class MenuUIManager : MonoBehaviour
     bool IsTutorialDone()
     {
         return PlayerPrefs.GetInt("TutorialDone", 0) == 1;
+    }
+
+    /// <summary>Returns the default button to focus on when switching to controller mode in this scene.</summary>
+    public GameObject GetDefaultSelectedButton()
+    {
+        if (difficultMenu != null && difficultMenu.gameObject.activeSelf)
+        {
+            if (difficultsBtn != null && difficultsBtn.Count > 0)
+                return difficultsBtn[0].gameObject;
+        }
+        else if (shopMenu != null && shopMenu.gameObject.activeSelf)
+        {
+            if (backBtn != null) return backBtn.gameObject;
+        }
+        else if (coinAdsMenu != null && coinAdsMenu.gameObject.activeSelf)
+        {
+            if (closeCoinAdsPanelBtn != null) return closeCoinAdsPanelBtn.gameObject;
+        }
+        else if (infoMenu != null && infoMenu.gameObject.activeSelf)
+        {
+            if (closeInfoPanelBtn != null) return closeInfoPanelBtn.gameObject;
+        }
+        else if (dailyRewardMenu != null && dailyRewardMenu.gameObject.activeSelf)
+        {
+            if (backBtn != null) return backBtn.gameObject;
+        }
+
+        if (mainMenu != null && mainMenu.gameObject.activeSelf)
+        {
+            if (playBtn != null) return playBtn.gameObject;
+        }
+
+        return null;
     }
 }

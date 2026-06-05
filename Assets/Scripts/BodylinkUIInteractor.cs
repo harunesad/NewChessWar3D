@@ -58,6 +58,12 @@ public class BodylinkUIInteractor : MonoBehaviour
     private ScrollRect activeScrollRect;
     private Slider activeSlider;
 
+    // Hybrid Controller/Keyboard Navigation variables
+    private Vector2 lastCursorScreenPos;
+    private bool isUsingController = false;
+    private float lastControllerInputTime = -10f;
+    private float controllerLockoutDuration = 1.5f;
+
     void Start()
     {
         bodylink = Bodylink.Instance;
@@ -132,9 +138,121 @@ public class BodylinkUIInteractor : MonoBehaviour
         }
     }
 
+    private GameObject FindSceneDefaultSelectedButton()
+    {
+        var menuManager = FindAnyObjectByType<MenuUIManager>();
+        if (menuManager != null)
+        {
+            return menuManager.GetDefaultSelectedButton();
+        }
+
+        var gameManager = FindAnyObjectByType<GameUIManager>();
+        if (gameManager != null)
+        {
+            return gameManager.GetDefaultSelectedButton();
+        }
+
+        return null;
+    }
+
     void Update()
     {
+        eventSystem = EventSystem.current;
+        if (eventSystem == null) return;
+
+        // Detect gamepad / keyboard arrow keys or stick movement
+        bool hasControllerInput = Mathf.Abs(Input.GetAxisRaw("Horizontal")) > 0.2f ||
+                                  Mathf.Abs(Input.GetAxisRaw("Vertical")) > 0.2f ||
+                                  Input.GetButtonDown("Submit") ||
+                                  Input.GetButtonDown("Cancel") ||
+                                  Input.GetKeyDown(KeyCode.UpArrow) ||
+                                  Input.GetKeyDown(KeyCode.DownArrow) ||
+                                  Input.GetKeyDown(KeyCode.LeftArrow) ||
+                                  Input.GetKeyDown(KeyCode.RightArrow) ||
+                                  Input.GetKeyDown(KeyCode.Return) ||
+                                  Input.GetKeyDown(KeyCode.Space);
+
+        if (hasControllerInput)
+        {
+            lastControllerInputTime = Time.unscaledTime;
+            bool selectionRestored = false;
+
+            if (!isUsingController)
+            {
+                isUsingController = true;
+                if (cursorVisual != null && cursorVisual.activeSelf)
+                {
+                    cursorVisual.SetActive(false);
+                }
+
+                GameObject defaultBtn = FindSceneDefaultSelectedButton();
+                if (defaultBtn != null && eventSystem != null)
+                {
+                    eventSystem.SetSelectedGameObject(defaultBtn);
+                    selectionRestored = true;
+                }
+            }
+
+            if (!selectionRestored && eventSystem != null && eventSystem.currentSelectedGameObject == null)
+            {
+                GameObject defaultBtn = FindSceneDefaultSelectedButton();
+                if (defaultBtn != null)
+                {
+                    eventSystem.SetSelectedGameObject(defaultBtn);
+                }
+            }
+        }
+
+        // Direct D-pad/Remote Scroll support
+        if (isUsingController)
+        {
+            float verticalInput = Input.GetAxisRaw("Vertical");
+            float horizontalInput = Input.GetAxisRaw("Horizontal");
+
+            // KeyCode fallbacks in case axes are unconfigured
+            if (Input.GetKey(KeyCode.UpArrow)) verticalInput = 1f;
+            else if (Input.GetKey(KeyCode.DownArrow)) verticalInput = -1f;
+
+            if (Input.GetKey(KeyCode.RightArrow)) horizontalInput = 1f;
+            else if (Input.GetKey(KeyCode.LeftArrow)) horizontalInput = -1f;
+
+            if (Mathf.Abs(verticalInput) > 0.1f || Mathf.Abs(horizontalInput) > 0.1f)
+            {
+                ScrollRect activeScroll = FindActiveScrollRect();
+                if (activeScroll != null)
+                {
+                    if (activeScroll.vertical && Mathf.Abs(verticalInput) > 0.1f)
+                    {
+                        float scrollAmount = verticalInput * Time.unscaledDeltaTime * 1.5f;
+                        activeScroll.verticalNormalizedPosition = Mathf.Clamp01(activeScroll.verticalNormalizedPosition + scrollAmount);
+                    }
+                    if (activeScroll.horizontal && Mathf.Abs(horizontalInput) > 0.1f)
+                    {
+                        float scrollAmount = horizontalInput * Time.unscaledDeltaTime * 1.5f;
+                        activeScroll.horizontalNormalizedPosition = Mathf.Clamp01(activeScroll.horizontalNormalizedPosition + scrollAmount);
+                    }
+                }
+            }
+        }
+
         UpdateCursorPosition();
+    }
+
+    private ScrollRect FindActiveScrollRect()
+    {
+        ScrollRect[] scrolls = FindObjectsByType<ScrollRect>(FindObjectsSortMode.None);
+        foreach (var scroll in scrolls)
+        {
+            if (scroll.gameObject.activeInHierarchy)
+            {
+                CanvasGroup cg = scroll.GetComponentInParent<CanvasGroup>();
+                if (cg == null || (cg.gameObject.activeInHierarchy && cg.alpha > 0.1f))
+                {
+                    return scroll;
+                }
+            }
+        }
+        return null;
     }
 
     private void UpdateCursorPosition()
@@ -172,63 +290,49 @@ public class BodylinkUIInteractor : MonoBehaviour
 
         Vector2 targetScreenPos = new Vector2(x * Screen.width, y * Screen.height);
         
+        if (isUsingController)
+        {
+            // Lock out hand movement checks if gamepad button was pressed very recently (to prevent hand noise from immediately reclaiming focus)
+            if (Time.unscaledTime - lastControllerInputTime < controllerLockoutDuration)
+            {
+                lastCursorScreenPos = targetScreenPos;
+                ResetHover();
+                return;
+            }
+
+            float handMovement = Vector2.Distance(targetScreenPos, lastCursorScreenPos);
+            // If hand moves significantly (e.g. more than 20 pixels), restore hand control
+            if (handMovement > 20f)
+            {
+                isUsingController = false;
+                if (cursorVisual != null && !cursorVisual.activeSelf)
+                {
+                    cursorVisual.SetActive(true);
+                }
+                // Deselect current button from EventSystem to hand focus back to cursor hover
+                if (UnityEngine.EventSystems.EventSystem.current != null)
+                {
+                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+                }
+            }
+        }
+        lastCursorScreenPos = targetScreenPos;
+
         // Pürüzsüzleştirme (Smoothing)
         currentScreenPos = Vector2.Lerp(currentScreenPos, targetScreenPos, smoothFactor);
 
-        if (cursorVisual != null)
+        if (cursorVisual != null && cursorVisual.activeSelf)
         {
             cursorVisual.transform.position = currentScreenPos;
         }
 
-        // --- CLICK, SCROLL & SLIDER DRAG LOGIC ---
-        // isGestureActive (Fist veya Victory) durumuna göre tıkla ve sürükle
-        if (isGestureActive)
+        if (!isUsingController)
         {
-            if (!isPinching) // İlk kez tetiklendi
+            // Hover click is retained as a helpful pointer fallback
+            if (useHoverClick && !isGestureActive)
             {
-                isPinching = true;
-                
-                // Önce altındaki Slider'ı kontrol et
-                activeSlider = FindSliderUnderPointer();
-                if (activeSlider != null)
-                {
-                    UpdateSliderValue();
-                }
-                else
-                {
-                    // Scroll desteği için
-                    activeScrollRect = FindScrollRectUnderPointer();
-                    lastPinchY = currentScreenPos.y;
-                }
+                HandleHoverLogic();
             }
-            else // Basılı tutuluyor (Drag/Scroll/Slider)
-            {
-                if (activeSlider != null)
-                {
-                    UpdateSliderValue();
-                }
-                else if (activeScrollRect != null)
-                {
-                    float deltaY = currentScreenPos.y - lastPinchY;
-                    activeScrollRect.verticalNormalizedPosition += deltaY / Screen.height * scrollSensitivity;
-                    lastPinchY = currentScreenPos.y;
-                }
-            }
-        }
-        else
-        {
-            if (isPinching)
-            {
-                isPinching = false;
-                activeScrollRect = null;
-                activeSlider = null;
-            }
-        }
-
-        // Eski Hover sistemini yardımcı olarak tutabiliriz
-        if (useHoverClick && !isGestureActive)
-        {
-            HandleHoverLogic();
         }
     }
 
@@ -494,5 +598,10 @@ public class BodylinkUIInteractor : MonoBehaviour
                 }
             }
         }
+    }
+
+    public bool IsControllerActive()
+    {
+        return isUsingController;
     }
 }

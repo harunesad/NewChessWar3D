@@ -41,6 +41,8 @@ public class ShopManager : MonoBehaviour
                 item.GetComponent<Image>().color = new Color(itemColor.r, itemColor.g, itemColor.b, 1);
             }
         }
+
+        UISelectedVisualizer.AttachToAllSelectables();
     }
     void BuyItem(GameObject item, int i)
     {

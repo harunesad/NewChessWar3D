@@ -162,7 +162,17 @@ public class BodylinkTwoHandInteractor : MonoBehaviour
         if (isGrab)
         {
             // TUTMA: Normal seçim yap
-            TrySelectCurrentTile(true);
+            if (TrySelectCurrentTile(true))
+            {
+                if (chessGameManager.Selected.visualPiece != null)
+                {
+                    AudioManager audioManager = FindAnyObjectByType<AudioManager>();
+                    if (audioManager != null)
+                    {
+                        audioManager.Pick();
+                    }
+                }
+            }
         }
         else
         {

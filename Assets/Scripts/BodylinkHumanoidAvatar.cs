@@ -17,6 +17,8 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
     public bool mirrorPositionX = false;
     public bool mirrorPositionZ = false;
     public bool disableAnimatorComponent = true;
+    public float movementDeadzoneX = 0.015f; // Jitter'ı önlemek için X ölü bölgesi (0.01 - 0.02 idealdir)
+    public float movementDeadzoneZ = 0.015f; // Jitter'ı önlemek için Z ölü bölgesi (0.01 - 0.02 idealdir)
 
     [Header("Boundary Settings")]
     public bool useBounds = true;
@@ -223,8 +225,18 @@ public class BodylinkHumanoidAvatar : MonoBehaviour
                 isCalibrated = true;
             }
 
-            float deltaX = (userX - initialUserPos.x) * moveSensitivityX * globalMovementScale;
-            float deltaZ = (torsoHeight - initialUserPos.z) * moveSensitivityZ * globalMovementScale;
+            float rawDeltaX = userX - initialUserPos.x;
+            float rawDeltaZ = torsoHeight - initialUserPos.z;
+
+            // Apply deadzone in normalized coordinate space to eliminate camera jitter/drift
+            if (Mathf.Abs(rawDeltaX) < movementDeadzoneX) rawDeltaX = 0f;
+            else rawDeltaX = Mathf.Sign(rawDeltaX) * (Mathf.Abs(rawDeltaX) - movementDeadzoneX);
+
+            if (Mathf.Abs(rawDeltaZ) < movementDeadzoneZ) rawDeltaZ = 0f;
+            else rawDeltaZ = Mathf.Sign(rawDeltaZ) * (Mathf.Abs(rawDeltaZ) - movementDeadzoneZ);
+
+            float deltaX = rawDeltaX * moveSensitivityX * globalMovementScale;
+            float deltaZ = rawDeltaZ * moveSensitivityZ * globalMovementScale;
             
             if (mirrorPositionX) deltaX *= -1;
             if (mirrorPositionZ) deltaZ *= -1;
