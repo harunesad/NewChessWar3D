@@ -1,13 +1,12 @@
 ﻿<Solution>
   <Project Path="Mediapipe.Runtime.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Bodylink.csproj" />
   <Project Path="Google.Play.Common.csproj" />
   <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="Mediapipe.Tests.EditMode.csproj" />
-  <Project Path="GoogleMobileAds.Editor.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Google.Play.Core.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="BodylinkEditor.csproj" />
   <Project Path="Google.Play.Review.csproj" />
 </Solution>

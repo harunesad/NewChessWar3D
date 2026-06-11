@@ -8,7 +8,6 @@ using ChessEngine.Game.UI;
 using ChessEngine.Game;
 using ChessEngine;
 using DG.Tweening;
-using GameAnalyticsSDK;
 
 public class GameUIManager : MonoBehaviour
 {
@@ -62,7 +61,6 @@ public class GameUIManager : MonoBehaviour
         string second = ((int)(time % 60)) < 10 ? "0" + ((int)(time % 60)) : ((int)(time % 60)).ToString();
         timeText.text = first + " : " + second;
 
-        healthBtn.onClick.AddListener(HealthUpdate);
         undoBtn.onClick.AddListener(UndoButton);
         pauseBtn.onClick.AddListener(ResumePanelOnOff);
         menuBtn.onClick.AddListener(MenuOpen);
@@ -74,7 +72,9 @@ public class GameUIManager : MonoBehaviour
         gameoverPanel.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RestartGame);
 
         // Start Health Button Pulse
-        StartPulse(healthBtn.transform.parent);
+        // Deactivate Health Ads button on start as AdMob is removed
+        if (healthBtn != null && healthBtn.transform.parent != null)
+            healthBtn.transform.parent.gameObject.SetActive(false);
 
         InitializeEditorBodylinkUI();
     }
@@ -167,55 +167,7 @@ public class GameUIManager : MonoBehaviour
         target.DOScale(baseScale * 1.1f, 0.8f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
     }
 
-    void HealthUpdate()
-    {
-        if (RewardedAdsManager.Instance != null && RewardedAdsManager.Instance.IsRewardedAdReady())
-        {
-            // Subscribe to events
-            RewardedAdsManager.Instance.OnRewardEarned += GiveHealthReward;
-            RewardedAdsManager.Instance.OnAdFailedToShow += OnHealthAdFailed;
-            RewardedAdsManager.Instance.OnAdClosed += OnAdClosedCleanup;
 
-            RewardedAdsManager.Instance.ShowRewardedAd();
-        }
-        else
-        {
-            MessageShow("Ad Not Ready");
-            Debug.LogWarning("Ad Not Ready");
-            // If ad is not ready, try to load one for next time
-            if (RewardedAdsManager.Instance != null)
-            {
-                RewardedAdsManager.Instance.LoadRewardedAd();
-            }
-        }
-    }
-
-    void GiveHealthReward()
-    {
-        GameSave.gameSave.sv.health++;
-        SaveManager.Save(GameSave.gameSave.sv);
-        GameSave.gameSave.HealthUpdate();
-        // Note: Using the exact call found in original code, assuming GameSave.gameSave is valid static or typo
-        // Original: GameSave.gameSave.HealthUpdate();
-        // Checked logic: It seems GameUIManager uses this.
-        // Cleanup handled by OnAdClosedCleanup usually, but for safety:
-    }
-
-    void OnHealthAdFailed()
-    {
-        MessageShow("Ad Failed");
-        Debug.LogWarning("Health ad failed to show");
-    }
-
-    void OnAdClosedCleanup()
-    {
-        if (RewardedAdsManager.Instance != null)
-        {
-            RewardedAdsManager.Instance.OnRewardEarned -= GiveHealthReward;
-            RewardedAdsManager.Instance.OnAdFailedToShow -= OnHealthAdFailed;
-            RewardedAdsManager.Instance.OnAdClosed -= OnAdClosedCleanup;
-        }
-    }
     void UndoButton()
     {
         if (PlayerPrefs.GetInt("Audio") == 1)
@@ -351,11 +303,7 @@ public class GameUIManager : MonoBehaviour
             chessGameManager.GameOver.RemoveListener(OnChessGameOver);
     }
 
-    void OnDestroy()
-    {
-        // Critical: Clean up ad event subscriptions to prevent memory leaks
-        OnAdClosedCleanup();
-    }
+
 
     private void OnChessGameOver(ChessColor pTeam, GameOverReason pReason)
     {
@@ -447,7 +395,6 @@ public class GameUIManager : MonoBehaviour
             // Automatc In-App Review Trigger
             if (result == "You Win!")
             {
-                GameAnalytics.NewDesignEvent("GameOutcome:Win:" + SceneManager.GetActiveScene().name);
                 int wins = PlayerPrefs.GetInt("TotalWins", 0) + 1;
                 PlayerPrefs.SetInt("TotalWins", wins);
                                 
@@ -462,7 +409,6 @@ public class GameUIManager : MonoBehaviour
             }
             else if (result == "You Lose!")
             {
-                GameAnalytics.NewDesignEvent("GameOutcome:Loss:" + SceneManager.GetActiveScene().name);
             }
         }
         pauseBtn.gameObject.SetActive(false);

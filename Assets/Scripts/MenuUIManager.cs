@@ -1,5 +1,4 @@
 using DG.Tweening;
-using GameAnalyticsSDK;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -23,8 +22,6 @@ public class MenuUIManager : MonoBehaviour
     void Start()
     {
         StartCoroutine(LoadingDelay());
-        // Initialize GameAnalytics explicitly
-        GameAnalytics.Initialize();
 
         PlayerPrefs.SetString("Type", "White");
         whiteBtn.image.sprite = whiteSelected;
@@ -32,12 +29,10 @@ public class MenuUIManager : MonoBehaviour
 
         MusicState(music);
 
-        coinAdsBtn.onClick.AddListener(CoinAdsMenuOpen);
         infoBtn.onClick.AddListener(delegate { 
             if (IsTutorialDone()) InfoMenuOpen(); 
             else MessageShow("Please complete the tutorial first!"); 
         });
-        healthBtn.onClick.AddListener(HealthUpdate);
         
         playBtn.onClick.AddListener(delegate { 
             if (IsTutorialDone()) MenuOpen(difficultMenu); 
@@ -76,7 +71,6 @@ public class MenuUIManager : MonoBehaviour
         backBtn.onClick.AddListener(Backmenu);
         soundOnOffBtn.onClick.AddListener(SoundfOnOff);
         exitBtn.onClick.AddListener(ExitGame);
-        closeCoinAdsPanelBtn.onClick.AddListener(CoinAdsMenuClose);
         closeInfoPanelBtn.onClick.AddListener(InfoMenuClose);
         dailyRewardBtn.onClick.AddListener(DailyRewardMenuOpen);
         tutorialBtn.onClick.AddListener(EnterTutorial);
@@ -88,9 +82,11 @@ public class MenuUIManager : MonoBehaviour
             tutorialOverlay.SetActive(!isTutorialDone);
         }
 
-        // Start Health Button and CoinAds Button Pulse
-        StartPulse(healthBtn.transform.parent);
-        StartPulse(coinAdsBtn.transform.parent);
+        // Deactivate Health and CoinAds buttons on start as AdMob is removed
+        if (healthBtn != null && healthBtn.transform.parent != null)
+            healthBtn.transform.parent.gameObject.SetActive(false);
+        if (coinAdsBtn != null && coinAdsBtn.transform.parent != null)
+            coinAdsBtn.transform.parent.gameObject.SetActive(false);
 
         // Deactivate all sub-panels so EventSystem ignores them at start
         if (difficultMenu != null) difficultMenu.gameObject.SetActive(false);
@@ -121,52 +117,7 @@ public class MenuUIManager : MonoBehaviour
         Vector3 baseScale = target.localScale;
         target.DOScale(baseScale * 1.1f, 0.8f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
     }
-    void HealthUpdate()
-    {
-        if (RewardedAdsManager.Instance != null && RewardedAdsManager.Instance.IsRewardedAdReady())
-        {
-            // Subscribe to events
-            RewardedAdsManager.Instance.OnRewardEarned += GiveHealthReward;
-            RewardedAdsManager.Instance.OnAdFailedToShow += OnHealthAdFailed;
-            RewardedAdsManager.Instance.OnAdClosed += OnAdClosedCleanup;
-            
-            RewardedAdsManager.Instance.ShowRewardedAd();
-        }
-        else
-        {
-            MessageShow("Ad Not Ready");
-            // If ad is not ready, try to load one for next time
-            if (RewardedAdsManager.Instance != null)
-            {
-                RewardedAdsManager.Instance.LoadRewardedAd();
-            }
-        }
-    }
 
-    void GiveHealthReward()
-    {
-        JsonSave.jsonSave.sv.health++;
-        SaveManager.Save(JsonSave.jsonSave.sv);
-        JsonSave.jsonSave.HealthUpdate();
-        
-        GameAnalytics.NewDesignEvent("Ads:HealthReward:Success");
-    }
-
-    void OnHealthAdFailed()
-    {
-        MessageShow("Ad Failed");
-        Debug.LogWarning("Health ad failed to show");
-    }
-
-    void OnAdClosedCleanup()
-    {
-        if (RewardedAdsManager.Instance != null)
-        {
-            RewardedAdsManager.Instance.OnRewardEarned -= GiveHealthReward;
-            RewardedAdsManager.Instance.OnAdFailedToShow -= OnHealthAdFailed;
-            RewardedAdsManager.Instance.OnAdClosed -= OnAdClosedCleanup;
-        }
-    }
     void MusicState(AudioSource source)
     {
         if (PlayerPrefs.HasKey("Audio"))
@@ -498,11 +449,7 @@ public class MenuUIManager : MonoBehaviour
         });
     }
 
-    void OnDestroy()
-    {
-        // Critical: Clean up ad event subscriptions to prevent memory leaks
-        OnAdClosedCleanup();
-    }
+
 
     bool IsTutorialDone()
     {
