@@ -9,13 +9,13 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu.unity
     guid: 5f462beb505be704d9e2986d6611650e
   - enabled: 1
-    path: Assets/Scenes/ChessWhiteAI.unity
-    guid: 8bbc6878ee56bfb4d90d02029376b981
+    path: Assets/Scenes/HarunChessWhiteAI.unity
+    guid: f648b2934a184ef458f987624d084fff
   - enabled: 1
-    path: Assets/Scenes/ChessBlackAI.unity
-    guid: a51a5cd63bc213e45a3562d19d82c716
+    path: Assets/Scenes/HarunChessBlackAI.unity
+    guid: 1703214e410627e4086c1880b6c972fd
   - enabled: 1
-    path: Assets/Scenes/ChessTwoPlayers.unity
-    guid: d5c779487865b6240a8e257e92b5f07d
+    path: Assets/Scenes/HarunChessTwoPlayers.unity
+    guid: 6d32071ea323792498c8a97c550cfce0
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

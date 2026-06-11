@@ -42,7 +42,8 @@ public class GameUIManager : MonoBehaviour
         difficulty = FindAnyObjectByType<Difficulty>();
         chessGameManager = FindAnyObjectByType<ChessGameManager>();
         
-        // Setup Tutorial
+        // Setup Tutorial (Deactivated in Bodylink branch as it uses BodylinkTutorialManager)
+        /*
         int tutorialVal = PlayerPrefs.GetInt("TutorialCompleted", 0);
         Debug.Log("Tutorial Status in Prefs: " + tutorialVal);
 
@@ -55,6 +56,8 @@ public class GameUIManager : MonoBehaviour
             tutorial.gameManager = chessGameManager;
             Debug.Log("TutorialManager component added!");
         }
+        */
+
 
         // Setup Tower Level
         if (PlayerPrefs.GetInt("IsTowerMode", 0) == 1)
@@ -436,7 +439,8 @@ public class GameUIManager : MonoBehaviour
                     }
                 }
 
-                // SHOW WHEEL ONLY ON WIN:
+                // SHOW WHEEL ONLY ON WIN (Deactivated for non-ads version):
+                /*
                 if (RewardedInterstitialManager.Instance != null && RewardedInterstitialManager.Instance.IsAdReady())
                 {
                     if (wheelObj != null) wheelObj.SetActive(true);
@@ -444,6 +448,8 @@ public class GameUIManager : MonoBehaviour
                     if (claimObj != null) claimObj.SetActive(true);
                     if (multiplierTextObj != null) multiplierTextObj.SetActive(true);
                 }
+                */
+
 
                 // Handle Tower Progression
                 if (PlayerPrefs.GetInt("IsTowerMode", 0) == 1)
