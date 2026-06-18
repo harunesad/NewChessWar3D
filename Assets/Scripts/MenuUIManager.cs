@@ -19,6 +19,7 @@ public class MenuUIManager : MonoBehaviour
     [SerializeField] Sprite soundOn, soundOff;
     Difficulty difficulty;
     CanvasGroup currentMenu;
+    public Button BackButton => backBtn;
     void Start()
     {
         StartCoroutine(LoadingDelay());
@@ -293,8 +294,7 @@ public class MenuUIManager : MonoBehaviour
     public void TowerMenuOpen()
     {
         if (towerMenu.alpha == 1) return;
-        
-        TowerMenuUI tmUI = FindAnyObjectByType<TowerMenuUI>();
+        TowerMenuUI tmUI = FindFirstObjectByType<TowerMenuUI>(FindObjectsInactive.Include);
         if (tmUI != null) tmUI.UpdateUI();
         
         MenuOpen(towerMenu);
@@ -345,6 +345,23 @@ public class MenuUIManager : MonoBehaviour
                     if (openToMenu == difficultMenu && difficultsBtn != null && difficultsBtn.Count > 0)
                     {
                         UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(difficultsBtn[0].gameObject);
+                    }
+                    else if (openToMenu == towerMenu)
+                    {
+                        TowerMenuUI tmUI = FindFirstObjectByType<TowerMenuUI>(FindObjectsInactive.Include);
+                        if (tmUI != null && tmUI.spawnedCards.Count > 0)
+                        {
+                            int reachedLevel = PlayerPrefs.GetInt("TowerLevelReached", 1);
+                            TowerManager tm = TowerManager.Instance;
+                            if (tm != null) reachedLevel = tm.GetReachedLevel();
+                            
+                            int focusIdx = Mathf.Clamp(reachedLevel - 1, 0, tmUI.spawnedCards.Count - 1);
+                            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(tmUI.spawnedCards[focusIdx].gameObject);
+                        }
+                        else
+                        {
+                            UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(backBtn.gameObject);
+                        }
                     }
                     else
                     {
@@ -479,6 +496,23 @@ public class MenuUIManager : MonoBehaviour
         }
         else if (shopMenu != null && shopMenu.gameObject.activeSelf)
         {
+            if (backBtn != null) return backBtn.gameObject;
+        }
+        else if (towerMenu != null && towerMenu.gameObject.activeSelf)
+        {
+            TowerMenuUI tmUI = FindFirstObjectByType<TowerMenuUI>(FindObjectsInactive.Include);
+            if (tmUI != null && tmUI.spawnedCards.Count > 0)
+            {
+                int reachedLevel = PlayerPrefs.GetInt("TowerLevelReached", 1);
+                int focusIdx = Mathf.Clamp(reachedLevel - 1, 0, tmUI.spawnedCards.Count - 1);
+                if (tmUI.spawnedCards[focusIdx] != null)
+                {
+                    Button btn = tmUI.spawnedCards[focusIdx].GetComponent<Button>();
+                    if (btn == null) btn = tmUI.spawnedCards[focusIdx].GetComponentInChildren<Button>();
+                    if (btn != null) return btn.gameObject;
+                }
+                return tmUI.spawnedCards[0].gameObject;
+            }
             if (backBtn != null) return backBtn.gameObject;
         }
         else if (coinAdsMenu != null && coinAdsMenu.gameObject.activeSelf)

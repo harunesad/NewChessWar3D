@@ -41,6 +41,7 @@ public class UISelectedVisualizer : MonoBehaviour, ISelectHandler, IDeselectHand
     {
         InitializeScale();
         AnimateScale(originalScale * selectedScaleMultiplier);
+        Debug.Log($"[UISelectedVisualizer] OnSelect tetiklendi. Obje: {gameObject.name}");
         ScrollToSelected(gameObject);
     }
 
@@ -86,8 +87,21 @@ public class UISelectedVisualizer : MonoBehaviour, ISelectHandler, IDeselectHand
 
     private void ScrollToSelected(GameObject selectedObj)
     {
+        // TowerMenuUI has its own custom FocusOnIndex scroll logic, ignore here to avoid conflicts
+        if (selectedObj.GetComponentInParent<TowerMenuUI>() != null)
+        {
+            Debug.Log($"[UISelectedVisualizer] ScrollToSelected yoksayılıyor çünkü obje bir TowerMenuUI elemanı: {selectedObj.name}");
+            return;
+        }
+
         ScrollRect scrollRect = selectedObj.GetComponentInParent<ScrollRect>();
         if (scrollRect == null) return;
+
+        // EĞER seçilen nesne ScrollRect'in Content objesinin altında değilse (Örn: Back butonu gibi dışarıda bir yerdeyse) kaydırma yapma
+        if (scrollRect.content != null && !selectedObj.transform.IsChildOf(scrollRect.content))
+        {
+            return;
+        }
 
         RectTransform scrollTransform = scrollRect.transform as RectTransform;
         RectTransform viewportTransform = scrollRect.viewport != null ? scrollRect.viewport : scrollTransform;
@@ -99,7 +113,7 @@ public class UISelectedVisualizer : MonoBehaviour, ISelectHandler, IDeselectHand
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentTransform);
 
-        float padding = 60f; // Safe margin from viewport edges
+        float padding = 0f; // Safe margin from viewport edges
 
         // Convert target position to scroll viewport local space
         Vector3 targetPosInViewport = viewportTransform.InverseTransformPoint(targetTransform.position);

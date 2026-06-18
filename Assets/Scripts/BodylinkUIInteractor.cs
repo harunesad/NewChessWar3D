@@ -63,6 +63,7 @@ public class BodylinkUIInteractor : MonoBehaviour
     private bool isUsingController = false;
     private float lastControllerInputTime = -10f;
     private float controllerLockoutDuration = 1.5f;
+    private bool wasAxisActive = false;
 
     void Start()
     {
@@ -160,10 +161,8 @@ public class BodylinkUIInteractor : MonoBehaviour
         eventSystem = EventSystem.current;
         if (eventSystem == null) return;
 
-        // Detect gamepad / keyboard arrow keys or stick movement
-        bool hasControllerInput = Mathf.Abs(Input.GetAxisRaw("Horizontal")) > 0.2f ||
-                                  Mathf.Abs(Input.GetAxisRaw("Vertical")) > 0.2f ||
-                                  Input.GetButtonDown("Submit") ||
+        // Detect gamepad / keyboard arrow keys - sadece tek basış (GetKeyDown), basılı tutma yok
+        bool hasControllerInput = Input.GetButtonDown("Submit") ||
                                   Input.GetButtonDown("Cancel") ||
                                   Input.GetKeyDown(KeyCode.UpArrow) ||
                                   Input.GetKeyDown(KeyCode.DownArrow) ||
@@ -171,6 +170,34 @@ public class BodylinkUIInteractor : MonoBehaviour
                                   Input.GetKeyDown(KeyCode.RightArrow) ||
                                   Input.GetKeyDown(KeyCode.Return) ||
                                   Input.GetKeyDown(KeyCode.Space);
+
+        if (hasControllerInput)
+        {
+            Debug.Log($"[BodylinkUIInteractor] Tuş basımı algılandı.");
+        }
+
+        // Gamepad stick için de tek basış algıla (sürekli basılı tutmayı engelle)
+        if (!hasControllerInput && !wasAxisActive)
+        {
+            float h = Input.GetAxisRaw("Horizontal");
+            float v = Input.GetAxisRaw("Vertical");
+            if (Mathf.Abs(h) > 0.5f || Mathf.Abs(v) > 0.5f)
+            {
+                hasControllerInput = true;
+                wasAxisActive = true;
+                Debug.Log($"[BodylinkUIInteractor] Axis hareketi algılandı (İlk basış). H: {h}, V: {v}");
+            }
+        }
+        else if (wasAxisActive)
+        {
+            float h = Input.GetAxisRaw("Horizontal");
+            float v = Input.GetAxisRaw("Vertical");
+            if (Mathf.Abs(h) < 0.2f && Mathf.Abs(v) < 0.2f)
+            {
+                wasAxisActive = false; // Bırakıldı, tekrar basılabilir
+                Debug.Log($"[BodylinkUIInteractor] Axis bırakıldı (Sıfırlandı).");
+            }
+        }
 
         if (hasControllerInput)
         {
@@ -203,37 +230,7 @@ public class BodylinkUIInteractor : MonoBehaviour
             }
         }
 
-        // Direct D-pad/Remote Scroll support
-        if (isUsingController)
-        {
-            float verticalInput = Input.GetAxisRaw("Vertical");
-            float horizontalInput = Input.GetAxisRaw("Horizontal");
-
-            // KeyCode fallbacks in case axes are unconfigured
-            if (Input.GetKey(KeyCode.UpArrow)) verticalInput = 1f;
-            else if (Input.GetKey(KeyCode.DownArrow)) verticalInput = -1f;
-
-            if (Input.GetKey(KeyCode.RightArrow)) horizontalInput = 1f;
-            else if (Input.GetKey(KeyCode.LeftArrow)) horizontalInput = -1f;
-
-            if (Mathf.Abs(verticalInput) > 0.1f || Mathf.Abs(horizontalInput) > 0.1f)
-            {
-                ScrollRect activeScroll = FindActiveScrollRect();
-                if (activeScroll != null)
-                {
-                    if (activeScroll.vertical && Mathf.Abs(verticalInput) > 0.1f)
-                    {
-                        float scrollAmount = verticalInput * Time.unscaledDeltaTime * 1.5f;
-                        activeScroll.verticalNormalizedPosition = Mathf.Clamp01(activeScroll.verticalNormalizedPosition + scrollAmount);
-                    }
-                    if (activeScroll.horizontal && Mathf.Abs(horizontalInput) > 0.1f)
-                    {
-                        float scrollAmount = horizontalInput * Time.unscaledDeltaTime * 1.5f;
-                        activeScroll.horizontalNormalizedPosition = Mathf.Clamp01(activeScroll.horizontalNormalizedPosition + scrollAmount);
-                    }
-                }
-            }
-        }
+        // ScrollRect kaydırma kaldırıldı - navigasyon artık EventSystem Explicit Navigation ile yapılıyor
 
         UpdateCursorPosition();
     }

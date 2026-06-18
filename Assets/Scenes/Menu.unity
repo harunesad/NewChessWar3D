@@ -1368,9 +1368,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1480ddf3d95d66f40be32dd6a4e7a439, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerMenuUI
-  levelCardPrefab: {fileID: 0}
-  scrollRect: {fileID: 1178655201}
-  content: {fileID: 1178655198}
+  levelCardPrefab: {fileID: 7264111784634868973, guid: 7bda9bd47b48c1147a55df34400dc871,
+    type: 3}
+  contentPanel: {fileID: 1178655198}
   themeSprites:
   - {fileID: 21300000, guid: 27ba60e1d6ce6974694fa5fa36d573ff, type: 3}
   - {fileID: 21300000, guid: 6751f03e7f0639b46a5d4d807b9f07ce, type: 3}
@@ -1381,12 +1381,11 @@ MonoBehaviour:
   - {fileID: 21300000, guid: fbb0670d1277b134a8e2722e17ad845f, type: 3}
   - {fileID: 21300000, guid: 968e945d381d72048b4d320527bf32f4, type: 3}
   - {fileID: 21300000, guid: e360d88b47f20424eb2b8d9a26a6d42d, type: 3}
-  mainPlayButton: {fileID: 1041977147}
-  mainPlayButtonText: {fileID: 34431328}
-  cardPosX: 600
-  cardHeight: 400
-  spacing: 100
-  snapSpeed: 0.3
+  - {fileID: 21300000, guid: 1d55d71ef04edb3418197c9844f1643a, type: 3}
+  spawnedCards: []
+  cardHeight: 350
+  spacing: 250
+  transitionDuration: 0.25
 --- !u!1 &174896078
 GameObject:
   m_ObjectHideFlags: 0
@@ -13051,7 +13050,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1481149476
 RectTransform:
   m_ObjectHideFlags: 0
