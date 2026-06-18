@@ -289,6 +289,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: fbb0670d1277b134a8e2722e17ad845f, type: 3}
   - {fileID: 21300000, guid: 968e945d381d72048b4d320527bf32f4, type: 3}
   - {fileID: 21300000, guid: e360d88b47f20424eb2b8d9a26a6d42d, type: 3}
+  - {fileID: 21300000, guid: 1d55d71ef04edb3418197c9844f1643a, type: 3}
   mainPlayButton: {fileID: 1877220210}
   mainPlayButtonText: {fileID: 791952477}
   cardPosX: 600
